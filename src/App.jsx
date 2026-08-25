@@ -5,8 +5,8 @@ import HomePage from './pages/HomePage'
 import Login from './components/Login'
 import Register from './components/Register'
 import EnrollmentForm from './components/EnrollmentForm'
-import TeacherReview from './components/TeacherReview'
-import TeacherAideDashboard from './components/TeacherAideDashboard'
+import TeacherDashboard from './pages/TeacherDashboard'
+import TeacherAideDashboard from './pages/TeacherAideDashboard'
 import RoleRoute from './components/RoleRoute'
 
 function App() {
@@ -33,7 +33,7 @@ function App() {
           path="/teacher"
           element={
             <RoleRoute allowedRole="teacher">
-              <TeacherReview />
+              <TeacherDashboard />
             </RoleRoute>
           }
         />

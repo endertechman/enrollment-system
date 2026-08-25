@@ -6,11 +6,34 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
+
   font-family: Arial, Helvetica, sans-serif;
-  background: #eaf4ff;
+
+  background:
+    radial-gradient(circle at 12% 20%,
+      rgba(255, 207, 228, 0.75),
+      transparent 38%),
+    radial-gradient(circle at 88% 18%,
+      rgba(191, 244, 246, 0.72),
+      transparent 40%),
+    radial-gradient(circle at 50% 85%,
+      rgba(230, 214, 255, 0.65),
+      transparent 45%),
+    linear-gradient(135deg,
+      #fff1f7 0%,
+      #f9efff 45%,
+      #e8fbff 100%);
+
   color: #1f2937;
 }
 
@@ -36,12 +59,13 @@ input {
   margin: 80px auto;
   padding: 40px;
 
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.94);
 
+  border: 1px solid rgba(255, 255, 255, 0.75);
   border-radius: 20px;
 
   box-shadow:
-    0 10px 30px rgba(59, 130, 246, 0.12);
+    0 18px 45px rgba(120, 125, 170, 0.14);
 }
 
 
@@ -54,7 +78,7 @@ input {
 
   font-size: 28px;
 
-  color: #1e3a5f;
+  color: #26344d;
 }
 
 .auth-container h2 {
@@ -97,10 +121,10 @@ input {
 
   padding: 13px 15px;
 
-  border: 1px solid #cbdff5;
+  border: 1px solid #d9d7eb;
   border-radius: 10px;
 
-  background: #fafdff;
+  background: rgba(255, 255, 255, 0.82);
   color: #1f2937;
 
   font-size: 15px;
@@ -118,16 +142,16 @@ input {
 }
 
 .auth-form input:hover {
-  border-color: #93c5fd;
+  border-color: #a5e6ea;
 }
 
 .auth-form input:focus {
   background: #ffffff;
 
-  border-color: #60a5fa;
+  border-color: #45cbd2;
 
   box-shadow:
-    0 0 0 3px rgba(96, 165, 250, 0.15);
+    0 0 0 3px rgba(69, 203, 210, 0.14);
 }
 
 
@@ -142,7 +166,7 @@ input {
   border: none;
   border-radius: 10px;
 
-  background: #60a5fa;
+  background: #35c8d0;
   color: #ffffff;
 
   font-size: 15px;
@@ -150,77 +174,183 @@ input {
 
   cursor: pointer;
 
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
+  box-shadow:
+    0 8px 20px rgba(53, 200, 208, 0.18);
+
+  transition: background 0.2s ease;
 }
 
 .auth-form button:hover {
-  transform: translateY(-2px);
-
-  background: #3b82f6;
-
-  box-shadow:
-    0 6px 16px rgba(59, 130, 246, 0.25);
+  background: #20b6c0;
 }
 
-.auth-form button:active {
-  transform: translateY(0);
+.auth-form button:disabled {
+  opacity: 0.6;
 
-  box-shadow:
-    0 2px 6px rgba(59, 130, 246, 0.15);
+  cursor: not-allowed;
+
+  transform: none;
 }
 
 
 /* Login ↔ Register Switch */
 
 .auth-switch {
-  position: relative;
-
   width: fit-content;
 
   margin: 24px auto 0;
 
   text-align: center;
 
-  color: #3b82f6;
+  color: #20aeb8;
 
   font-size: 14px;
   font-weight: 500;
 
   cursor: pointer;
 
-  transition:
-    transform 0.2s ease,
-    color 0.2s ease,
-    opacity 0.2s ease;
+  transition: color 0.2s ease;
 }
 
 .auth-switch:hover {
-  transform: translateY(-2px);
-
-  color: #2563eb;
+  color: #138891;
 }
 
-.auth-switch::after {
-  content: "";
-
-  position: absolute;
-
-  left: 0;
-  bottom: -4px;
-
-  width: 0;
-  height: 1px;
-
-  background: currentColor;
-
-  transition: width 0.2s ease;
+.login-page {
+  width: min(100% - 40px, 760px);
+  margin: 0 auto;
+  padding: 52px 0 80px;
 }
 
-.auth-switch:hover::after {
-  width: 100%;
+.login-heading {
+  margin-bottom: 18px;
+}
+
+.login-heading h1 {
+  margin: 0;
+  color: #302a32;
+  font-size: 36px;
+  line-height: 1.15;
+}
+
+.login-heading p {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.login-card {
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+.login-actions {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.login-actions .auth-switch {
+  margin: 0;
+  text-align: left;
+}
+
+.login-actions button {
+  width: auto;
+  min-width: 112px;
+  margin: 0;
+  padding-inline: 24px;
+  border-radius: 999px;
+}
+
+.register-page {
+  width: min(100% - 40px, 760px);
+  margin: 0 auto;
+  padding: 52px 0 80px;
+}
+
+.register-heading {
+  margin-bottom: 18px;
+}
+
+.register-heading h1 {
+  margin: 0;
+  color: #302a32;
+  font-size: 36px;
+  line-height: 1.15;
+}
+
+.register-heading p {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.register-card {
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+.register-actions {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.register-actions .auth-switch {
+  margin: 0;
+  text-align: left;
+}
+
+.register-actions button {
+  width: auto;
+  min-width: 112px;
+  margin: 0;
+  padding-inline: 24px;
+  border-radius: 999px;
+}
+
+@media (max-width: 480px) {
+
+  .login-page,
+  .register-page {
+    width: calc(100% - 28px);
+    padding: 36px 0 56px;
+  }
+
+  .login-heading h1,
+  .register-heading h1 {
+    font-size: 30px;
+  }
+
+  .login-card,
+  .register-card {
+    width: 100%;
+    margin: 0;
+  }
+
+  .login-actions,
+  .register-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+    gap: 16px;
+  }
+
+  .login-actions .auth-switch,
+  .register-actions .auth-switch {
+    align-self: center;
+  }
+
+  .login-actions button,
+  .register-actions button {
+    width: 100%;
+  }
 }
 
 
@@ -244,7 +374,7 @@ input {
 
 .landing-page {
   width: 100%;
-  height: 100vh;
+  height: 100dvh;
 
   display: flex;
   flex-direction: column;
@@ -252,11 +382,33 @@ input {
   overflow: hidden;
 
   background:
-    radial-gradient(circle at top right,
-      rgba(96, 165, 250, 0.18),
-      transparent 35%),
-    #f8fbff;
+    radial-gradient(circle at 10% 18%,
+      rgba(255, 205, 228, 0.82),
+      transparent 38%),
+    radial-gradient(circle at 88% 20%,
+      rgba(188, 244, 247, 0.82),
+      transparent 40%),
+    radial-gradient(circle at 52% 85%,
+      rgba(230, 211, 255, 0.72),
+      transparent 46%),
+    linear-gradient(135deg,
+      #fff0f7 0%,
+      #f8edff 46%,
+      #e3fbff 100%);
 }
+
+.landing-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  scrollbar-gutter: stable;
+}
+
+
+
 
 /* =========================================================
    HEADER / NAVIGATION
@@ -264,16 +416,25 @@ input {
 
 .landing-nav {
   width: 100%;
-  height: 64px;
-  min-height: 64px;
+  height: 76px;
+  min-height: 76px;
+
   flex-shrink: 0;
 
   display: flex;
   align-items: center;
 
-  background: #ffffff;
+  /* Designer reference: soft pink header */
+  background:
+    linear-gradient(90deg,
+      #fff1f6 0%,
+      #ffeaf4 50%,
+      #fff2f7 100%);
 
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid rgba(236, 190, 211, 0.45);
+
+  box-shadow:
+    0 3px 14px rgba(150, 110, 135, 0.06);
 }
 
 .landing-nav-inner {
@@ -289,42 +450,33 @@ input {
   gap: 20px;
 }
 
-.landing-scroll {
-  flex: 1;
-  min-height: 0;
-
-  overflow-y: auto;
-  overflow-x: hidden;
-
-  scrollbar-gutter: stable;
-}
-
-/* Keeps header content aligned with the landing page */
-
-.landing-nav-inner {
-  width: min(1180px, calc(100% - 40px));
-
-  min-height: 80px;
-
-  margin: 0 auto;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  gap: 20px;
-}
 
 /* Brand */
 
 .landing-brand {
-  color: #1e3a5f;
+  display: flex;
+  align-items: center;
 
-  font-size: 18px;
+  gap: 12px;
+
+  color: #302a32;
+
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 20px;
   font-weight: 700;
 
   white-space: nowrap;
 }
+
+.landing-logo {
+  width: 52px;
+  height: 52px;
+
+  object-fit: contain;
+
+  flex-shrink: 0;
+}
+
 
 /* Right-side account area */
 
@@ -336,17 +488,18 @@ input {
   align-items: center;
   justify-content: flex-end;
 
-  gap: 10px;
+  gap: 12px;
 }
+
 
 /* Logged-in Name */
 
 .nav-user-name {
-  max-width: 170px;
+  max-width: 190px;
 
   overflow: hidden;
 
-  color: #475569;
+  color: #514752;
 
   font-size: 14px;
   font-weight: 500;
@@ -355,22 +508,26 @@ input {
   white-space: nowrap;
 }
 
-/* Login / Dashboard Button */
+
+/* Login */
 
 .nav-login {
-  padding: 10px 20px;
+  padding: 10px 22px;
 
-  border: 1px solid #bfdbfe;
-  border-radius: 10px;
+  border: 1px solid rgba(216, 211, 216, 0.9);
+  border-radius: 999px;
 
-  background: rgba(255, 255, 255, 0.8);
+  background: #ffffff;
 
-  color: #2563eb;
+  color: #302a32;
 
   font-size: 14px;
   font-weight: 600;
 
   cursor: pointer;
+
+  box-shadow:
+    0 4px 10px rgba(60, 45, 55, 0.12);
 
   transition:
     transform 0.2s ease,
@@ -379,41 +536,44 @@ input {
 }
 
 .nav-login:hover {
-  transform: translateY(-2px);
-
-  background: #ffffff;
-
-  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.12);
+  background: #ffeaf4;
 }
+
 
 /* Logout */
 
 .nav-logout {
-  padding: 10px 16px;
+  padding: 10px 20px;
 
-  border: 1px solid #fecaca;
-  border-radius: 10px;
+  border: 1px solid #ffc4d4;
+  border-radius: 999px;
 
-  background: #fff;
+  background: #ffffff;
 
-  color: #dc2626;
+  color: #d94b70;
 
   font-size: 14px;
   font-weight: 600;
 
   cursor: pointer;
 
+  box-shadow:
+    0 4px 10px rgba(100, 55, 70, 0.08);
+
   transition:
+    transform 0.2s ease,
     background 0.2s ease,
     border-color 0.2s ease,
-    color 0.2s ease;
+    color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .nav-logout:hover {
-  background: #fef2f2;
-  border-color: #fca5a5;
-  color: #b91c1c;
+  background: #fff1f5;
+  border-color: #ffa8c0;
+  color: #bd3158;
 }
+
 
 /* =========================================================
    HERO
@@ -421,11 +581,16 @@ input {
 
 .landing-hero {
   width: min(1180px, calc(100% - 40px));
+
+  min-height: 100%;
+  height: fit-content;
+
   margin: 0 auto;
-  padding: 90px 0 120px;
+  padding: 60px 0 80px;
 
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
+
   gap: 80px;
 
   align-items: center;
@@ -439,25 +604,33 @@ input {
 }
 
 .hero-label {
+  width: fit-content;
+
   margin: 0 0 18px;
+  padding: 7px 14px;
 
-  color: #3b82f6;
+  border-radius: 999px;
 
-  font-size: 14px;
+  background: #35c8d0;
+  color: #ffffff;
+
+  font-size: 13px;
   font-weight: 700;
 
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
 
   text-transform: uppercase;
+
+  box-shadow:
+    0 6px 16px rgba(53, 200, 208, 0.2);
 }
 
 .hero-content h1 {
   margin: 0;
 
-  color: #172033;
+  color: #252a36;
 
-  font-size:
-    clamp(46px, 6vw, 72px);
+  font-size: 72px;
 
   line-height: 1.05;
 
@@ -465,7 +638,7 @@ input {
 }
 
 .hero-content h1 span {
-  color: #60a5fa;
+  color: #35bfc9;
 }
 
 .hero-description {
@@ -473,14 +646,17 @@ input {
 
   margin: 28px 0 0;
 
-  color: #64748b;
+  color: #5f6d7d;
 
   font-size: 18px;
+
   line-height: 1.7;
 }
 
 
-/* Hero Buttons */
+/* =========================================================
+   HERO BUTTONS
+========================================================= */
 
 .hero-actions {
   margin-top: 36px;
@@ -515,21 +691,16 @@ input {
 .primary-cta {
   border: none;
 
-  background: #60a5fa;
+  background: #ffabd0;
 
-  color: #ffffff;
+  color: #3c3040;
 
   box-shadow:
-    0 10px 24px rgba(59, 130, 246, 0.2);
+    0 10px 24px rgba(236, 132, 180, 0.22);
 }
 
 .primary-cta:hover {
-  transform: translateY(-2px);
-
-  background: #3b82f6;
-
-  box-shadow:
-    0 14px 28px rgba(59, 130, 246, 0.28);
+  background: #ff98c4;
 }
 
 .primary-cta:active {
@@ -540,20 +711,18 @@ input {
 /* Secondary */
 
 .secondary-cta {
-  border: 1px solid #cbdff5;
+  border: 1px solid #a9e9ed;
 
-  background: #ffffff;
+  background: #35c8d0;
 
-  color: #2563eb;
+  color: #ffffff;
+
+  box-shadow:
+    0 8px 18px rgba(53, 200, 208, 0.16);
 }
 
 .secondary-cta:hover {
-  transform: translateY(-2px);
-
-  background: #eff6ff;
-
-  box-shadow:
-    0 8px 20px rgba(59, 130, 246, 0.1);
+  background: #20b6c0;
 }
 
 .secondary-cta:active {
@@ -578,13 +747,16 @@ input {
   padding: 28px;
 
   background:
-    rgba(255, 255, 255, 0.9);
+    linear-gradient(135deg,
+      rgba(255, 224, 238, 0.88),
+      rgba(243, 231, 255, 0.82) 50%,
+      rgba(218, 248, 250, 0.9));
 
-  border: 1px solid #dbeafe;
+  border: 1px solid rgba(255, 255, 255, 0.75);
   border-radius: 24px;
 
   box-shadow:
-    0 24px 60px rgba(59, 130, 246, 0.15);
+    0 24px 60px rgba(106, 120, 160, 0.15);
 }
 
 .hero-card-header {
@@ -594,7 +766,7 @@ input {
   align-items: center;
   justify-content: space-between;
 
-  color: #1e3a5f;
+  color: #26344d;
 
   font-size: 17px;
   font-weight: 700;
@@ -609,10 +781,10 @@ input {
 
   border-radius: 50%;
 
-  background: #60a5fa;
+  background: #35c8d0;
 
   box-shadow:
-    0 0 0 5px rgba(96, 165, 250, 0.14);
+    0 0 0 5px rgba(53, 200, 208, 0.15);
 }
 
 
@@ -629,7 +801,7 @@ input {
   justify-content: space-between;
 
   border-bottom:
-    1px solid #eef2f7;
+    1px solid rgba(255, 255, 255, 0.7);
 }
 
 .status-item:last-child {
@@ -647,7 +819,7 @@ input {
 .status-item p {
   margin: 6px 0 0;
 
-  color: #94a3b8;
+  color: #758296;
 
   font-size: 13px;
   line-height: 1.5;
@@ -670,9 +842,9 @@ input {
 
   border-radius: 50%;
 
-  background: #dbeafe;
+  background: #cff5f7;
 
-  color: #2563eb;
+  color: #159da6;
 
   font-weight: 700;
 }
@@ -686,8 +858,8 @@ input {
 
   margin-top: 7px;
 
-  border: 3px solid #bfdbfe;
-  border-top-color: #3b82f6;
+  border: 3px solid #bcecef;
+  border-top-color: #25b7bf;
 
   border-radius: 50%;
 }
@@ -701,13 +873,13 @@ input {
   padding-bottom: 24px;
 
   border-bottom:
-    1px solid #eef2f7;
+    1px solid rgba(255, 255, 255, 0.72);
 }
 
 .status-summary h3 {
   margin: 14px 0 8px;
 
-  color: #1e3a5f;
+  color: #26344d;
 
   font-size: 20px;
 }
@@ -730,9 +902,13 @@ input {
   line-height: 1.6;
 }
 
+
+/* Tracker Result */
+
 .tracker-result-display {
   display: flex;
   flex-direction: column;
+
   align-items: flex-start;
 }
 
@@ -741,9 +917,10 @@ input {
   padding: 0;
 
   border: none;
+
   background: transparent;
 
-  color: #3b82f6;
+  color: #159da6;
 
   font-size: 13px;
   font-weight: 600;
@@ -754,11 +931,13 @@ input {
 }
 
 .track-another-button:hover {
-  color: #1d4ed8;
+  color: #0d747b;
 }
 
 
-/* Status Badge */
+/* =========================================================
+   STATUS BADGES
+========================================================= */
 
 .enrollment-status {
   display: inline-block;
@@ -792,7 +971,9 @@ input {
 }
 
 
-/* Enrollment Details */
+/* =========================================================
+   ENROLLMENT DETAILS
+========================================================= */
 
 .enrollment-details {
   margin-top: 22px;
@@ -811,7 +992,7 @@ input {
 }
 
 .enrollment-details span {
-  color: #94a3b8;
+  color: #7b8798;
 
   font-size: 12px;
 }
@@ -836,7 +1017,7 @@ input {
 .empty-enrollment h3 {
   margin: 0 0 8px;
 
-  color: #1e3a5f;
+  color: #26344d;
 }
 
 .empty-enrollment p {
@@ -849,13 +1030,402 @@ input {
 
 
 /* =========================================================
+   TEACHER DASHBOARD
+========================================================= */
+
+.teacher-dashboard-page {
+  width: 100%;
+  height: 100dvh;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 205, 228, 0.76), transparent 36%),
+    radial-gradient(circle at 88% 20%, rgba(188, 244, 247, 0.78), transparent 40%),
+    linear-gradient(135deg, #fff0f7 0%, #f8edff 48%, #e3fbff 100%);
+}
+
+.teacher-dashboard-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.teacher-dashboard-content {
+  width: min(1080px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 46px 0 80px;
+}
+
+.teacher-profile-area {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.teacher-profile-area h1 {
+  margin: 0;
+
+  color: #302a32;
+
+  font-size: 34px;
+  line-height: 1.2;
+}
+
+.teacher-profile-area p {
+  margin: 7px 0 0;
+
+  color: #6f6871;
+
+  font-size: 15px;
+}
+
+.teacher-tabs {
+  margin-top: 34px;
+  padding-bottom: 4px;
+
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 10px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  white-space: nowrap;
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+
+  cursor: default;
+  user-select: none;
+}
+
+.teacher-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.teacher-tabs.dragging {
+  cursor: default;
+}
+
+.teacher-tab {
+  min-width: 112px;
+  padding: 10px 18px;
+
+  flex-shrink: 0;
+
+  border: 1px solid rgba(163, 220, 224, 0.7);
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.78);
+  color: #5b6673;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.teacher-tab.active {
+  border-color: #35c8d0;
+  background: #35c8d0;
+  color: #ffffff;
+}
+
+.teacher-tab:disabled {
+  opacity: 0.68;
+  pointer-events: none;
+}
+
+.pending-approvals-panel {
+  margin-top: 24px;
+  padding: 30px;
+
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 24px;
+
+  background: rgba(255, 255, 255, 0.64);
+
+  box-shadow: 0 18px 45px rgba(116, 87, 105, 0.1);
+}
+
+.pending-approvals-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.pending-approvals-header h2 {
+  margin: 0;
+
+  color: #302a32;
+
+  font-size: 23px;
+}
+
+.waiting-badge {
+  flex-shrink: 0;
+
+  padding: 7px 12px;
+
+  border-radius: 999px;
+
+  background: #ffe1ed;
+  color: #c14c72;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.teacher-dashboard-message {
+  margin: 18px 0 0;
+
+  color: #a83e60;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.approval-list {
+  margin-top: 22px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.approval-row {
+  padding: 22px 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+
+  border: 1px solid rgba(223, 218, 226, 0.8);
+  border-radius: 17px;
+
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.approval-details {
+  min-width: 0;
+}
+
+.approval-details h3 {
+  margin: 0;
+
+  color: #334155;
+
+  font-size: 17px;
+  overflow-wrap: anywhere;
+}
+
+.approval-details p {
+  margin: 8px 0 0;
+
+  color: #758296;
+
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.application-meta {
+  margin-top: 8px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.application-meta p {
+  margin: 0;
+}
+
+.approval-details .approval-summary {
+  overflow-wrap: normal;
+  white-space: normal;
+}
+
+.approval-details .approval-bmi {
+  margin-top: 0;
+}
+
+.approval-row .review-actions {
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.approval-row .approve-button {
+  border-color: #88e1e5;
+  background: #35c8d0;
+  color: #ffffff;
+}
+
+.approval-row .approve-button:hover:not(:disabled) {
+  border-color: #20b6c0;
+  background: #20b6c0;
+}
+
+.approval-row .reject-button {
+  border-color: #ffc4d4;
+  background: #fff1f5;
+  color: #d94b70;
+}
+
+.approval-row .reject-button:hover:not(:disabled) {
+  border-color: #ffa8c0;
+  background: #ffe2ea;
+}
+
+.teacher-empty-state {
+  margin: 22px 0 0;
+  padding: 48px 20px;
+
+  border: 1px dashed rgba(176, 183, 195, 0.72);
+  border-radius: 17px;
+
+  background: rgba(255, 255, 255, 0.5);
+  color: #758296;
+
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  .teacher-dashboard-content {
+    width: calc(100% - 28px);
+    padding: 34px 0 60px;
+  }
+
+  .teacher-profile-area h1 {
+    font-size: 28px;
+  }
+
+  .pending-approvals-panel {
+    padding: 22px;
+    border-radius: 20px;
+  }
+
+  .approval-row {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .approval-row .review-actions {
+    width: 100%;
+  }
+
+  .approval-row .review-actions button {
+    flex: 1;
+  }
+}
+
+@media (max-width: 430px) {
+  .teacher-tabs {
+    margin-top: 26px;
+  }
+
+  .pending-approvals-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+
+/* =========================================================
+   TEACHER REVIEW ACTIONS
+========================================================= */
+
+.review-actions {
+  display: flex;
+
+  gap: 10px;
+
+  margin-top: 16px;
+}
+
+.approve-button,
+.reject-button {
+  padding: 10px 16px;
+
+  border-radius: 9px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+
+/* Approve */
+
+.approve-button {
+  border: 1px solid #bbf7d0;
+
+  background: #f0fdf4;
+
+  color: #15803d;
+}
+
+.approve-button:hover {
+  background: #dcfce7;
+  border-color: #86efac;
+}
+
+
+/* Reject */
+
+.reject-button {
+  border: 1px solid #fecaca;
+
+  background: #fef2f2;
+
+  color: #dc2626;
+}
+
+.reject-button:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+
+/* Disabled */
+
+.approve-button:disabled,
+.reject-button:disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
+
+  transform: none;
+}
+
+
+/* =========================================================
    PUBLIC ENROLLMENT TRACKER
 ========================================================= */
 
 .public-tracker h3 {
   margin: 0 0 8px;
 
-  color: #1e3a5f;
+  color: #26344d;
 
   font-size: 20px;
 }
@@ -884,10 +1454,10 @@ input {
 
   padding: 13px 15px;
 
-  border: 1px solid #cbdff5;
+  border: 1px solid rgba(149, 218, 223, 0.8);
   border-radius: 10px;
 
-  background: #fafdff;
+  background: rgba(255, 255, 255, 0.72);
 
   color: #1f2937;
 
@@ -902,16 +1472,16 @@ input {
 }
 
 .tracker-form input:hover {
-  border-color: #93c5fd;
+  border-color: #6fd7dd;
 }
 
 .tracker-form input:focus {
   background: #ffffff;
 
-  border-color: #60a5fa;
+  border-color: #35c8d0;
 
   box-shadow:
-    0 0 0 3px rgba(96, 165, 250, 0.15);
+    0 0 0 3px rgba(53, 200, 208, 0.15);
 }
 
 
@@ -925,7 +1495,7 @@ input {
   border: none;
   border-radius: 10px;
 
-  background: #60a5fa;
+  background: #35c8d0;
 
   color: #ffffff;
 
@@ -942,12 +1512,7 @@ input {
 }
 
 .tracker-form button:hover:not(:disabled) {
-  transform: translateY(-2px);
-
-  background: #3b82f6;
-
-  box-shadow:
-    0 6px 16px rgba(59, 130, 246, 0.22);
+  background: #20b6c0;
 }
 
 .tracker-form button:active:not(:disabled) {
@@ -971,15 +1536,210 @@ input {
   font-size: 13px;
 }
 
-
-/* Tracker Result */
-
 .tracker-result {
   margin-top: 24px;
   padding-top: 24px;
 
   border-top:
-    1px solid #eef2f7;
+    1px solid rgba(255, 255, 255, 0.7);
+}
+
+/* ========================================
+   ENROLLMENT FORM
+======================================== */
+
+.enrollment-page {
+  width: min(1100px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 48px 0 80px;
+}
+
+.enrollment-heading {
+  margin-bottom: 30px;
+}
+
+.enrollment-heading h1 {
+  margin: 0;
+  color: #302a32;
+  font-size: 36px;
+  line-height: 1.2;
+}
+
+.enrollment-heading>p:last-child {
+  margin: 10px 0 0;
+  color: #75707a;
+  font-size: 15px;
+}
+
+.enrollment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.enrollment-section {
+  padding: 32px;
+
+  background: rgba(255, 255, 255, 0.88);
+
+  border: 1px solid rgba(230, 204, 218, 0.7);
+  border-radius: 24px;
+
+  box-shadow:
+    0 12px 35px rgba(116, 87, 105, 0.08);
+}
+
+.enrollment-section h2 {
+  margin: 0 0 24px;
+
+  color: #302a32;
+
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.enrollment-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  gap: 22px 24px;
+}
+
+.enrollment-grid>div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.enrollment-grid label {
+  color: #4e4851;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.enrollment-grid input,
+.enrollment-grid select {
+  width: 100%;
+  height: 48px;
+
+  padding: 0 14px;
+
+  border: 1px solid #ded7dd;
+  border-radius: 12px;
+
+  background: #ffffff;
+  color: #302a32;
+
+  font: inherit;
+  font-size: 15px;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.enrollment-grid input:focus,
+.enrollment-grid select:focus {
+  border-color: #53cbd1;
+
+  box-shadow:
+    0 0 0 3px rgba(83, 203, 209, 0.14);
+}
+
+.enrollment-grid input[readonly] {
+  background: #f6f3f5;
+  color: #777078;
+
+  cursor: default;
+}
+
+.enrollment-submit {
+  align-self: flex-end;
+
+  min-width: 190px;
+
+  padding: 14px 24px;
+
+  border: none;
+  border-radius: 999px;
+
+  background: #ef92b3;
+  color: #ffffff;
+
+  font-size: 15px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 8px 20px rgba(239, 146, 179, 0.25);
+
+  transition: background 0.2s ease;
+}
+
+.enrollment-submit:hover:not(:disabled) {
+  background: #e781a6;
+}
+
+.enrollment-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-message {
+  margin: 0;
+
+  color: #c14c68;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+
+/* ========================================
+   ENROLLMENT RESPONSIVE
+======================================== */
+
+@media (max-width: 850px) {
+  .enrollment-page {
+    width: min(100% - 32px, 1100px);
+    padding: 36px 0 60px;
+  }
+
+  .enrollment-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .enrollment-section {
+    padding: 26px;
+  }
+
+  .enrollment-heading h1 {
+    font-size: 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .enrollment-page {
+    width: calc(100% - 24px);
+    padding: 28px 0 50px;
+  }
+
+  .enrollment-section {
+    padding: 20px;
+    border-radius: 18px;
+  }
+
+  .enrollment-heading h1 {
+    font-size: 26px;
+  }
+
+  .enrollment-submit {
+    width: 100%;
+  }
 }
 
 
@@ -988,17 +1748,34 @@ input {
 ========================================================= */
 
 @media (max-width: 850px) {
-  .landing-nav {
-    padding-left: 20px;
-    padding-right: 20px;
+  .hero-content h1 {
+    font-size: 56px;
+  }
+
+  .hero-description {
+    font-size: 17px;
   }
 
   .landing-nav-actions {
-    min-width: 240px;
+    min-width: 0;
+    flex-shrink: 0;
+  }
+
+  .landing-brand {
+    min-width: 0;
+    max-width: calc(100% - 110px);
+
+    font-size: 17px;
+
+    white-space: normal;
+  }
+
+  .landing-brand span {
+    overflow-wrap: anywhere;
   }
 
   .landing-hero {
-    padding: 60px 0 90px;
+    padding: 50px 0 80px;
 
     grid-template-columns: 1fr;
 
@@ -1017,7 +1794,12 @@ input {
 
 @media (max-width: 600px) {
   .landing-nav {
+    height: 72px;
     min-height: 72px;
+  }
+
+  .landing-nav-inner {
+    width: calc(100% - 28px);
 
     gap: 12px;
   }
@@ -1037,7 +1819,10 @@ input {
   }
 
   .nav-user-name {
-    display: none;
+    display: block;
+    max-width: 86px;
+
+    font-size: 12px;
   }
 
   .nav-login,
@@ -1050,6 +1835,14 @@ input {
 
 
 @media (max-width: 480px) {
+  .hero-content h1 {
+    font-size: 42px;
+  }
+
+  .hero-description {
+    font-size: 16px;
+  }
+
   .auth-container {
     width: calc(100% - 28px);
 
@@ -1068,23 +1861,14 @@ input {
     font-size: 18px;
   }
 
-  .landing-nav {
-    padding-left: 14px;
-    padding-right: 14px;
+  .landing-nav-inner {
+    width: calc(100% - 28px);
   }
 
   .landing-hero {
-    width: min(100% - 28px, 1180px);
+    width: calc(100% - 28px);
 
-    padding-top: 50px;
-  }
-
-  .hero-content h1 {
-    font-size: 42px;
-  }
-
-  .hero-description {
-    font-size: 16px;
+    padding: 42px 0 70px;
   }
 
   .hero-actions {

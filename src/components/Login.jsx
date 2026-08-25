@@ -55,54 +55,91 @@ function Login() {
   }
 
   return (
-    <div className="auth-container">
-      <h1>Enrollment System</h1>
-      <h2>Login</h2>
+    <div className="landing-page">
+      <nav className="landing-nav">
+        <div className="landing-nav-inner">
+          <div
+            className="landing-brand"
+            onClick={() => navigate('/')}
+            style={{ cursor: 'pointer' }}
+          >
+            <img
+              src="/bcdc-logo.png"
+              alt="Binuangan Child Development Center logo"
+              className="landing-logo"
+            />
 
-      <form className="auth-form" onSubmit={handleLogin}>
-        <div>
-          <label>Email</label>
+            <span>Binuangan Child Development Center</span>
+          </div>
 
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email"
-            required
-          />
+          <div className="landing-nav-actions">
+            <button
+              className="nav-login"
+              onClick={() => navigate('/')}
+            >
+              Home
+            </button>
+          </div>
         </div>
+      </nav>
 
-        <div>
-          <label>Password</label>
+      <div className="landing-scroll">
+        <main className="login-page">
+          <header className="login-heading">
+            <h1>Welcome</h1>
+            <p>Login first to see your dashboard.</p>
+          </header>
 
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter your password"
-            required
-          />
-        </div>
+          <div className="auth-container login-card">
+            <form className="auth-form" onSubmit={handleLogin}>
+              <div>
+                <label>Email</label>
 
-        <button type="submit">
-          Login
-        </button>
-      </form>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  required
+                />
+              </div>
 
-      {message && <p>{message}</p>}
+              <div>
+                <label>Password</label>
 
-      <div
-        className="auth-switch"
-        onClick={() => navigate('/register')}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            navigate('/register')
-          }
-        }}
-      >
-        Don't have an account?
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  required
+                />
+              </div>
+
+              <div className="login-actions">
+                <div
+                  className="auth-switch"
+                  onClick={() => navigate('/register')}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      navigate('/register')
+                    }
+                  }}
+                >
+                  Don't have an account?
+                </div>
+
+                <button type="submit">
+                  Login
+                </button>
+              </div>
+            </form>
+
+            {message && <p>{message}</p>}
+          </div>
+        </main>
       </div>
     </div>
   )

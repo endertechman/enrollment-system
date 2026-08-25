@@ -26,15 +26,12 @@ function Register() {
     })
 
     if (error) {
-      if (error) {
-        if (error.message === 'User already registered') {
-          setMessage('This email is already registered.')
-        } else {
-          setMessage(error.message)
-        }
-
-        return
+      if (error.message === 'User already registered') {
+        setMessage('This email is already registered.')
+      } else {
+        setMessage(error.message)
       }
+
       return
     }
 
@@ -46,78 +43,117 @@ function Register() {
   }
 
   return (
-    <div className="auth-container">
-      <h1>Enrollment System</h1>
-      <h2>Register</h2>
+    <div className="landing-page">
+      <nav className="landing-nav">
+        <div className="landing-nav-inner">
+          <div
+            className="landing-brand"
+            onClick={() => navigate('/')}
+            style={{ cursor: 'pointer' }}
+          >
+            <img
+              src="/bcdc-logo.png"
+              alt="Binuangan Child Development Center logo"
+              className="landing-logo"
+            />
 
-      <form
-        className="auth-form"
-        onSubmit={handleRegister}
-      >
-        <div>
-          <label>Full Name</label>
+            <span>Binuangan Child Development Center</span>
+          </div>
 
-          <input
-            type="text"
-            value={fullName}
-            onChange={(e) =>
-              setFullName(e.target.value)
-            }
-            placeholder="Enter your full name"
-            required
-          />
+          <div className="landing-nav-actions">
+            <button
+              className="nav-login"
+              onClick={() => navigate('/')}
+            >
+              Home
+            </button>
+          </div>
         </div>
+      </nav>
 
-        <div>
-          <label>Email</label>
+      <div className="landing-scroll">
+        <main className="register-page">
+          <header className="register-heading">
+            <h1>Register your account</h1>
+            <p>
+              Follow your child’s journey, register your BCDC account.
+            </p>
+          </header>
 
-          <input
-            type="email"
-            value={email}
-            onChange={(e) =>
-              setEmail(e.target.value)
-            }
-            placeholder="Enter your email"
-            required
-          />
-        </div>
+          <div className="auth-container register-card">
+            <form
+              className="auth-form"
+              onSubmit={handleRegister}
+            >
+              <div>
+                <label>Full Name</label>
 
-        <div>
-          <label>Password</label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) =>
+                    setFullName(e.target.value)
+                  }
+                  placeholder="Enter your full name"
+                  required
+                />
+              </div>
 
-          <input
-            type="password"
-            value={password}
-            onChange={(e) =>
-              setPassword(e.target.value)
-            }
-            placeholder="Enter your password"
-            required
-          />
-        </div>
+              <div>
+                <label>Email</label>
 
-        <button type="submit">
-          Register
-        </button>
-      </form>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) =>
+                    setEmail(e.target.value)
+                  }
+                  placeholder="Enter your email"
+                  required
+                />
+              </div>
 
-      {message && <p>{message}</p>}
+              <div>
+                <label>Password</label>
 
-      <div
-        className="auth-switch"
-        onClick={() => navigate('/login')}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (
-            e.key === 'Enter' ||
-            e.key === ' '
-          ) {
-            navigate('/login')
-          }
-        }}
-      >
-        Already have an account?
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) =>
+                    setPassword(e.target.value)
+                  }
+                  placeholder="Enter your password"
+                  required
+                />
+              </div>
+
+              <div className="register-actions">
+                <div
+                  className="auth-switch"
+                  onClick={() => navigate('/login')}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (
+                      e.key === 'Enter' ||
+                      e.key === ' '
+                    ) {
+                      navigate('/login')
+                    }
+                  }}
+                >
+                  Already have an account?
+                </div>
+
+                <button type="submit">
+                  Register
+                </button>
+              </div>
+            </form>
+
+            {message && <p>{message}</p>}
+          </div>
+        </main>
       </div>
     </div>
   )

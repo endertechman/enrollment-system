@@ -225,15 +225,17 @@ function HomePage() {
       <nav className="landing-nav">
         <div className="landing-nav-inner">
           <div className="landing-brand">
-            Child Development Center
+            <img
+              src="/bcdc-logo.png"
+              alt="Binuangan Child Development Center logo"
+              className="landing-logo"
+            />
+
+            <span>Binuangan Child Development Center</span>
           </div>
 
           <div className="landing-nav-actions">
-            {loading ? (
-              <span className="nav-placeholder">
-                Loading...
-              </span>
-            ) : user ? (
+            {loading ? null : user ? (
               <>
                 <span className="nav-user-name">
                   Hi, {fullName || 'User'}
@@ -268,80 +270,79 @@ function HomePage() {
 
           <div className="hero-content">
             <p className="hero-label">
-              Enrollment System
+              Enrollment Ongoing
             </p>
 
             <h1>
-              Simple enrollment for
-              <span> growing families.</span>
+              Every Child is a Beginning of{' '}
+              <span>Something Big.</span>
             </h1>
 
             <p className="hero-description">
-              Submit enrollment applications, track their status,
-              and stay updated throughout the admission process.
+              Give your little one the best start in learning.
+              <br />
+              Enroll today and become part of the BCDC Family!
             </p>
 
             <div className="hero-actions">
-              {/* Logged out */}
-
-              {!user && (
+              {!loading && (
                 <>
-                  <button
-                    type="button"
-                    className="primary-cta"
-                    onClick={() => navigate('/login')}
-                  >
-                    Start Enrollment
-                  </button>
+                  {/* Logged out */}
+                  {!user && (
+                    <>
+                      <button
+                        type="button"
+                        className="primary-cta"
+                        onClick={() => navigate('/login')}
+                      >
+                        Start Enrollment
+                      </button>
 
-                  <button
-                    type="button"
-                    className="secondary-cta"
-                    onClick={() => navigate('/register')}
-                  >
-                    Sign Up
-                  </button>
+                      <button
+                        type="button"
+                        className="secondary-cta"
+                        onClick={() => navigate('/register')}
+                      >
+                        Sign Up
+                      </button>
+                    </>
+                  )}
+
+                  {/* Parent with no application */}
+                  {user &&
+                    role === 'parent' &&
+                    !enrollment && (
+                      <button
+                        type="button"
+                        className="primary-cta"
+                        onClick={() => navigate('/enroll')}
+                      >
+                        Start Enrollment
+                      </button>
+                    )}
+
+                  {/* Teacher */}
+                  {user && role === 'teacher' && (
+                    <button
+                      type="button"
+                      className="primary-cta"
+                      onClick={() => navigate('/teacher')}
+                    >
+                      Open Teacher Portal
+                    </button>
+                  )}
+
+                  {/* Teacher Aide */}
+                  {user && role === 'teacher_aide' && (
+                    <button
+                      type="button"
+                      className="primary-cta"
+                      onClick={() => navigate('/teacher-aide')}
+                    >
+                      Open Teacher Aide Portal
+                    </button>
+                  )}
                 </>
-              )}
-
-              {/* Parent with no application */}
-
-              {user &&
-                role === 'parent' &&
-                !enrollment && (
-                  <button
-                    type="button"
-                    className="primary-cta"
-                    onClick={() => navigate('/enroll')}
-                  >
-                    Start Enrollment
-                  </button>
-                )}
-
-              {/* Teacher */}
-
-              {user && role === 'teacher' && (
-                <button
-                  type="button"
-                  className="primary-cta"
-                  onClick={() => navigate('/teacher')}
-                >
-                  Open Teacher Portal
-                </button>
-              )}
-
-              {/* Teacher Aide */}
-
-              {user && role === 'teacher_aide' && (
-                <button
-                  type="button"
-                  className="primary-cta"
-                  onClick={() =>
-                    navigate('/teacher-aide')
-                  }
-                >
-                  Open Teacher Aide Portal
-                </button>
               )}
             </div>
           </div>

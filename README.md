@@ -1,16 +1,32 @@
-# React + Vite
+# Enrollment System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A web-based enrollment system developed as a capstone project to simplify the student enrollment process.
 
-Currently, two official plugins are available:
+The system allows students or guardians to submit enrollment applications online, while authorized school personnel can review and manage applications through a dedicated dashboard.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- User registration and login
+- Online enrollment form
+- Enrollment application tracking
+- Teacher/Aide dashboard
+- Application review and status management
+- Role-based access control
+- Supabase authentication and database integration
+- Responsive web interface
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the ESLint configuration
+- **React**
+- **Vite**
+- **Supabase**
+- **Vercel**
+- **GitHub**
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Project Status
+
+This project is currently under development. Additional features, security improvements, testing, and UI/UX revisions will be implemented as development continues.
+
+## Purpose
+
+The goal of this project is to provide a more convenient and organized enrollment process by reducing manual paperwork and allowing enrollment applications to be submitted and reviewed online.

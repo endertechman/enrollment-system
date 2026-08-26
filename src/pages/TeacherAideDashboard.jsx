@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import StaffReferenceSearch from '../components/StaffReferenceSearch'
+import AppHeader from '../components/AppHeader'
 
 function TeacherAideDashboard() {
   const navigate = useNavigate()
@@ -9,9 +11,7 @@ function TeacherAideDashboard() {
   const [aideName, setAideName] = useState('Teacher Aide')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
-  const [isDraggingTabs, setIsDraggingTabs] = useState(false)
-  const tabsRef = useRef(null)
-  const tabDrag = useRef({ startX: 0, scrollLeft: 0 })
+  const [activeTab, setActiveTab] = useState('students')
 
   useEffect(() => {
     loadDashboard()
@@ -29,7 +29,8 @@ function TeacherAideDashboard() {
       return
     }
 
-    const [profileResult, enrollmentResult] = await Promise.all([
+    const [profileResult, enrollmentResult, parentNamesResult] =
+      await Promise.all([
       supabase
         .from('profiles')
         .select('full_name')
@@ -39,6 +40,7 @@ function TeacherAideDashboard() {
         .from('enrollments')
         .select('*')
         .order('submitted_at', { ascending: false }),
+      supabase.rpc('get_staff_parent_names'),
     ])
 
     if (profileResult.error) {
@@ -50,7 +52,23 @@ function TeacherAideDashboard() {
     if (enrollmentResult.error) {
       setMessage(enrollmentResult.error.message)
     } else {
-      setEnrollments(enrollmentResult.data || [])
+      const parentNames = new Map(
+        (parentNamesResult.data || []).map((parent) => [
+          parent.parent_id,
+          parent.parent_full_name,
+        ]),
+      )
+
+      setEnrollments(
+        (enrollmentResult.data || []).map((enrollment) => ({
+          ...enrollment,
+          parent_full_name: parentNames.get(enrollment.parent_id) || null,
+        })),
+      )
+    }
+
+    if (parentNamesResult.error) {
+      console.error('Unable to load parent names:', parentNamesResult.error)
     }
 
     setLoading(false)
@@ -86,15 +104,23 @@ function TeacherAideDashboard() {
   }
 
   function calculateBmi(heightCm, weightKg) {
-    const height = Number(heightCm)
-    const weight = Number(weightKg)
+    const heightInCentimeters = Number(heightCm)
+    const weightInKilograms = Number(weightKg)
 
-    if (!height || !weight || height <= 0 || weight <= 0) {
+    if (
+      !Number.isFinite(heightInCentimeters) ||
+      !Number.isFinite(weightInKilograms) ||
+      heightInCentimeters <= 0 ||
+      weightInKilograms <= 0
+    ) {
       return '—'
     }
 
-    const heightInMeters = height / 100
-    return (weight / heightInMeters ** 2).toFixed(1)
+    const heightInMeters = heightInCentimeters / 100
+    const heightSquared = heightInMeters * heightInMeters
+    const bmi = weightInKilograms / heightSquared
+
+    return bmi.toFixed(1)
   }
 
   function formatSex(sex) {
@@ -102,62 +128,9 @@ function TeacherAideDashboard() {
     return sex.charAt(0).toUpperCase() + sex.slice(1)
   }
 
-  function startTabDrag(event) {
-    if (!tabsRef.current) return
-
-    setIsDraggingTabs(true)
-    tabDrag.current = {
-      startX: event.pageX,
-      scrollLeft: tabsRef.current.scrollLeft,
-    }
-  }
-
-  function dragTabs(event) {
-    if (!isDraggingTabs || !tabsRef.current) return
-
-    event.preventDefault()
-    const distance = event.pageX - tabDrag.current.startX
-    tabsRef.current.scrollLeft = tabDrag.current.scrollLeft - distance
-  }
-
-  function stopTabDrag() {
-    setIsDraggingTabs(false)
-  }
-
   return (
     <div className="teacher-dashboard-page">
-      <nav className="landing-nav">
-        <div className="landing-nav-inner">
-          <div
-            className="landing-brand"
-            onClick={() => navigate('/')}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                navigate('/')
-              }
-            }}
-          >
-            <img
-              src="/bcdc-logo.png"
-              alt="Binuangan Child Development Center logo"
-              className="landing-logo"
-            />
-            <span>Binuangan Child Development Center</span>
-          </div>
-
-          <div className="landing-nav-actions">
-            <button
-              type="button"
-              className="nav-login"
-              onClick={() => navigate('/')}
-            >
-              Home
-            </button>
-          </div>
-        </div>
-      </nav>
+      <AppHeader />
 
       <main className="teacher-dashboard-scroll">
         <div className="teacher-dashboard-content">
@@ -168,30 +141,29 @@ function TeacherAideDashboard() {
             </div>
           </section>
 
-          <nav
-            ref={tabsRef}
-            className={`teacher-tabs${isDraggingTabs ? ' dragging' : ''}`}
-            aria-label="Teacher aide dashboard sections"
-            onMouseDown={startTabDrag}
-            onMouseMove={dragTabs}
-            onMouseUp={stopTabDrag}
-            onMouseLeave={stopTabDrag}
-          >
-            <button type="button" className="teacher-tab active">
-              Students
-            </button>
-            <button type="button" className="teacher-tab" disabled>
-              Attendance
-            </button>
-            <button type="button" className="teacher-tab" disabled>
-              Announcement
-            </button>
-            <button type="button" className="teacher-tab" disabled>
-              Calendar
-            </button>
-          </nav>
+          <div className="staff-dashboard-layout">
+            <nav
+              className="teacher-tabs"
+              aria-label="Teacher aide dashboard sections"
+            >
+              <button type="button" className={`teacher-tab${activeTab === 'students' ? ' active' : ''}`} onClick={() => setActiveTab('students')}>
+                Students
+              </button>
+              <button type="button" className={`teacher-tab${activeTab === 'reference' ? ' active' : ''}`} onClick={() => setActiveTab('reference')}>
+                Reference Search
+              </button>
+              <button type="button" className="teacher-tab" disabled>
+                Attendance
+              </button>
+              <button type="button" className="teacher-tab" disabled>
+                Announcement
+              </button>
+              <button type="button" className="teacher-tab" disabled>
+                Calendar
+              </button>
+            </nav>
 
-          <section className="pending-approvals-panel">
+            {activeTab === 'reference' ? <StaffReferenceSearch /> : <section className="pending-approvals-panel">
             <div className="pending-approvals-header">
               <h2>Student Records</h2>
               <span className="waiting-badge">
@@ -218,7 +190,8 @@ function TeacherAideDashboard() {
                       <div className="application-meta">
                         <p className="approval-summary">
                           Age: {calculateAge(enrollment.birth_date)} | Sex:{' '}
-                          {formatSex(enrollment.sex)} | Parent: —
+                          {formatSex(enrollment.sex)} | Parent:{' '}
+                          {enrollment.parent_full_name || '—'}
                         </p>
                         <p className="approval-bmi">
                           BMI: {calculateBmi(
@@ -236,7 +209,8 @@ function TeacherAideDashboard() {
                 ))}
               </div>
             )}
-          </section>
+            </section>}
+          </div>
         </div>
       </main>
     </div>

@@ -1,0 +1,445 @@
+/* =========================================================
+   TEACHER DASHBOARD
+========================================================= */
+
+.teacher-dashboard-page {
+  width: 100%;
+  height: 100dvh;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 205, 228, 0.76), transparent 36%),
+    radial-gradient(circle at 88% 20%, rgba(188, 244, 247, 0.78), transparent 40%),
+    linear-gradient(135deg, #fff0f7 0%, #f8edff 48%, #e3fbff 100%);
+}
+
+.teacher-dashboard-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.teacher-dashboard-content {
+  width: min(1080px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 46px 0 80px;
+}
+
+.teacher-profile-area {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.teacher-profile-area h1 {
+  margin: 0;
+
+  color: #302a32;
+
+  font-size: 34px;
+  line-height: 1.2;
+}
+
+.teacher-profile-area p {
+  margin: 7px 0 0;
+
+  color: #6f6871;
+
+  font-size: 15px;
+}
+
+.staff-dashboard-layout {
+  margin-top: 34px;
+
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+
+.teacher-tabs {
+  padding: 10px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 18px;
+
+  background: rgba(255, 255, 255, 0.68);
+
+  box-shadow: 0 12px 30px rgba(116, 87, 105, 0.08);
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+
+  cursor: default;
+}
+
+.teacher-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.teacher-tab {
+  width: 100%;
+  min-height: 44px;
+  padding: 11px 14px;
+
+  border: 1px solid transparent;
+  border-radius: 12px;
+
+  background: transparent;
+  color: #5b6673;
+
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.teacher-tab.active {
+  border-color: #8de1e5;
+  background: #dff8fa;
+  color: #138891;
+}
+
+.teacher-tab:disabled {
+  opacity: 0.68;
+  pointer-events: none;
+}
+
+.pending-approvals-panel {
+  margin-top: 0;
+  padding: 30px;
+
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 24px;
+
+  background: rgba(255, 255, 255, 0.64);
+
+  box-shadow: 0 18px 45px rgba(116, 87, 105, 0.1);
+}
+
+.pending-approvals-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.pending-approvals-header h2 {
+  margin: 0;
+
+  color: #302a32;
+
+  font-size: 23px;
+}
+
+.waiting-badge {
+  flex-shrink: 0;
+
+  padding: 7px 12px;
+
+  border-radius: 999px;
+
+  background: #ffe1ed;
+  color: #c14c72;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.teacher-dashboard-message {
+  margin: 18px 0 0;
+
+  color: #a83e60;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.approval-list {
+  margin-top: 22px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.approval-row {
+  padding: 22px 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+
+  border: 1px solid rgba(223, 218, 226, 0.8);
+  border-radius: 17px;
+
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.approval-details {
+  min-width: 0;
+}
+
+.approval-details h3 {
+  margin: 0;
+
+  color: #334155;
+
+  font-size: 17px;
+  overflow-wrap: anywhere;
+}
+
+.approval-details p {
+  margin: 8px 0 0;
+
+  color: #758296;
+
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.application-meta {
+  margin-top: 8px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.application-meta p {
+  margin: 0;
+}
+
+.approval-details .approval-summary {
+  overflow-wrap: normal;
+  white-space: normal;
+}
+
+.approval-details .approval-bmi {
+  margin-top: 0;
+}
+
+.approval-row .review-actions {
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.approval-row .approve-button {
+  border-color: #88e1e5;
+  background: #35c8d0;
+  color: #ffffff;
+}
+
+.approval-row .approve-button:hover:not(:disabled) {
+  border-color: #20b6c0;
+  background: #20b6c0;
+}
+
+.approval-row .reject-button {
+  border-color: #ffc4d4;
+  background: #fff1f5;
+  color: #d94b70;
+}
+
+.approval-row .reject-button:hover:not(:disabled) {
+  border-color: #ffa8c0;
+  background: #ffe2ea;
+}
+
+.teacher-empty-state {
+  margin: 22px 0 0;
+  padding: 48px 20px;
+
+  border: 1px dashed rgba(176, 183, 195, 0.72);
+  border-radius: 17px;
+
+  background: rgba(255, 255, 255, 0.5);
+  color: #758296;
+
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  .teacher-dashboard-content {
+    width: calc(100% - 28px);
+    padding: 34px 0 60px;
+  }
+
+  .teacher-profile-area h1 {
+    font-size: 28px;
+  }
+
+  .staff-dashboard-layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .teacher-tabs {
+    padding: 6px;
+
+    flex-direction: row;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    white-space: nowrap;
+  }
+
+  .teacher-tab {
+    width: auto;
+    min-width: 120px;
+
+    flex-shrink: 0;
+
+    text-align: center;
+  }
+
+  .pending-approvals-panel {
+    padding: 22px;
+    border-radius: 20px;
+  }
+
+  .approval-row {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .approval-row .review-actions {
+    width: 100%;
+  }
+
+  .approval-row .review-actions button {
+    flex: 1;
+  }
+}
+
+@media (max-width: 430px) {
+  .pending-approvals-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+
+/* =========================================================
+   TEACHER REVIEW ACTIONS
+========================================================= */
+
+.review-actions {
+  display: flex;
+
+  gap: 10px;
+
+  margin-top: 16px;
+}
+
+.approve-button,
+.reject-button {
+  padding: 10px 16px;
+
+  border-radius: 9px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+
+/* Approve */
+
+.approve-button {
+  border: 1px solid #bbf7d0;
+
+  background: #f0fdf4;
+
+  color: #15803d;
+}
+
+.approve-button:hover {
+  background: #dcfce7;
+  border-color: #86efac;
+}
+
+
+/* Reject */
+
+.reject-button {
+  border: 1px solid #fecaca;
+
+  background: #fef2f2;
+
+  color: #dc2626;
+}
+
+.reject-button:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+
+/* Disabled */
+
+.approve-button:disabled,
+.reject-button:disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
+
+  transform: none;
+}
+
+
+.staff-reference-panel { min-width: 0; }
+.staff-reference-form { display: flex; gap: 10px; margin: 18px 0; }
+.staff-reference-form input { min-width: 0; flex: 1; padding: 11px 13px; border: 1px solid #d7d7d7; border-radius: 8px; font: inherit; }
+.staff-reference-form button { border: 0; border-radius: 999px; padding: 11px 20px; background: #ef92b3; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+.staff-reference-result { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; padding: 18px; border-radius: 12px; background: #f5fbfb; }
+.staff-reference-result div { display: grid; gap: 5px; }
+.staff-reference-result span { color: #686868; font-size: 13px; }
+
+@media (max-width: 640px) {
+  .staff-reference-form { flex-direction: column; }
+  .staff-reference-result { grid-template-columns: 1fr; }
+}
+
+/* Compact staff dashboard scale */
+.teacher-dashboard-content { padding: 34px 0 56px; }
+.teacher-profile-area h1 { font-size: 28px; }
+.teacher-profile-area p { font-size: 14px; }
+.staff-dashboard-layout { margin-top: 24px; grid-template-columns: 200px minmax(0, 1fr); gap: 18px; }
+.teacher-tab { min-height: 40px; padding: 9px 12px; font-size: 13px; }
+.pending-approvals-panel { padding: 22px; border-radius: 20px; }
+.pending-approvals-header h2 { font-size: 20px; }
+.approval-row { padding: 17px; }
+.approval-details h3 { font-size: 17px; }
+
+@media (max-width: 760px) {
+  .teacher-dashboard-content { padding: 28px 0 46px; }
+  .teacher-profile-area h1 { font-size: 25px; }
+  .staff-dashboard-layout { grid-template-columns: 1fr; }
+}

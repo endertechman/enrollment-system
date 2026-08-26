@@ -1,0 +1,50 @@
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  background:
+    radial-gradient(circle at 12% 20%,
+      rgba(255, 207, 228, 0.75),
+      transparent 38%),
+    radial-gradient(circle at 88% 18%,
+      rgba(191, 244, 246, 0.72),
+      transparent 40%),
+    radial-gradient(circle at 50% 85%,
+      rgba(230, 214, 255, 0.65),
+      transparent 45%),
+    linear-gradient(135deg,
+      #fff1f7 0%,
+      #f9efff 45%,
+      #e8fbff 100%);
+
+  color: #1f2937;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+

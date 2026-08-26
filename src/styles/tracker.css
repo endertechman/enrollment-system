@@ -1,0 +1,126 @@
+/* =========================================================
+   PUBLIC ENROLLMENT TRACKER
+========================================================= */
+
+.public-tracker h3 {
+  margin: 0 0 8px;
+
+  color: #26344d;
+
+  font-size: 20px;
+}
+
+.public-tracker>p {
+  margin: 0 0 22px;
+
+  color: #64748b;
+
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+
+/* Tracker Form */
+
+.tracker-form {
+  display: flex;
+  flex-direction: column;
+
+  gap: 12px;
+}
+
+.tracker-form input {
+  width: 100%;
+
+  padding: 13px 15px;
+
+  border: 1px solid rgba(149, 218, 223, 0.8);
+  border-radius: 10px;
+
+  background: rgba(255, 255, 255, 0.72);
+
+  color: #1f2937;
+
+  font-size: 15px;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.tracker-form input:hover {
+  border-color: #6fd7dd;
+}
+
+.tracker-form input:focus {
+  background: #ffffff;
+
+  border-color: #35c8d0;
+
+  box-shadow:
+    0 0 0 3px rgba(53, 200, 208, 0.15);
+}
+
+
+/* Tracker Button */
+
+.tracker-form button {
+  width: 100%;
+
+  padding: 13px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: #35c8d0;
+
+  color: #ffffff;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.tracker-form button:hover:not(:disabled) {
+  background: #20b6c0;
+}
+
+.tracker-form button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.tracker-form button:disabled {
+  opacity: 0.65;
+
+  cursor: not-allowed;
+}
+
+
+/* Tracker Error */
+
+.tracker-message {
+  margin: 14px 0 0;
+
+  color: #dc2626;
+
+  font-size: 13px;
+}
+
+.tracker-result {
+  margin-top: 24px;
+  padding-top: 24px;
+
+  border-top:
+    1px solid rgba(255, 255, 255, 0.7);
+}
+

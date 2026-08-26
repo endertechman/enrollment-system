@@ -15,14 +15,6 @@ The system allows students or guardians to submit enrollment applications online
 - Supabase authentication and database integration
 - Responsive web interface
 
-## Tech Stack
-
-- **React**
-- **Vite**
-- **Supabase**
-- **Vercel**
-- **GitHub**
-
 ## Project Status
 
 This project is currently under development. Additional features, security improvements, testing, and UI/UX revisions will be implemented as development continues.

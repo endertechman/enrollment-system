@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import AppHeader from './AppHeader'
 
 function EnrollmentForm() {
   const navigate = useNavigate()
@@ -20,7 +21,8 @@ function EnrollmentForm() {
   const [motherTongue, setMotherTongue] = useState('')
   const [otherDialect, setOtherDialect] = useState('')
 
-  const [heightCm, setHeightCm] = useState('')
+  const [heightValue, setHeightValue] = useState('')
+  const [heightUnit, setHeightUnit] = useState('cm')
   const [weightKg, setWeightKg] = useState('')
 
   const [message, setMessage] = useState('')
@@ -30,6 +32,13 @@ function EnrollmentForm() {
   useEffect(() => {
     initializeForm()
   }, [])
+
+  async function getEnrollmentCount(parentId) {
+    return supabase
+      .from('enrollments')
+      .select('id', { count: 'exact', head: true })
+      .eq('parent_id', parentId)
+  }
 
   async function initializeForm() {
     const {
@@ -41,25 +50,20 @@ function EnrollmentForm() {
       return
     }
 
-    setParentEmail(user.email || '')
-
-    const { data, error } = await supabase
-      .from('enrollments')
-      .select('id')
-      .eq('parent_id', user.id)
-      .limit(1)
+    const { count, error } = await getEnrollmentCount(user.id)
 
     if (error) {
-      console.error(error)
-      setMessage('Unable to check enrollment status.')
+      setMessage('Unable to verify your enrollments right now.')
       setLoading(false)
       return
     }
 
-    if (data && data.length > 0) {
-      navigate('/', { replace: true })
+    if ((count || 0) >= 3) {
+      navigate('/parent?notice=max-children', { replace: true })
       return
     }
+
+    setParentEmail(user.email || '')
 
     setLoading(false)
   }
@@ -95,6 +99,27 @@ function EnrollmentForm() {
     return `ENR-${new Date().getFullYear()}-${randomPart}`
   }
 
+  function getHeightCm() {
+    const value = Number(heightValue)
+    if (!Number.isFinite(value) || value <= 0) return null
+    return heightUnit === 'in' ? value * 2.54 : value
+  }
+
+  function calculateBmi() {
+    const heightCm = getHeightCm()
+    const weight = Number(weightKg)
+    if (!heightCm || !Number.isFinite(weight) || weight <= 0) return '—'
+    const heightMeters = heightCm / 100
+    return (weight / (heightMeters * heightMeters)).toFixed(1)
+  }
+
+  function formatPhilippinePlace(place) {
+    const cleanedPlace = place.trim()
+    return /philippines$/i.test(cleanedPlace)
+      ? cleanedPlace
+      : `${cleanedPlace}, Philippines`
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
 
@@ -113,21 +138,22 @@ function EnrollmentForm() {
       return
     }
 
-    const { data: existing, error: checkError } = await supabase
-      .from('enrollments')
-      .select('id')
-      .eq('parent_id', user.id)
-      .limit(1)
-
-    if (checkError) {
-      console.error(checkError)
-      setMessage('Unable to submit enrollment.')
+    if (!getHeightCm()) {
+      setMessage('Enter a valid height.')
       setSubmitting(false)
       return
     }
 
-    if (existing && existing.length > 0) {
-      navigate('/', { replace: true })
+    const { count, error: countError } = await getEnrollmentCount(user.id)
+
+    if (countError) {
+      setMessage('Unable to verify your enrollments right now.')
+      setSubmitting(false)
+      return
+    }
+
+    if ((count || 0) >= 3) {
+      navigate('/parent?notice=max-children', { replace: true })
       return
     }
 
@@ -145,13 +171,13 @@ function EnrollmentForm() {
 
         birth_date: birthDate,
         sex,
-        place_of_birth: placeOfBirth.trim(),
+        place_of_birth: formatPhilippinePlace(placeOfBirth),
         birth_order: Number(birthOrder),
         is_registered: isRegistered === 'yes',
         mother_tongue: motherTongue.trim(),
         other_dialect: otherDialect.trim() || null,
 
-        height_cm: Number(heightCm),
+        height_cm: Number(getHeightCm().toFixed(2)),
         weight_kg: Number(weightKg),
 
         status: 'pending',
@@ -160,12 +186,16 @@ function EnrollmentForm() {
 
     if (error) {
       console.error(error)
-      setMessage(error.message)
+      setMessage(
+        error.code === '23514' || error.message?.includes('at most three')
+          ? 'All child enrollment slots for this account are already filled.'
+          : error.message,
+      )
       setSubmitting(false)
       return
     }
 
-    navigate('/', { replace: true })
+    navigate('/parent', { replace: true })
   }
 
   if (loading) {
@@ -178,44 +208,17 @@ function EnrollmentForm() {
 
   return (
     <div className="landing-page">
-      <nav className="landing-nav">
-        <div className="landing-nav-inner">
-          <div
-            className="landing-brand"
-            onClick={() => navigate('/')}
-            style={{ cursor: 'pointer' }}
-          >
-            <img
-              src="/bcdc-logo.png"
-              alt="Binuangan Child Development Center logo"
-              className="landing-logo"
-            />
-
-            <span>Binuangan Child Development Center</span>
-          </div>
-
-          <div className="landing-nav-actions">
-            <button
-              className="nav-login"
-              onClick={() => navigate('/')}
-            >
-              Home
-            </button>
-          </div>
-        </div>
-      </nav>
+      <AppHeader />
 
       <div className="landing-scroll">
         <main className="enrollment-page">
           <div className="enrollment-heading">
-            <p className="hero-label">
-              Enrollment Form
-            </p>
-
             <h1>Child Information</h1>
 
             <p>
-              Please provide the learner&apos;s information below.
+              Please enter complete and accurate learner information. These
+              details will become part of your child&apos;s official information
+              record at BCDC.
             </p>
           </div>
 
@@ -314,12 +317,13 @@ function EnrollmentForm() {
                 </div>
 
                 <div>
-                  <label>Place of Birth *</label>
+                  <label>Place of Birth (Philippines) *</label>
                   <input
                     type="text"
                     value={placeOfBirth}
                     onChange={(e) => setPlaceOfBirth(e.target.value)}
                     maxLength={100}
+                    placeholder="City/Municipality, Province"
                     required
                   />
                 </div>
@@ -378,18 +382,26 @@ function EnrollmentForm() {
 
               <div className="enrollment-grid">
                 <div>
-                  <label>Height (cm) *</label>
-                  <input
-                    type="number"
-                    value={heightCm}
-                    onChange={(e) =>
-                      setHeightCm(e.target.value)
-                    }
-                    min="30"
-                    max="200"
-                    step="0.1"
-                    required
-                  />
+                  <label>Height *</label>
+                  <div className="measurement-input">
+                    <input
+                      type="number"
+                      value={heightValue}
+                      onChange={(e) => setHeightValue(e.target.value)}
+                      min={heightUnit === 'cm' ? '30' : '11.8'}
+                      max={heightUnit === 'cm' ? '200' : '78.7'}
+                      step="0.1"
+                      required
+                    />
+                    <select
+                      value={heightUnit}
+                      onChange={(e) => setHeightUnit(e.target.value)}
+                      aria-label="Height unit"
+                    >
+                      <option value="cm">cm</option>
+                      <option value="in">in</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div>
@@ -405,6 +417,12 @@ function EnrollmentForm() {
                     step="0.1"
                     required
                   />
+                </div>
+
+                <div className="bmi-preview" aria-live="polite">
+                  <span>Calculated BMI</span>
+                  <strong>{calculateBmi()}</strong>
+                  <small>Calculated from height and weight; not stored separately.</small>
                 </div>
               </div>
             </section>

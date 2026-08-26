@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import AppHeader from './AppHeader'
 
 function Register() {
   const navigate = useNavigate()
@@ -14,7 +15,7 @@ function Register() {
     e.preventDefault()
     setMessage('')
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
 
@@ -35,48 +36,27 @@ function Register() {
       return
     }
 
-    setMessage('Registration successful!')
+    if (!data.session) {
+      setMessage(
+        'Registration successful. Please confirm your email before logging in.',
+      )
+      return
+    }
 
-    setTimeout(() => {
-      navigate('/login')
-    }, 1000)
+    navigate('/')
   }
 
   return (
     <div className="landing-page">
-      <nav className="landing-nav">
-        <div className="landing-nav-inner">
-          <div
-            className="landing-brand"
-            onClick={() => navigate('/')}
-            style={{ cursor: 'pointer' }}
-          >
-            <img
-              src="/bcdc-logo.png"
-              alt="Binuangan Child Development Center logo"
-              className="landing-logo"
-            />
-
-            <span>Binuangan Child Development Center</span>
-          </div>
-
-          <div className="landing-nav-actions">
-            <button
-              className="nav-login"
-              onClick={() => navigate('/')}
-            >
-              Home
-            </button>
-          </div>
-        </div>
-      </nav>
+      <AppHeader />
 
       <div className="landing-scroll">
         <main className="register-page">
           <header className="register-heading">
             <h1>Register your account</h1>
             <p>
-              Follow your child’s journey, register your BCDC account.
+              Register using the parent or guardian&apos;s full name. This name
+              will be recorded with the child&apos;s enrollment information.
             </p>
           </header>
 
@@ -86,7 +66,7 @@ function Register() {
               onSubmit={handleRegister}
             >
               <div>
-                <label>Full Name</label>
+                <label>Parent/Guardian Full Name</label>
 
                 <input
                   type="text"
@@ -94,7 +74,7 @@ function Register() {
                   onChange={(e) =>
                     setFullName(e.target.value)
                   }
-                  placeholder="Enter your full name"
+                  placeholder="Enter the parent or guardian's full name"
                   required
                 />
               </div>

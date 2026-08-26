@@ -5,6 +5,7 @@ import HomePage from './pages/HomePage'
 import Login from './components/Login'
 import Register from './components/Register'
 import EnrollmentForm from './components/EnrollmentForm'
+import ParentDashboard from './pages/ParentDashboard'
 import TeacherDashboard from './pages/TeacherDashboard'
 import TeacherAideDashboard from './pages/TeacherAideDashboard'
 import RoleRoute from './components/RoleRoute'
@@ -24,6 +25,15 @@ function App() {
           element={
             <RoleRoute allowedRole="parent">
               <EnrollmentForm />
+            </RoleRoute>
+          }
+        />
+
+        <Route
+          path="/parent"
+          element={
+            <RoleRoute allowedRole="parent">
+              <ParentDashboard />
             </RoleRoute>
           }
         />

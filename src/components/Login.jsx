@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import AppHeader from './AppHeader'
 
 function Login() {
   const navigate = useNavigate()
@@ -56,32 +57,7 @@ function Login() {
 
   return (
     <div className="landing-page">
-      <nav className="landing-nav">
-        <div className="landing-nav-inner">
-          <div
-            className="landing-brand"
-            onClick={() => navigate('/')}
-            style={{ cursor: 'pointer' }}
-          >
-            <img
-              src="/bcdc-logo.png"
-              alt="Binuangan Child Development Center logo"
-              className="landing-logo"
-            />
-
-            <span>Binuangan Child Development Center</span>
-          </div>
-
-          <div className="landing-nav-actions">
-            <button
-              className="nav-login"
-              onClick={() => navigate('/')}
-            >
-              Home
-            </button>
-          </div>
-        </div>
-      </nav>
+      <AppHeader />
 
       <div className="landing-scroll">
         <main className="login-page">

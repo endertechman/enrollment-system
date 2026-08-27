@@ -65,20 +65,20 @@ function AppHeader({ loggedOutAction = 'home' }) {
           {!loading && (user ? (
             <div className="account-menu" ref={menuRef}>
               <button type="button" className="account-menu-toggle" aria-label="Open account menu" aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}>
-                <i className="gg-menu" aria-hidden="true" />
+                <img className="ui-icon menu-icon" src="/icons/menu.svg" alt="" aria-hidden="true" />
               </button>
               {menuOpen && (
                 <div className="account-menu-dropdown">
                   <div className="account-menu-name"><span>Signed in as</span><strong>{fullName}</strong></div>
-                  <button type="button" onClick={() => { setMenuOpen(false); navigate('/') }}><i className="gg-home" aria-hidden="true" /><span>Home</span></button>
-                  <button type="button" className="account-menu-logout" onClick={handleLogout}><i className="gg-log-out" aria-hidden="true" /><span>Log out</span></button>
+                  <button type="button" onClick={() => { setMenuOpen(false); navigate('/') }}><img className="ui-icon" src="/icons/home.svg" alt="" aria-hidden="true" /><span>Home</span></button>
+                  <button type="button" className="account-menu-logout" onClick={handleLogout}><img className="ui-icon" src="/icons/log-out.svg" alt="" aria-hidden="true" /><span>Log out</span></button>
                 </div>
               )}
             </div>
           ) : (
-            <button type="button" className="nav-login" onClick={() => navigate(actionIsLogin ? '/login' : '/')}>
-              <i className={actionIsLogin ? 'gg-log-in' : 'gg-home'} aria-hidden="true" />
-              <span>{actionIsLogin ? 'Login' : 'Home'}</span>
+            <button type="button" className={actionIsLogin ? 'nav-login' : 'nav-home-icon'} aria-label={actionIsLogin ? 'Login' : 'Home'} onClick={() => navigate(actionIsLogin ? '/login' : '/')}>
+              <img className="ui-icon" src={actionIsLogin ? '/icons/log-in.svg' : '/icons/home.svg'} alt="" aria-hidden="true" />
+              {actionIsLogin && <span>Login</span>}
             </button>
           ))}
         </div>

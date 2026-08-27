@@ -115,7 +115,9 @@ function HomePage() {
         <p className="hero-description">Give your little one the best start in learning.<br />Enroll today and become part of the BCDC Family!</p>
         <div className="hero-actions">
           {!loading && !user && <><button type="button" className="primary-cta" onClick={() => navigate('/login')}>Start Enrollment</button><button type="button" className="secondary-cta" onClick={() => navigate('/register')}>Sign Up</button></>}
-          {!loading && role === 'parent' && <button type="button" className="primary-cta role-dashboard-button" onClick={openParentDashboard}>Open Parent Dashboard</button>}
+          {!loading && role === 'parent' && enrollments.length === 0 && <button type="button" className="primary-cta role-dashboard-button" onClick={() => navigate('/enroll')}>Start Enrollment</button>}
+          {!loading && role === 'parent' && enrollments.length > 0 && <button type="button" className="primary-cta role-dashboard-button" onClick={openParentDashboard}>Open Parent Dashboard</button>}
+          {!loading && role === 'parent' && enrollments.length > 0 && enrollments.length < 3 && <button type="button" className="secondary-cta role-enroll-button" onClick={() => navigate('/enroll')}>Enroll Another</button>}
           {!loading && role === 'teacher' && <button type="button" className="primary-cta role-dashboard-button" onClick={() => navigate('/teacher')}>Open Teacher Portal</button>}
           {!loading && role === 'teacher_aide' && <button type="button" className="primary-cta role-dashboard-button" onClick={() => navigate('/teacher-aide')}>Open Teacher Aide Portal</button>}
         </div>
@@ -123,16 +125,15 @@ function HomePage() {
 
       <div className="hero-panel"><div className="hero-card home-child-card">
         {loading ? <p>Loading...</p> : user && role === 'parent' ? (selected ? <>
-          <button type="button" className="home-switch-child" onClick={() => setSelectedId(null)}><i className="gg-arrows-exchange-alt" aria-hidden="true" /><span>Switch child</span></button>
+          <div className="hero-card-header enrolled-child-header"><div><span>Enrolled Child</span><small>Enrollment record and current status</small></div>{enrollments.length > 1 && <button type="button" className="home-switch-child" onClick={() => setSelectedId(null)} aria-label="Switch child"><img className="ui-icon" src="/icons/arrows-exchange.svg" alt="" aria-hidden="true" /></button>}</div>
           <div className="home-selected-child-heading"><div className="home-child-avatar">{initials(selected)}</div><div><h3>{selected.child_first_name} {selected.child_last_name}</h3><span className={`enrollment-status ${selected.status}`}>{selected.status}</span></div></div>
           <p className="status-message">{statusMessage(selected.status)}</p>
           <div className="enrollment-details"><div><span>Reference Code</span><strong>{selected.reference_code}</strong></div><div><span>Submitted</span><strong>{formatDate(selected.submitted_at)}</strong></div></div>
         </> : <>
-          <div className="hero-card-header"><span>Who are we checking today?</span><span className="status-dot" /></div>
-          <div className="home-child-selector">
+          <div className="hero-card-header enrolled-child-header"><div><span>Enrolled Child</span><small>Select a child to view their enrollment</small></div><span className="status-dot" /></div>
+          {enrollments.length === 0 ? <div className="empty-enrollment"><h3>No enrolled child yet</h3><p>Use Start Enrollment to submit your child&apos;s information.</p></div> : <div className="home-child-selector">
             {enrollments.map((item) => <button type="button" className="home-child-choice" key={item.id} onClick={() => setSelectedId(item.id)}><span className="home-child-avatar">{initials(item)}</span><strong>{item.child_first_name}</strong></button>)}
-            {enrollments.length < 3 && <button type="button" className="home-child-choice add-child" onClick={() => navigate('/enroll')}><span className="home-child-avatar">+</span><strong>{enrollments.length === 0 ? 'Enroll Your Child' : 'Enroll Another'}</strong></button>}
-          </div>
+          </div>}
           {enrollments.length === 3 && <div className="home-child-limit"><strong>All child enrollment slots are filled</strong><span>This account is ready to manage its enrolled children.</span></div>}
         </>) : !user ? <div className="public-tracker">
           {!trackedEnrollment ? <>
@@ -162,7 +163,6 @@ function HomePage() {
           <p>Select a child to open the correct enrollment information.</p>
           <div className="home-child-selector">
             {enrollments.map((item) => <button type="button" className="home-child-choice" key={item.id} onClick={() => navigate(`/parent?child=${item.id}`)}><span className="home-child-avatar">{initials(item)}</span><strong>{item.child_first_name}</strong></button>)}
-            {enrollments.length < 3 && <button type="button" className="home-child-choice add-child" onClick={() => navigate('/enroll')}><span className="home-child-avatar">+</span><strong>Enroll Another</strong></button>}
           </div>
           {enrollments.length === 3 && <div className="home-child-limit"><strong>All child enrollment slots are filled</strong><span>This account is ready to manage its enrolled children.</span></div>}
         </div>

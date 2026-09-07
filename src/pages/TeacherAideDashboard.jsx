@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import StaffReferenceSearch from '../components/StaffReferenceSearch'
 import AppHeader from '../components/AppHeader'
+import LoadingSpinner from '../components/LoadingSpinner'
 
 function TeacherAideDashboard() {
   const navigate = useNavigate()
@@ -175,7 +176,7 @@ function TeacherAideDashboard() {
             {message && <p className="teacher-dashboard-message">{message}</p>}
 
             {loading ? (
-              <p className="teacher-empty-state">Loading student records...</p>
+              <div className="teacher-empty-state"><LoadingSpinner label="Loading student records..." compact /></div>
             ) : enrollments.length === 0 ? (
               <p className="teacher-empty-state">No enrollment records found.</p>
             ) : (

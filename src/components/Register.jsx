@@ -66,7 +66,7 @@ function Register() {
               onSubmit={handleRegister}
             >
               <div>
-                <label>Parent/Guardian Full Name</label>
+                <label>Full Name</label>
 
                 <input
                   type="text"

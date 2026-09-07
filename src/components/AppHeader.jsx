@@ -65,20 +65,20 @@ function AppHeader({ loggedOutAction = 'home' }) {
           {!loading && (user ? (
             <div className="account-menu" ref={menuRef}>
               <button type="button" className="account-menu-toggle" aria-label="Open account menu" aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}>
-                <img className="ui-icon menu-icon" src="/icons/menu.svg" alt="" aria-hidden="true" />
+                <span className="header-icon-slot"><i className="app-icon app-icon-menu" aria-hidden="true" /></span>
               </button>
               {menuOpen && (
                 <div className="account-menu-dropdown">
                   <div className="account-menu-name"><span>Signed in as</span><strong>{fullName}</strong></div>
-                  <button type="button" onClick={() => { setMenuOpen(false); navigate('/') }}><img className="ui-icon" src="/icons/home.svg" alt="" aria-hidden="true" /><span>Home</span></button>
-                  <button type="button" className="account-menu-logout" onClick={handleLogout}><img className="ui-icon" src="/icons/log-out.svg" alt="" aria-hidden="true" /><span>Log out</span></button>
+                  <button type="button" onClick={() => { setMenuOpen(false); navigate('/') }}><span className="header-icon-slot"><i className="app-icon app-icon-home" aria-hidden="true" /></span><span>Home</span></button>
+                  <button type="button" className="account-menu-logout" onClick={handleLogout}><span className="header-icon-slot"><i className="app-icon app-icon-log-out" aria-hidden="true" /></span><span>Log out</span></button>
                 </div>
               )}
             </div>
           ) : (
-            <button type="button" className={actionIsLogin ? 'nav-login' : 'nav-home-icon'} aria-label={actionIsLogin ? 'Login' : 'Home'} onClick={() => navigate(actionIsLogin ? '/login' : '/')}>
-              <img className="ui-icon" src={actionIsLogin ? '/icons/log-in.svg' : '/icons/home.svg'} alt="" aria-hidden="true" />
-              {actionIsLogin && <span>Login</span>}
+            <button type="button" className="nav-login" aria-label={actionIsLogin ? 'Login' : 'Home'} onClick={() => navigate(actionIsLogin ? '/login' : '/')}>
+              <span className="header-icon-slot"><i className={`app-icon ${actionIsLogin ? 'app-icon-log-in' : 'app-icon-home'}`} aria-hidden="true" /></span>
+              <span>{actionIsLogin ? 'Login' : 'Home'}</span>
             </button>
           ))}
         </div>

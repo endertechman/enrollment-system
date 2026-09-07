@@ -443,3 +443,50 @@
   .teacher-profile-area h1 { font-size: 25px; }
   .staff-dashboard-layout { grid-template-columns: 1fr; }
 }
+
+/* Calm long-session dashboard theme */
+.teacher-dashboard-page {
+  background:
+    radial-gradient(circle at 8% 8%, rgba(255, 220, 235, 0.3), transparent 34%),
+    radial-gradient(circle at 92% 12%, rgba(205, 241, 243, 0.32), transparent 36%),
+    linear-gradient(135deg, #fcf9fb 0%, #f9f7fb 52%, #f3fafb 100%);
+}
+
+.teacher-profile-area h1 { color: #3f3940; font-weight: 650; }
+.teacher-profile-area p { color: #7b747b; }
+
+.teacher-tabs {
+  border-color: #ebe5e9;
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: 0 4px 14px rgba(73, 61, 69, 0.045);
+}
+
+.teacher-tab { color: #667078; }
+.teacher-tab:not(:disabled):hover { background: #f2f8f8; color: #397d82; }
+.teacher-tab.active {
+  border-color: #d2e8e9;
+  background: #eaf5f5;
+  color: #32777c;
+}
+
+.pending-approvals-panel {
+  border-color: #e9e4e7;
+  background: rgba(255, 255, 255, 0.68);
+  box-shadow: 0 6px 20px rgba(73, 61, 69, 0.05);
+}
+
+.approval-row {
+  border-color: #ebe7ea;
+  background: rgba(255, 255, 255, 0.66);
+  box-shadow: none;
+}
+
+.waiting-badge { background: #f8edf2; color: #8a5d6e; }
+.teacher-dashboard-message { background: #fdf5f8; color: #865c6c; }
+.teacher-empty-state { border-color: #dedadd; background: rgba(255, 255, 255, 0.42); color: #7a818a; }
+.staff-reference-result { background: #f4f8f8; }
+
+.approve-button { border-color: #b9dcda; background: #dceeed; color: #2f716e; }
+.approve-button:hover { border-color: #9fcfcb; background: #cfe7e5; }
+.reject-button { border-color: #e6c9d2; background: #f8eaee; color: #92556a; }
+.reject-button:hover { border-color: #dcb3c0; background: #f3dde4; }

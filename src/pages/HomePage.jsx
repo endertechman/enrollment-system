@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import AppHeader from '../components/AppHeader'
+import LoadingSpinner from '../components/LoadingSpinner'
 
 function HomePage() {
   const navigate = useNavigate()
@@ -103,6 +104,13 @@ function HomePage() {
     return `${item.child_first_name?.[0] || ''}${item.child_last_name?.[0] || ''}`.toUpperCase()
   }
 
+  function avatarColor(item) {
+    const colors = ['#c0567a', '#4776a8', '#43857d', '#8a65a8', '#b26a3c', '#647a3d']
+    const identity = String(item.id || `${item.child_first_name}${item.child_last_name}`)
+    const colorIndex = [...identity].reduce((total, character) => total + character.charCodeAt(0), 0) % colors.length
+    return colors[colorIndex]
+  }
+
   const selected = enrollments.find((item) => item.id === selectedId)
 
   return <div className="landing-page">
@@ -124,15 +132,15 @@ function HomePage() {
       </div>
 
       <div className="hero-panel"><div className="hero-card home-child-card">
-        {loading ? <p>Loading...</p> : user && role === 'parent' ? (selected ? <>
-          <div className="hero-card-header enrolled-child-header"><div><span>Enrolled Child</span><small>Enrollment record and current status</small></div>{enrollments.length > 1 && <button type="button" className="home-switch-child" onClick={() => setSelectedId(null)} aria-label="Switch child"><img className="ui-icon" src="/icons/arrows-exchange.svg" alt="" aria-hidden="true" /></button>}</div>
-          <div className="home-selected-child-heading"><div className="home-child-avatar">{initials(selected)}</div><div><h3>{selected.child_first_name} {selected.child_last_name}</h3><span className={`enrollment-status ${selected.status}`}>{selected.status}</span></div></div>
+        {loading ? <LoadingSpinner label="Loading your home page..." /> : user && role === 'parent' ? (selected ? <>
+          <div className="hero-card-header enrolled-child-header"><div><span>Enrolled Child</span><small>Enrollment record and current status</small></div>{enrollments.length > 1 && <button type="button" className="home-switch-child" onClick={() => setSelectedId(null)} aria-label="Switch child"><i className="app-icon app-icon-swap" aria-hidden="true" /></button>}</div>
+          <div className="home-selected-child-heading"><div className="home-child-avatar" style={{ backgroundColor: avatarColor(selected) }}>{initials(selected)}</div><div><h3>{selected.child_first_name} {selected.child_last_name}</h3><span className={`enrollment-status ${selected.status}`}>{selected.status}</span></div></div>
           <p className="status-message">{statusMessage(selected.status)}</p>
           <div className="enrollment-details"><div><span>Reference Code</span><strong>{selected.reference_code}</strong></div><div><span>Submitted</span><strong>{formatDate(selected.submitted_at)}</strong></div></div>
         </> : <>
           <div className="hero-card-header enrolled-child-header"><div><span>Enrolled Child</span><small>Select a child to view their enrollment</small></div><span className="status-dot" /></div>
           {enrollments.length === 0 ? <div className="empty-enrollment"><h3>No enrolled child yet</h3><p>Use Start Enrollment to submit your child&apos;s information.</p></div> : <div className="home-child-selector">
-            {enrollments.map((item) => <button type="button" className="home-child-choice" key={item.id} onClick={() => setSelectedId(item.id)}><span className="home-child-avatar">{initials(item)}</span><strong>{item.child_first_name}</strong></button>)}
+            {enrollments.map((item) => <button type="button" className="home-child-choice" key={item.id} onClick={() => setSelectedId(item.id)}><span className="home-child-avatar" style={{ backgroundColor: avatarColor(item) }}>{initials(item)}</span><strong>{item.child_first_name}</strong></button>)}
           </div>}
           {enrollments.length === 3 && <div className="home-child-limit"><strong>All child enrollment slots are filled</strong><span>This account is ready to manage its enrolled children.</span></div>}
         </>) : !user ? <div className="public-tracker">
@@ -162,7 +170,7 @@ function HomePage() {
           <h2 id="child-picker-title">Which child are you viewing?</h2>
           <p>Select a child to open the correct enrollment information.</p>
           <div className="home-child-selector">
-            {enrollments.map((item) => <button type="button" className="home-child-choice" key={item.id} onClick={() => navigate(`/parent?child=${item.id}`)}><span className="home-child-avatar">{initials(item)}</span><strong>{item.child_first_name}</strong></button>)}
+            {enrollments.map((item) => <button type="button" className="home-child-choice" key={item.id} onClick={() => navigate(`/parent?child=${item.id}`)}><span className="home-child-avatar" style={{ backgroundColor: avatarColor(item) }}>{initials(item)}</span><strong>{item.child_first_name}</strong></button>)}
           </div>
           {enrollments.length === 3 && <div className="home-child-limit"><strong>All child enrollment slots are filled</strong><span>This account is ready to manage its enrolled children.</span></div>}
         </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import LoadingSpinner from './LoadingSpinner'
 
 function RoleRoute({ allowedRole, children }) {
   const [loading, setLoading] = useState(true)
@@ -46,7 +47,7 @@ function RoleRoute({ allowedRole, children }) {
   }
 
   if (loading) {
-    return null
+    return <LoadingSpinner label="Checking account access..." fullPage />
   }
 
   // User isn't logged in

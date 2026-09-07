@@ -332,3 +332,38 @@
   .parent-profile-area h1 { font-size: 25px; }
   .parent-dashboard-layout { grid-template-columns: 1fr; }
 }
+
+/* Calm long-session dashboard theme */
+.parent-dashboard-page {
+  background:
+    radial-gradient(circle at 8% 8%, rgba(255, 220, 235, 0.3), transparent 34%),
+    radial-gradient(circle at 92% 12%, rgba(205, 241, 243, 0.32), transparent 36%),
+    linear-gradient(135deg, #fcf9fb 0%, #f9f7fb 52%, #f3fafb 100%);
+}
+
+.parent-profile-area h1 { color: #3f3940; font-weight: 650; }
+.parent-profile-area p { color: #7b747b; }
+
+.parent-sidebar-tabs {
+  border-color: #ebe5e9;
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: 0 4px 14px rgba(73, 61, 69, 0.045);
+}
+
+.parent-sidebar-tab { color: #667078; }
+.parent-sidebar-tab:hover { background: #f2f8f8; color: #397d82; }
+.parent-sidebar-tab.active {
+  border-color: #d2e8e9;
+  background: #eaf5f5;
+  color: #32777c;
+}
+
+.parent-dashboard-card {
+  border-color: #e9e4e7;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 6px 20px rgba(73, 61, 69, 0.05);
+}
+
+.parent-information-grid div,
+.parent-overview-grid div { border-color: #eee9ec; background: rgba(250, 249, 250, 0.72); }
+.parent-dashboard-message { background: #fdf5f8; color: #865c6c; }

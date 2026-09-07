@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import AppHeader from './AppHeader'
+import LoadingSpinner from './LoadingSpinner'
 
 function EnrollmentForm() {
   const navigate = useNavigate()
+  const formRef = useRef(null)
 
   const [parentEmail, setParentEmail] = useState('')
 
@@ -28,6 +30,7 @@ function EnrollmentForm() {
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [currentStep, setCurrentStep] = useState(1)
 
   useEffect(() => {
     initializeForm()
@@ -120,6 +123,23 @@ function EnrollmentForm() {
       : `${cleanedPlace}, Philippines`
   }
 
+  function goToNextStep() {
+    const currentSection = formRef.current?.querySelector(
+      `[data-step="${currentStep}"]`,
+    )
+    const fields = currentSection?.querySelectorAll('input, select') || []
+
+    for (const field of fields) {
+      if (!field.checkValidity()) {
+        field.reportValidity()
+        return
+      }
+    }
+
+    setMessage('')
+    setCurrentStep((step) => Math.min(step + 1, 3))
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
 
@@ -201,7 +221,7 @@ function EnrollmentForm() {
   if (loading) {
     return (
       <div className="auth-container">
-        <p>Loading...</p>
+        <LoadingSpinner label="Loading enrollment form..." />
       </div>
     )
   }
@@ -223,11 +243,26 @@ function EnrollmentForm() {
           </div>
 
           <form
+            ref={formRef}
             className="enrollment-form"
             onSubmit={handleSubmit}
           >
-            <section className="enrollment-section">
-              <h2>Personal Information</h2>
+            <div className="enrollment-progress" role="list" aria-label={`Form section ${currentStep} of 3`}>
+              {[1, 2, 3].map((step) => (
+                <div
+                  key={step}
+                  role="listitem"
+                  aria-label={`${['Child Details', 'Registration and Language', 'Health and Growth'][step - 1]}${step === currentStep ? ', current section' : step < currentStep ? ', completed' : ''}`}
+                  aria-current={step === currentStep ? 'step' : undefined}
+                  className={`enrollment-progress-step${step === currentStep ? ' active' : ''}${step < currentStep ? ' complete' : ''}`}
+                >
+                  <span>{step < currentStep ? '✓' : step}</span>
+                </div>
+              ))}
+            </div>
+
+            {currentStep === 1 && <section className="enrollment-section" data-step="1">
+              <div className="enrollment-section-heading"><h2>Child Details</h2><p>Enter the child&apos;s identity and basic information.</p></div>
 
               <div className="enrollment-grid">
                 <div>
@@ -315,15 +350,22 @@ function EnrollmentForm() {
                     <option value="female">Female</option>
                   </select>
                 </div>
+              </div>
+            </section>}
+
+            {currentStep === 2 && <section className="enrollment-section" data-step="2">
+              <div className="enrollment-section-heading"><h2>Registration & Language</h2><p>Add birth, registration, and language details.</p></div>
+
+              <div className="enrollment-grid">
 
                 <div>
-                  <label>Place of Birth (Philippines) *</label>
+                  <label>Place of Birth *</label>
                   <input
                     type="text"
                     value={placeOfBirth}
                     onChange={(e) => setPlaceOfBirth(e.target.value)}
                     maxLength={100}
-                    placeholder="City/Municipality, Province"
+                    placeholder="City/Municipality, Province, Philippines"
                     required
                   />
                 </div>
@@ -375,10 +417,10 @@ function EnrollmentForm() {
                   />
                 </div>
               </div>
-            </section>
+            </section>}
 
-            <section className="enrollment-section">
-              <h2>Health & Growth</h2>
+            {currentStep === 3 && <section className="enrollment-section" data-step="3">
+              <div className="enrollment-section-heading"><h2>Health & Growth</h2><p>Provide current measurements and review the calculated BMI.</p></div>
 
               <div className="enrollment-grid">
                 <div>
@@ -405,27 +447,27 @@ function EnrollmentForm() {
                 </div>
 
                 <div>
-                  <label>Weight (kg) *</label>
-                  <input
-                    type="number"
-                    value={weightKg}
-                    onChange={(e) =>
-                      setWeightKg(e.target.value)
-                    }
-                    min="1"
-                    max="150"
-                    step="0.1"
-                    required
-                  />
+                  <label>Weight *</label>
+                  <div className="measurement-input measurement-input-static">
+                    <input
+                      type="number"
+                      value={weightKg}
+                      onChange={(e) => setWeightKg(e.target.value)}
+                      min="1"
+                      max="150"
+                      step="0.1"
+                      required
+                    />
+                    <span className="measurement-unit">kg</span>
+                  </div>
                 </div>
 
-                <div className="bmi-preview" aria-live="polite">
-                  <span>Calculated BMI</span>
-                  <strong>{calculateBmi()}</strong>
-                  <small>Calculated from height and weight; not stored separately.</small>
+                <div>
+                  <label>Calculated BMI</label>
+                  <div className="bmi-preview" aria-live="polite">{calculateBmi()}</div>
                 </div>
               </div>
-            </section>
+            </section>}
 
             {message && (
               <p className="form-message">
@@ -433,15 +475,10 @@ function EnrollmentForm() {
               </p>
             )}
 
-            <button
-              type="submit"
-              className="enrollment-submit"
-              disabled={submitting}
-            >
-              {submitting
-                ? 'Submitting...'
-                : 'Submit Enrollment'}
-            </button>
+            <div className="enrollment-step-actions">
+              {currentStep > 1 && <button type="button" className="enrollment-previous" onClick={() => setCurrentStep((step) => step - 1)}>Previous</button>}
+              {currentStep < 3 ? <button type="button" className="enrollment-next" onClick={goToNextStep}>Next</button> : <button type="submit" className="enrollment-submit" disabled={submitting}>{submitting ? 'Submitting...' : 'Submit Enrollment'}</button>}
+            </div>
           </form>
         </main>
       </div>

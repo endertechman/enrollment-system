@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import AppHeader from '../components/AppHeader'
+import LoadingSpinner from '../components/LoadingSpinner'
 
 function ParentDashboard() {
   const navigate = useNavigate()
@@ -172,7 +173,7 @@ function ParentDashboard() {
             <div className="parent-tab-content">
               {loading ? (
                 <section className="parent-dashboard-card parent-empty-state">
-                  <p>Loading your enrollment...</p>
+                  <LoadingSpinner label="Loading your enrollment..." compact />
                 </section>
               ) : enrollments.length === 0 ? (
                 <section className="parent-dashboard-card parent-empty-state">

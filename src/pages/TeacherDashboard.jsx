@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import StaffReferenceSearch from '../components/StaffReferenceSearch'
 import AppHeader from '../components/AppHeader'
 import LoadingSpinner from '../components/LoadingSpinner'
+import { getEnrollmentWindow, getEnrollmentWindowStatus, toDateTimeLocalValue } from '../lib/enrollmentWindow'
 
 function TeacherDashboard() {
   const navigate = useNavigate()
@@ -14,6 +15,12 @@ function TeacherDashboard() {
   const [loading, setLoading] = useState(true)
   const [reviewingId, setReviewingId] = useState(null)
   const [activeTab, setActiveTab] = useState('approvals')
+  const [opensAt, setOpensAt] = useState('')
+  const [closesAt, setClosesAt] = useState('')
+  const [savingWindow, setSavingWindow] = useState(false)
+  const [editingWindow, setEditingWindow] = useState(false)
+  const [savedOpensAt, setSavedOpensAt] = useState('')
+  const [savedClosesAt, setSavedClosesAt] = useState('')
 
   useEffect(() => {
     loadDashboard()
@@ -31,7 +38,7 @@ function TeacherDashboard() {
       return
     }
 
-    const [profileResult, enrollmentResult, parentNamesResult] =
+    const [profileResult, enrollmentResult, parentNamesResult, windowResult] =
       await Promise.all([
       supabase
         .from('profiles')
@@ -44,6 +51,7 @@ function TeacherDashboard() {
         .eq('status', 'pending')
         .order('submitted_at', { ascending: false }),
       supabase.rpc('get_staff_parent_names'),
+      getEnrollmentWindow(),
     ])
 
     if (profileResult.error) {
@@ -72,6 +80,15 @@ function TeacherDashboard() {
 
     if (parentNamesResult.error) {
       console.error('Unable to load parent names:', parentNamesResult.error)
+    }
+
+    if (windowResult.error) {
+      setMessage('The enrollment schedule is unavailable until its migration is applied.')
+    } else {
+      setOpensAt(toDateTimeLocalValue(windowResult.data?.opens_at))
+      setClosesAt(toDateTimeLocalValue(windowResult.data?.closes_at))
+      setSavedOpensAt(toDateTimeLocalValue(windowResult.data?.opens_at))
+      setSavedClosesAt(toDateTimeLocalValue(windowResult.data?.closes_at))
     }
 
     setLoading(false)
@@ -167,6 +184,74 @@ function TeacherDashboard() {
     return bmi.toFixed(1)
   }
 
+  async function saveEnrollmentWindow(event) {
+    event.preventDefault()
+    setMessage('')
+
+    const minimumOpeningTime = toDateTimeLocalValue(new Date(Date.now() + 60000))
+    const keepingCurrentOpening = opensAt === savedOpensAt
+    if (!opensAt || !closesAt || (!keepingCurrentOpening && opensAt < minimumOpeningTime) || opensAt >= closesAt) {
+      setMessage('Choose a valid opening and closing date.')
+      return
+    }
+
+    setSavingWindow(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    const { error } = await supabase
+      .from('enrollment_settings')
+      .update({
+        opens_at: new Date(opensAt).toISOString(),
+        closes_at: new Date(closesAt).toISOString(),
+        updated_at: new Date().toISOString(),
+        updated_by: user?.id || null,
+      })
+      .eq('id', true)
+
+    setSavingWindow(false)
+    if (error) {
+      setMessage(error.message)
+      return
+    }
+
+    setSavedOpensAt(opensAt)
+    setSavedClosesAt(closesAt)
+    setEditingWindow(false)
+    setMessage('Enrollment schedule updated.')
+  }
+
+  const nextTimeSlot = new Date()
+  nextTimeSlot.setSeconds(0, 0)
+  nextTimeSlot.setMinutes(Math.ceil((nextTimeSlot.getMinutes() + 1) / 30) * 30)
+  const minimumOpeningTime = toDateTimeLocalValue(nextTimeSlot)
+  const minimumOpeningDate = minimumOpeningTime.slice(0, 10)
+  const minimumOpeningClock = minimumOpeningTime.slice(11, 16)
+  const openingDate = opensAt.slice(0, 10)
+  const openingTime = opensAt.slice(11, 16)
+  const closingDate = closesAt.slice(0, 10)
+  const closingTime = closesAt.slice(11, 16)
+  const currentOpeningIsPast = savedOpensAt && savedOpensAt < minimumOpeningTime
+
+  function updateDateTime(setter, currentValue, nextDate, nextTime) {
+    const currentDate = currentValue.slice(0, 10)
+    const currentTime = currentValue.slice(11, 16)
+    setter(`${nextDate ?? currentDate}T${nextTime ?? currentTime}`)
+  }
+
+  function formatScheduleDate(value) {
+    if (!value) return 'Not scheduled'
+    return new Date(value).toLocaleString('en-PH', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    })
+  }
+
+  function cancelWindowEdit() {
+    setOpensAt(savedOpensAt)
+    setClosesAt(savedClosesAt)
+    setMessage('')
+    setEditingWindow(false)
+  }
+
   return (
     <div className="teacher-dashboard-page">
       <AppHeader />
@@ -191,6 +276,9 @@ function TeacherDashboard() {
               <button type="button" className={`teacher-tab${activeTab === 'reference' ? ' active' : ''}`} onClick={() => setActiveTab('reference')}>
                 Reference Search
               </button>
+              <button type="button" className={`teacher-tab${activeTab === 'enrollment-window' ? ' active' : ''}`} onClick={() => setActiveTab('enrollment-window')}>
+                Enrollment Status
+              </button>
               <button type="button" className="teacher-tab" disabled>
                 Students
               </button>
@@ -205,7 +293,43 @@ function TeacherDashboard() {
               </button>
             </nav>
 
-            {activeTab === 'reference' ? <StaffReferenceSearch /> : <section className="pending-approvals-panel">
+            {activeTab === 'reference' ? <StaffReferenceSearch /> : activeTab === 'enrollment-window' ? (
+              <section className="pending-approvals-panel enrollment-window-panel">
+                <div className="pending-approvals-header">
+                  <div><h2>Enrollment Status</h2><p>Set the dates when BCDC accepts new applications.</p></div>
+                  <span className={`enrollment-window-badge ${getEnrollmentWindowStatus({ opens_at: opensAt, closes_at: closesAt })}`}>
+                    {getEnrollmentWindowStatus({ opens_at: opensAt, closes_at: closesAt })}
+                  </span>
+                </div>
+                {!editingWindow ? <div className="enrollment-window-summary">
+                  <dl>
+                    <div><dt>Opens</dt><dd>{formatScheduleDate(savedOpensAt)}</dd></div>
+                    <div><dt>Closes</dt><dd>{formatScheduleDate(savedClosesAt)}</dd></div>
+                  </dl>
+                  <button type="button" className="approve-button" onClick={() => { setMessage(''); setEditingWindow(true) }}>Update Schedule</button>
+                </div> : <form className="enrollment-window-form" onSubmit={saveEnrollmentWindow}>
+                  <div className="enrollment-window-range">
+                    <fieldset className="enrollment-window-group">
+                      <legend>Opens</legend>
+                      <div className="enrollment-window-fields">
+                        <label>Date<input type="date" value={openingDate} min={currentOpeningIsPast ? undefined : minimumOpeningDate} onChange={(event) => updateDateTime(setOpensAt, opensAt, event.target.value, openingTime || minimumOpeningClock)} required /></label>
+                        <label>Time<input type="time" value={openingTime} min={!currentOpeningIsPast && openingDate === minimumOpeningDate ? minimumOpeningClock : undefined} onChange={(event) => updateDateTime(setOpensAt, opensAt, openingDate || minimumOpeningDate, event.target.value)} required /></label>
+                      </div>
+                    </fieldset>
+                    <fieldset className="enrollment-window-group">
+                      <legend>Closes</legend>
+                      <div className="enrollment-window-fields">
+                        <label>Date<input type="date" value={closingDate} min={openingDate || minimumOpeningDate} onChange={(event) => updateDateTime(setClosesAt, closesAt, event.target.value, closingTime)} required /></label>
+                        <label>Time<input type="time" value={closingTime} min={closingDate && closingDate === openingDate ? openingTime : undefined} onChange={(event) => updateDateTime(setClosesAt, closesAt, closingDate || openingDate || minimumOpeningDate, event.target.value)} required /></label>
+                      </div>
+                    </fieldset>
+                  </div>
+                  <div className="enrollment-window-actions"><button type="button" className="button-secondary" onClick={cancelWindowEdit} disabled={savingWindow}>Cancel</button><button type="submit" className="approve-button" disabled={savingWindow}>{savingWindow ? 'Saving...' : 'Save Schedule'}</button></div>
+                </form>}
+                {message && <p className="teacher-dashboard-message">{message}</p>}
+                <p className="enrollment-window-note">Dates are inclusive and follow Philippine time. New enrollment submissions are blocked outside this range.</p>
+              </section>
+            ) : <section className="pending-approvals-panel">
             <div className="pending-approvals-header">
               <h2>Pending Approvals</h2>
               <span className="waiting-badge">

@@ -2,6 +2,15 @@
    GLOBAL
 ========================================================= */
 
+:root {
+  --color-bg: #f8f7f9;
+  --color-surface: #ffffff;
+  --color-text: #353039;
+  --color-muted: #77717a;
+  --color-primary: #35c8d0;
+  --color-accent: #ef92b3;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -19,8 +28,7 @@ body {
 
   font-family: Arial, Helvetica, sans-serif;
 
-  background:
-    radial-gradient(circle at 12% 20%,
+  background: radial-gradient(circle at 12% 20%,
       rgba(255, 207, 228, 0.75),
       transparent 38%),
     radial-gradient(circle at 88% 18%,
@@ -40,6 +48,11 @@ body {
 button,
 input {
   font: inherit;
+}
+
+button {
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
 }
 
 #root {
@@ -128,3 +141,18 @@ input {
 @media (prefers-reduced-motion: reduce) {
   .lds-spinner div { animation-duration: 2.4s; }
 }
+
+.enrollment-window-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.enrollment-window-badge.open { background: color-mix(in srgb, var(--color-primary) 16%, var(--color-surface)); color: var(--color-primary); }
+.enrollment-window-badge.scheduled { background: color-mix(in srgb, var(--color-accent) 16%, var(--color-surface)); color: var(--color-accent); }
+.enrollment-window-badge.closed { background: color-mix(in srgb, var(--color-accent) 16%, var(--color-surface)); color: var(--color-accent); }

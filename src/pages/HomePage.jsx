@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import AppHeader from '../components/AppHeader'
 import LoadingSpinner from '../components/LoadingSpinner'
+import { getEnrollmentWindow, getEnrollmentWindowStatus } from '../lib/enrollmentWindow'
 
 function HomePage() {
   const navigate = useNavigate()
@@ -16,6 +17,7 @@ function HomePage() {
   const [trackMessage, setTrackMessage] = useState('')
   const [tracking, setTracking] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [enrollmentWindow, setEnrollmentWindow] = useState(undefined)
 
   useEffect(() => {
     checkUser()
@@ -25,6 +27,8 @@ function HomePage() {
 
   async function checkUser() {
     setLoading(true)
+    const windowResult = await getEnrollmentWindow()
+    if (!windowResult.error) setEnrollmentWindow(windowResult.data)
     const { data: { user: currentUser } } = await supabase.auth.getUser()
     if (!currentUser) {
       setUser(null); setRole(null); setEnrollments([]); setSelectedId(null); setLoading(false)
@@ -112,13 +116,15 @@ function HomePage() {
   }
 
   const selected = enrollments.find((item) => item.id === selectedId)
+  const windowStatus = enrollmentWindow === undefined ? 'open' : getEnrollmentWindowStatus(enrollmentWindow)
+  const windowLabel = windowStatus === 'open' ? 'Enrollment Ongoing' : windowStatus === 'scheduled' ? 'Enrollment Opens Soon' : 'Enrollment Closed'
 
   return <div className="landing-page">
     <AppHeader loggedOutAction="login" />
 
     <div className="landing-scroll"><main className="landing-hero">
       <div className="hero-content">
-        <p className="hero-label">Enrollment Ongoing</p>
+        <p className={`hero-label enrollment-window-${windowStatus}`}>{windowLabel}</p>
         <h1>Every Child is a Beginning of <span>Something Big.</span></h1>
         <p className="hero-description">Give your little one the best start in learning.<br />Enroll today and become part of the BCDC Family!</p>
         <div className="hero-actions">

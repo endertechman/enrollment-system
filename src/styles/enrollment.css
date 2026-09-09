@@ -39,8 +39,7 @@
   border: 1px solid rgba(230, 204, 218, 0.7);
   border-radius: 24px;
 
-  box-shadow:
-    0 12px 35px rgba(116, 87, 105, 0.08);
+  box-shadow: 0 12px 35px rgba(116, 87, 105, 0.08);
 }
 
 .enrollment-section h2 {
@@ -99,8 +98,7 @@
 .enrollment-grid select:focus {
   border-color: #53cbd1;
 
-  box-shadow:
-    0 0 0 3px rgba(83, 203, 209, 0.14);
+  box-shadow: 0 0 0 3px rgba(83, 203, 209, 0.14);
 }
 
 
@@ -198,8 +196,7 @@
 
   cursor: pointer;
 
-  box-shadow:
-    0 8px 20px rgba(239, 146, 179, 0.25);
+  box-shadow: 0 8px 20px rgba(239, 146, 179, 0.25);
 
   transition: background 0.2s ease;
 }
@@ -330,7 +327,7 @@
 .enrollment-previous:hover,
 .button-secondary:hover { background: #ffffff; border-color: #d7cdd3; }
 .enrollment-next { border: 1px solid #a9e9ed; background: #35c8d0; color: #fff; }
-.enrollment-next:hover { background: #20b6c0; }
+.enrollment-next:hover { background: #20b6c0; border-color: color-mix(in srgb, var(--color-accent) 86%, var(--color-text)); }
 .enrollment-step-actions .enrollment-submit { align-self: auto; margin: 0; }
 
 /* Compact enrollment scale */
@@ -358,3 +355,16 @@
 }
 
 
+.enrollment-closed-card {
+  width: min(620px, 100%);
+  margin: 40px auto 0;
+  padding: 34px;
+  border-radius: 22px;
+  background: var(--color-surface);
+  box-shadow: 0 10px 32px color-mix(in srgb, var(--color-text) 7%, transparent);
+  text-align: center;
+}
+
+.enrollment-closed-card h1 { margin: 18px 0 8px; color: var(--color-text); font-size: 26px; }
+.enrollment-closed-card > p { margin: 0 auto 22px; color: var(--color-muted); line-height: 1.6; }
+.enrollment-closed-card button { padding: 11px 20px; border-radius: 999px; font: inherit; font-weight: 700; cursor: pointer; }

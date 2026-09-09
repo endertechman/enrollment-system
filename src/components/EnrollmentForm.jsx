@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import AppHeader from './AppHeader'
 import LoadingSpinner from './LoadingSpinner'
+import { getEnrollmentWindow, isEnrollmentOpen } from '../lib/enrollmentWindow'
 
 function EnrollmentForm() {
   const navigate = useNavigate()
@@ -29,6 +30,7 @@ function EnrollmentForm() {
 
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
+  const [enrollmentOpen, setEnrollmentOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [currentStep, setCurrentStep] = useState(1)
 
@@ -53,7 +55,25 @@ function EnrollmentForm() {
       return
     }
 
-    const { count, error } = await getEnrollmentCount(user.id)
+    const [windowResult, enrollmentResult] = await Promise.all([
+      getEnrollmentWindow(),
+      getEnrollmentCount(user.id),
+    ])
+
+    if (windowResult.error) {
+      setMessage('Unable to verify the enrollment schedule right now.')
+      setLoading(false)
+      return
+    }
+
+    if (!isEnrollmentOpen(windowResult.data)) {
+      setEnrollmentOpen(false)
+      setLoading(false)
+      return
+    }
+
+    setEnrollmentOpen(true)
+    const { count, error } = enrollmentResult
 
     if (error) {
       setMessage('Unable to verify your enrollments right now.')
@@ -164,6 +184,14 @@ function EnrollmentForm() {
       return
     }
 
+    const windowResult = await getEnrollmentWindow()
+    if (windowResult.error || !isEnrollmentOpen(windowResult.data)) {
+      setEnrollmentOpen(false)
+      setMessage('Enrollment is currently closed. Your form was not submitted.')
+      setSubmitting(false)
+      return
+    }
+
     const { count, error: countError } = await getEnrollmentCount(user.id)
 
     if (countError) {
@@ -207,9 +235,11 @@ function EnrollmentForm() {
     if (error) {
       console.error(error)
       setMessage(
-        error.code === '23514' || error.message?.includes('at most three')
-          ? 'All child enrollment slots for this account are already filled.'
-          : error.message,
+        error.message?.includes('not currently open')
+          ? 'Enrollment is currently closed. Your form was not submitted.'
+          : error.message?.includes('at most three')
+            ? 'All child enrollment slots for this account are already filled.'
+            : error.message,
       )
       setSubmitting(false)
       return
@@ -222,6 +252,25 @@ function EnrollmentForm() {
     return (
       <div className="auth-container">
         <LoadingSpinner label="Loading enrollment form..." />
+      </div>
+    )
+  }
+
+  if (!enrollmentOpen) {
+    return (
+      <div className="landing-page">
+        <AppHeader />
+        <div className="landing-scroll">
+          <main className="enrollment-page">
+            <section className="enrollment-closed-card">
+              <span className="enrollment-window-badge closed">Enrollment Closed</span>
+              <h1>Enrollment is not accepting applications right now.</h1>
+              <p>Please return to the Home page for the next enrollment schedule.</p>
+              {message && <p className="enrollment-message">{message}</p>}
+              <button type="button" className="button-secondary" onClick={() => navigate('/')}>Return Home</button>
+            </section>
+          </main>
+        </div>
       </div>
     )
   }

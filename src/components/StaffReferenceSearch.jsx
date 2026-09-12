@@ -64,7 +64,6 @@ function StaffReferenceSearch() {
       <div className="pending-approvals-header">
         <div>
           <h2>Find an Application</h2>
-          <p>Search using the child’s enrollment reference code.</p>
         </div>
       </div>
 

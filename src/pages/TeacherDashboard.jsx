@@ -10,6 +10,9 @@ function TeacherDashboard() {
   const navigate = useNavigate()
 
   const [enrollments, setEnrollments] = useState([])
+  const [studentRecords, setStudentRecords] = useState([])
+  const [rejectedEnrollments, setRejectedEnrollments] = useState([])
+  const [selectedRejectedIds, setSelectedRejectedIds] = useState([])
   const [teacherName, setTeacherName] = useState('Teacher')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
@@ -21,6 +24,8 @@ function TeacherDashboard() {
   const [editingWindow, setEditingWindow] = useState(false)
   const [savedOpensAt, setSavedOpensAt] = useState('')
   const [savedClosesAt, setSavedClosesAt] = useState('')
+  const [deletingRejected, setDeletingRejected] = useState(false)
+  const [studentFilter, setStudentFilter] = useState('all')
 
   useEffect(() => {
     loadDashboard()
@@ -48,7 +53,6 @@ function TeacherDashboard() {
       supabase
         .from('enrollments')
         .select('*')
-        .eq('status', 'pending')
         .order('submitted_at', { ascending: false }),
       supabase.rpc('get_staff_parent_names'),
       getEnrollmentWindow(),
@@ -70,12 +74,14 @@ function TeacherDashboard() {
         ]),
       )
 
-      setEnrollments(
-        (enrollmentResult.data || []).map((enrollment) => ({
+      const attachParentName = (enrollment) => ({
           ...enrollment,
           parent_full_name: parentNames.get(enrollment.parent_id) || null,
-        })),
-      )
+        })
+      const records = (enrollmentResult.data || []).map(attachParentName)
+      setStudentRecords(records)
+      setEnrollments(records.filter((enrollment) => enrollment.status === 'pending'))
+      setRejectedEnrollments(records.filter((enrollment) => enrollment.status === 'rejected'))
     }
 
     if (parentNamesResult.error) {
@@ -123,9 +129,19 @@ function TeacherDashboard() {
       return
     }
 
-    setEnrollments((current) =>
-      current.filter((enrollment) => enrollment.id !== id),
-    )
+    const reviewedEnrollment = enrollments.find((enrollment) => enrollment.id === id)
+    setEnrollments((current) => current.filter((enrollment) => enrollment.id !== id))
+    setStudentRecords((current) => current.map((enrollment) => enrollment.id === id
+      ? { ...enrollment, status, reviewed_at: new Date().toISOString(), reviewed_by: user.id }
+      : enrollment))
+    if (status === 'rejected' && reviewedEnrollment) {
+      setRejectedEnrollments((current) => [{
+        ...reviewedEnrollment,
+        status: 'rejected',
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: user.id,
+      }, ...current])
+    }
     setMessage(`Enrollment ${status}.`)
     setReviewingId(null)
   }
@@ -252,6 +268,41 @@ function TeacherDashboard() {
     setEditingWindow(false)
   }
 
+  function toggleRejectedSelection(id) {
+    setSelectedRejectedIds((current) => current.includes(id)
+      ? current.filter((selectedId) => selectedId !== id)
+      : [...current, id])
+  }
+
+  async function deleteRejected(ids) {
+    if (!ids.length) return
+    const label = ids.length === 1 ? 'this rejected application' : `${ids.length} rejected applications`
+    if (!window.confirm(`Permanently delete ${label}? This cannot be undone.`)) return
+
+    setDeletingRejected(true)
+    setMessage('')
+    const { error } = await supabase
+      .from('enrollments')
+      .delete()
+      .eq('status', 'rejected')
+      .in('id', ids)
+
+    setDeletingRejected(false)
+    if (error) {
+      setMessage(error.message)
+      return
+    }
+
+    setRejectedEnrollments((current) => current.filter((item) => !ids.includes(item.id)))
+    setStudentRecords((current) => current.filter((item) => !ids.includes(item.id)))
+    setSelectedRejectedIds((current) => current.filter((id) => !ids.includes(id)))
+    setMessage(ids.length === 1 ? 'Rejected application deleted.' : 'Selected rejected applications deleted.')
+  }
+
+  const visibleStudentRecords = studentFilter === 'all'
+    ? studentRecords
+    : studentRecords.filter((enrollment) => enrollment.status === studentFilter)
+
   return (
     <div className="teacher-dashboard-page">
       <AppHeader />
@@ -279,7 +330,10 @@ function TeacherDashboard() {
               <button type="button" className={`teacher-tab${activeTab === 'enrollment-window' ? ' active' : ''}`} onClick={() => setActiveTab('enrollment-window')}>
                 Enrollment Status
               </button>
-              <button type="button" className="teacher-tab" disabled>
+              <button type="button" className={`teacher-tab${activeTab === 'rejected' ? ' active' : ''}`} onClick={() => setActiveTab('rejected')}>
+                Rejected
+              </button>
+              <button type="button" className={`teacher-tab${activeTab === 'students' ? ' active' : ''}`} onClick={() => setActiveTab('students')}>
                 Students
               </button>
               <button type="button" className="teacher-tab" disabled>
@@ -293,10 +347,46 @@ function TeacherDashboard() {
               </button>
             </nav>
 
-            {activeTab === 'reference' ? <StaffReferenceSearch /> : activeTab === 'enrollment-window' ? (
+            {activeTab === 'reference' ? <StaffReferenceSearch /> : activeTab === 'students' ? (
+              <section className="pending-approvals-panel student-records-panel">
+                <div className="pending-approvals-header">
+                  <div><h2>Student Records</h2></div>
+                  <span className="waiting-badge">{visibleStudentRecords.length} records</span>
+                </div>
+                <div className="student-status-filters" aria-label="Filter student records by status">
+                  {[['all', 'All'], ['approved', 'Accepted'], ['pending', 'Pending'], ['rejected', 'Rejected']].map(([value, label]) => <button type="button" key={value} className={studentFilter === value ? 'active' : ''} onClick={() => setStudentFilter(value)}>{label}</button>)}
+                </div>
+                {message && <p className="teacher-dashboard-message">{message}</p>}
+                {loading ? <div className="teacher-empty-state"><LoadingSpinner label="Loading student records..." compact /></div> : visibleStudentRecords.length === 0 ? <p className="teacher-empty-state">No {studentFilter === 'all' ? '' : studentFilter} student records found.</p> : <div className="approval-list">
+                  {visibleStudentRecords.map((enrollment) => <article className="approval-row student-record-row" key={enrollment.id}>
+                    <div className="approval-details"><h3>{getChildName(enrollment)}</h3><div className="application-meta"><p>Age: {calculateAge(enrollment.birth_date)} | Sex: {formatSex(enrollment.sex)} | Parent: {enrollment.parent_full_name || '—'}</p><p>BMI: {calculateBmi(enrollment.height_cm, enrollment.weight_kg)}</p></div></div>
+                    <span className={`enrollment-status ${enrollment.status}`}>{enrollment.status === 'approved' ? 'accepted' : enrollment.status}</span>
+                  </article>)}
+                </div>}
+              </section>
+            ) : activeTab === 'rejected' ? (
+              <section className="pending-approvals-panel rejected-applications-panel">
+                <div className="pending-approvals-header">
+                  <div><h2>Rejected Applications</h2></div>
+                  <span className="waiting-badge">{rejectedEnrollments.length} rejected</span>
+                </div>
+                {message && <p className="teacher-dashboard-message">{message}</p>}
+                {!loading && rejectedEnrollments.length > 0 && <div className="rejected-toolbar">
+                  <label><input type="checkbox" checked={selectedRejectedIds.length === rejectedEnrollments.length} onChange={(event) => setSelectedRejectedIds(event.target.checked ? rejectedEnrollments.map((item) => item.id) : [])} /> Select all</label>
+                  <button type="button" className="bulk-delete-button" disabled={!selectedRejectedIds.length || deletingRejected} onClick={() => deleteRejected(selectedRejectedIds)}>{deletingRejected ? 'Deleting...' : `Delete Selected (${selectedRejectedIds.length})`}</button>
+                </div>}
+                {loading ? <div className="teacher-empty-state"><LoadingSpinner label="Loading rejected applications..." compact /></div> : rejectedEnrollments.length === 0 ? <p className="teacher-empty-state">No rejected applications.</p> : <div className="approval-list">
+                  {rejectedEnrollments.map((enrollment) => <article className="approval-row rejected-row" key={enrollment.id}>
+                    <label className="rejected-select"><input type="checkbox" checked={selectedRejectedIds.includes(enrollment.id)} onChange={() => toggleRejectedSelection(enrollment.id)} /><span className="visually-hidden">Select {getChildName(enrollment)}</span></label>
+                    <div className="approval-details"><h3>{getChildName(enrollment)}</h3><div className="application-meta"><p>Age: {calculateAge(enrollment.birth_date)} | Sex: {formatSex(enrollment.sex)} | Parent: {enrollment.parent_full_name || '—'}</p><p>BMI: {calculateBmi(enrollment.height_cm, enrollment.weight_kg)}</p></div></div>
+                    <button type="button" className="delete-record-button" disabled={deletingRejected} onClick={() => deleteRejected([enrollment.id])}>Delete</button>
+                  </article>)}
+                </div>}
+              </section>
+            ) : activeTab === 'enrollment-window' ? (
               <section className="pending-approvals-panel enrollment-window-panel">
                 <div className="pending-approvals-header">
-                  <div><h2>Enrollment Status</h2><p>Set the dates when BCDC accepts new applications.</p></div>
+                  <div><h2>Enrollment Status</h2></div>
                   <span className={`enrollment-window-badge ${getEnrollmentWindowStatus({ opens_at: opensAt, closes_at: closesAt })}`}>
                     {getEnrollmentWindowStatus({ opens_at: opensAt, closes_at: closesAt })}
                   </span>

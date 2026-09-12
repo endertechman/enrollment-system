@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import AppHeader from '../components/AppHeader'
 import LoadingSpinner from '../components/LoadingSpinner'
+import StaffReferenceSearch from '../components/StaffReferenceSearch'
 import { getEnrollmentWindow, getEnrollmentWindowStatus } from '../lib/enrollmentWindow'
 
 function HomePage() {
@@ -12,10 +13,6 @@ function HomePage() {
   const [enrollments, setEnrollments] = useState([])
   const [selectedId, setSelectedId] = useState(null)
   const [showDashboardChildPicker, setShowDashboardChildPicker] = useState(false)
-  const [referenceCode, setReferenceCode] = useState('')
-  const [trackedEnrollment, setTrackedEnrollment] = useState(null)
-  const [trackMessage, setTrackMessage] = useState('')
-  const [tracking, setTracking] = useState(false)
   const [loading, setLoading] = useState(true)
   const [enrollmentWindow, setEnrollmentWindow] = useState(undefined)
 
@@ -64,36 +61,6 @@ function HomePage() {
     navigate(childId ? `/parent?child=${childId}` : '/parent')
   }
 
-  async function handleTrackEnrollment(event) {
-    event.preventDefault()
-    const cleanedCode = referenceCode.trim().toUpperCase()
-    setTrackedEnrollment(null)
-    setTrackMessage('')
-
-    if (!cleanedCode) {
-      setTrackMessage('Enter your reference code.')
-      return
-    }
-
-    setTracking(true)
-    const { data, error } = await supabase.rpc('track_enrollment', {
-      lookup_reference: cleanedCode,
-    })
-    setTracking(false)
-
-    if (error) {
-      setTrackMessage('Unable to check the application right now.')
-      return
-    }
-
-    if (!data || data.length === 0) {
-      setTrackMessage('No application found with that reference code.')
-      return
-    }
-
-    setTrackedEnrollment(data[0])
-  }
-
   function formatDate(date) {
     return date ? new Date(date).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' }) : '—'
   }
@@ -122,7 +89,7 @@ function HomePage() {
   return <div className="landing-page">
     <AppHeader loggedOutAction="login" />
 
-    <div className="landing-scroll"><main className="landing-hero">
+    <div className="landing-scroll"><main className={`landing-hero${!loading && !user ? ' landing-hero-public' : ''}`}>
       <div className="hero-content">
         <p className={`hero-label enrollment-window-${windowStatus}`}>{windowLabel}</p>
         <h1>Every Child is a Beginning of <span>Something Big.</span></h1>
@@ -137,36 +104,24 @@ function HomePage() {
         </div>
       </div>
 
-      <div className="hero-panel"><div className="hero-card home-child-card">
+      {(loading || user) && <div className="hero-panel"><div className={`hero-card${!loading && user && role === 'parent' ? ' home-child-card' : ''}`}>
         {loading ? <LoadingSpinner label="Loading your home page..." /> : user && role === 'parent' ? (selected ? <>
-          <div className="hero-card-header enrolled-child-header"><div><span>Enrolled Child</span><small>Enrollment record and current status</small></div>{enrollments.length > 1 && <button type="button" className="home-switch-child" onClick={() => setSelectedId(null)} aria-label="Switch child"><i className="app-icon app-icon-swap" aria-hidden="true" /></button>}</div>
-          <div className="home-selected-child-heading"><div className="home-child-avatar" style={{ backgroundColor: avatarColor(selected) }}>{initials(selected)}</div><div><h3>{selected.child_first_name} {selected.child_last_name}</h3><span className={`enrollment-status ${selected.status}`}>{selected.status}</span></div></div>
-          <p className="status-message">{statusMessage(selected.status)}</p>
-          <div className="enrollment-details"><div><span>Reference Code</span><strong>{selected.reference_code}</strong></div><div><span>Submitted</span><strong>{formatDate(selected.submitted_at)}</strong></div></div>
+          <header className="hero-card-header enrolled-child-header"><div><span>Enrolled Child</span><small>Enrollment record and current status</small></div>{enrollments.length > 1 && <button type="button" className="home-switch-child" onClick={() => setSelectedId(null)} aria-label="Switch child"><i className="app-icon app-icon-swap" aria-hidden="true" /></button>}</header>
+          <div className="home-child-card-body">
+            <div className="home-selected-child-heading"><div className="home-child-avatar" style={{ backgroundColor: avatarColor(selected) }}>{initials(selected)}</div><div><h3>{selected.child_first_name} {selected.child_last_name}</h3><span className={`enrollment-status ${selected.status}`}>{selected.status}</span></div></div>
+            <p className="status-message">{statusMessage(selected.status)}</p>
+            <div className="enrollment-details"><div><span>Reference Code</span><strong>{selected.reference_code}</strong></div><div><span>Submitted</span><strong>{formatDate(selected.submitted_at)}</strong></div></div>
+          </div>
         </> : <>
-          <div className="hero-card-header enrolled-child-header"><div><span>Enrolled Child</span><small>Select a child to view their enrollment</small></div><span className="status-dot" /></div>
-          {enrollments.length === 0 ? <div className="empty-enrollment"><h3>No enrolled child yet</h3><p>Use Start Enrollment to submit your child&apos;s information.</p></div> : <div className="home-child-selector">
-            {enrollments.map((item) => <button type="button" className="home-child-choice" key={item.id} onClick={() => setSelectedId(item.id)}><span className="home-child-avatar" style={{ backgroundColor: avatarColor(item) }}>{initials(item)}</span><strong>{item.child_first_name}</strong></button>)}
-          </div>}
-          {enrollments.length === 3 && <div className="home-child-limit"><strong>All child enrollment slots are filled</strong><span>This account is ready to manage its enrolled children.</span></div>}
-        </>) : !user ? <div className="public-tracker">
-          {!trackedEnrollment ? <>
-            <div className="hero-card-header"><span>Enrollment Status</span><span className="status-dot" /></div>
-            <h3>Track your application</h3>
-            <p>Enter the reference code provided after submitting your enrollment application.</p>
-            <form className="tracker-form" onSubmit={handleTrackEnrollment}>
-              <input type="text" value={referenceCode} onChange={(event) => setReferenceCode(event.target.value)} placeholder="ENR-2026-ABC123" />
-              <button type="submit" disabled={tracking}>{tracking ? 'Checking...' : 'Check Status'}</button>
-            </form>
-            {trackMessage && <p className="tracker-message">{trackMessage}</p>}
-          </> : <div className="tracker-result-display">
-            <span className={`enrollment-status ${trackedEnrollment.status}`}>{trackedEnrollment.status}</span>
-            <p className="status-message">{statusMessage(trackedEnrollment.status)}</p>
-            <div className="enrollment-details"><div><span>Reference Code</span><strong>{trackedEnrollment.reference_code}</strong></div><div><span>Submitted</span><strong>{formatDate(trackedEnrollment.submitted_at)}</strong></div></div>
-            <button type="button" className="track-another-button" onClick={() => { setTrackedEnrollment(null); setReferenceCode(''); setTrackMessage('') }}>Check another application</button>
-          </div>}
-        </div> : <><div className="hero-card-header"><span>Staff Portal</span><span className="status-dot" /></div><p>Open your dashboard to continue.</p></>}
-      </div></div>
+          <header className="hero-card-header enrolled-child-header"><div><span>Enrolled Child</span><small>Select a child to view their enrollment</small></div><span className="status-dot" /></header>
+          <div className="home-child-card-body">
+            {enrollments.length === 0 ? <div className="empty-enrollment"><h3>No enrolled child yet</h3><p>Use Start Enrollment to submit your child&apos;s information.</p></div> : <div className="home-child-selector">
+              {enrollments.map((item) => <button type="button" className="home-child-choice" key={item.id} onClick={() => setSelectedId(item.id)}><span className="home-child-avatar" style={{ backgroundColor: avatarColor(item) }}>{initials(item)}</span><strong>{item.child_first_name}</strong></button>)}
+            </div>}
+            {enrollments.length === 3 && <div className="home-child-limit"><strong>All child enrollment slots are filled</strong><span>This account is ready to manage its enrolled children.</span></div>}
+          </div>
+        </>) : <StaffReferenceSearch />}
+      </div></div>}
     </main></div>
 
     {!loading && role === 'parent' && enrollments.length > 1 && showDashboardChildPicker && (

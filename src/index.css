@@ -3,6 +3,10 @@
 @import './styles/landing.css';
 @import './styles/staff-dashboard.css';
 @import './styles/parent-dashboard.css';
-@import './styles/tracker.css';
+@import './styles/announcements.css';
+@import './styles/calendar.css';
+@import './styles/health-growth.css';
+@import './styles/role-manager.css';
+@import './styles/notifications.css';
 @import './styles/enrollment.css';
 @import './styles/responsive.css';

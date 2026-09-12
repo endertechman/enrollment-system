@@ -3,6 +3,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import AppHeader from '../components/AppHeader'
 import LoadingSpinner from '../components/LoadingSpinner'
+import AnnouncementsPanel from '../components/AnnouncementsPanel'
+import CalendarPanel from '../components/CalendarPanel'
+import HealthGrowthPanel from '../components/HealthGrowthPanel'
 
 function ParentDashboard() {
   const navigate = useNavigate()
@@ -126,6 +129,7 @@ function ParentDashboard() {
     enrollments.find((item) => item.id === selectedEnrollmentId) ||
     enrollments[0] ||
     null
+  const hasApprovedSelection = selectedEnrollment?.status === 'approved'
 
   return (
     <div className="parent-dashboard-page">
@@ -168,6 +172,33 @@ function ParentDashboard() {
               >
                 Child Information
               </button>
+              {hasApprovedSelection && <button
+                type="button"
+                className={`parent-sidebar-tab${
+                  activeTab === 'health-growth' ? ' active' : ''
+                }`}
+                onClick={() => setActiveTab('health-growth')}
+              >
+                Health &amp; Growth
+              </button>}
+              {hasApprovedSelection && <button
+                type="button"
+                className={`parent-sidebar-tab${
+                  activeTab === 'announcements' ? ' active' : ''
+                }`}
+                onClick={() => setActiveTab('announcements')}
+              >
+                Announcements
+              </button>}
+              {hasApprovedSelection && <button
+                type="button"
+                className={`parent-sidebar-tab${
+                  activeTab === 'calendar' ? ' active' : ''
+                }`}
+                onClick={() => setActiveTab('calendar')}
+              >
+                Calendar
+              </button>}
             </nav>
 
             <div className="parent-tab-content">
@@ -175,6 +206,12 @@ function ParentDashboard() {
                 <section className="parent-dashboard-card parent-empty-state">
                   <LoadingSpinner label="Loading your enrollment..." compact />
                 </section>
+              ) : activeTab === 'health-growth' ? (
+                <HealthGrowthPanel enrollments={selectedEnrollment ? [selectedEnrollment] : []} />
+              ) : activeTab === 'calendar' ? (
+                <CalendarPanel />
+              ) : activeTab === 'announcements' ? (
+                <AnnouncementsPanel />
               ) : enrollments.length === 0 ? (
                 <section className="parent-dashboard-card parent-empty-state">
                   <h2>No enrollment application yet.</h2>

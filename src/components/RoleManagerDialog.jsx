@@ -1,0 +1,97 @@
+import { useEffect, useState } from 'react'
+import { supabase } from '../lib/supabase'
+
+function formatRole(role) {
+  if (role === 'teacher_aide') return 'Teacher Aide'
+  return role ? role[0].toUpperCase() + role.slice(1) : 'Unknown'
+}
+
+function RoleManagerDialog({ onClose }) {
+  const [email, setEmail] = useState('')
+  const [account, setAccount] = useState(null)
+  const [message, setMessage] = useState('')
+  const [searching, setSearching] = useState(false)
+  const [updatingRole, setUpdatingRole] = useState('')
+
+  useEffect(() => {
+    function closeOnEscape(event) {
+      if (event.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', closeOnEscape)
+    return () => document.removeEventListener('keydown', closeOnEscape)
+  }, [onClose])
+
+  async function findAccount(event) {
+    event.preventDefault()
+    const cleanEmail = email.trim()
+    if (!cleanEmail) return
+
+    setSearching(true)
+    setAccount(null)
+    setMessage('')
+    const { data, error } = await supabase
+      .rpc('find_account_by_email', { p_email: cleanEmail })
+      .maybeSingle()
+
+    if (error) setMessage(error.message)
+    else if (!data) setMessage('No account was found with that exact email address.')
+    else setAccount(data)
+    setSearching(false)
+  }
+
+  async function changeRole(nextRole) {
+    if (!account || updatingRole) return
+
+    const nextLabel = formatRole(nextRole)
+    if (!window.confirm(`Change ${account.full_name}'s role to ${nextLabel}?`)) return
+
+    setUpdatingRole(nextRole)
+    setMessage('')
+    const { data, error } = await supabase
+      .rpc('set_account_role', { p_user_id: account.user_id, p_role: nextRole })
+      .single()
+
+    if (error) setMessage(error.message)
+    else {
+      setAccount(data)
+      setMessage(`Account role changed to ${formatRole(data.account_role)}.`)
+    }
+    setUpdatingRole('')
+  }
+
+  const availableRoles = account?.account_role === 'parent'
+    ? [['teacher_aide', 'Make Teacher Aide'], ['teacher', 'Make Teacher']]
+    : account?.account_role === 'teacher_aide'
+      ? [['parent', 'Return to Parent'], ['teacher', 'Make Teacher']]
+      : []
+
+  return (
+    <div className="role-manager-overlay" role="dialog" aria-modal="true" aria-labelledby="role-manager-title" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
+      <section className="role-manager-dialog">
+        <button type="button" className="role-manager-close" onClick={onClose} aria-label="Close role manager">×</button>
+        <header>
+          <span>Teacher tools</span>
+          <h2 id="role-manager-title">Manage Account Role</h2>
+          <p>Enter an exact email address. Accounts are never shown as a public list.</p>
+        </header>
+
+        <form className="role-manager-search" onSubmit={findAccount}>
+          <label htmlFor="role-account-email">Account email</label>
+          <div><input id="role-account-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="parent@example.com" required /><button type="submit" disabled={searching}>{searching ? 'Searching...' : 'Find Account'}</button></div>
+        </form>
+
+        {message && <p className="role-manager-message">{message}</p>}
+
+        {account && <article className="role-manager-result">
+          <div className="role-manager-account"><i className="app-icon app-icon-user-list" aria-hidden="true" /><div><span>Account</span><strong>{account.full_name}</strong></div></div>
+          <div><span>Current role</span><strong>{formatRole(account.account_role)}</strong></div>
+          {account.account_role === 'teacher' ? <p>Teacher accounts are protected and cannot be changed here.</p> : <div className="role-manager-actions">{availableRoles.map(([role, label]) => <button type="button" key={role} disabled={Boolean(updatingRole)} onClick={() => changeRole(role)}>{updatingRole === role ? 'Updating...' : label}</button>)}</div>}
+        </article>}
+
+        <p className="role-manager-note">Promoting an account to Teacher is permanent from this tool. Existing teachers cannot be demoted or edited.</p>
+      </section>
+    </div>
+  )
+}
+
+export default RoleManagerDialog

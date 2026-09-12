@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import StaffReferenceSearch from '../components/StaffReferenceSearch'
 import AppHeader from '../components/AppHeader'
 import LoadingSpinner from '../components/LoadingSpinner'
+import AttendanceRoster from '../components/AttendanceRoster'
+import AnnouncementsPanel from '../components/AnnouncementsPanel'
+import CalendarPanel from '../components/CalendarPanel'
+import HealthGrowthPanel from '../components/HealthGrowthPanel'
 import { getEnrollmentWindow, getEnrollmentWindowStatus, toDateTimeLocalValue } from '../lib/enrollmentWindow'
 
 function TeacherDashboard() {
@@ -11,7 +14,6 @@ function TeacherDashboard() {
 
   const [enrollments, setEnrollments] = useState([])
   const [studentRecords, setStudentRecords] = useState([])
-  const [rejectedEnrollments, setRejectedEnrollments] = useState([])
   const [selectedRejectedIds, setSelectedRejectedIds] = useState([])
   const [teacherName, setTeacherName] = useState('Teacher')
   const [message, setMessage] = useState('')
@@ -26,6 +28,11 @@ function TeacherDashboard() {
   const [savedClosesAt, setSavedClosesAt] = useState('')
   const [deletingRejected, setDeletingRejected] = useState(false)
   const [studentFilter, setStudentFilter] = useState('all')
+  const [attendanceDate, setAttendanceDate] = useState(() => {
+    const now = new Date()
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
+    return now.toISOString().slice(0, 10)
+  })
 
   useEffect(() => {
     loadDashboard()
@@ -81,7 +88,6 @@ function TeacherDashboard() {
       const records = (enrollmentResult.data || []).map(attachParentName)
       setStudentRecords(records)
       setEnrollments(records.filter((enrollment) => enrollment.status === 'pending'))
-      setRejectedEnrollments(records.filter((enrollment) => enrollment.status === 'rejected'))
     }
 
     if (parentNamesResult.error) {
@@ -129,19 +135,10 @@ function TeacherDashboard() {
       return
     }
 
-    const reviewedEnrollment = enrollments.find((enrollment) => enrollment.id === id)
     setEnrollments((current) => current.filter((enrollment) => enrollment.id !== id))
     setStudentRecords((current) => current.map((enrollment) => enrollment.id === id
       ? { ...enrollment, status, reviewed_at: new Date().toISOString(), reviewed_by: user.id }
       : enrollment))
-    if (status === 'rejected' && reviewedEnrollment) {
-      setRejectedEnrollments((current) => [{
-        ...reviewedEnrollment,
-        status: 'rejected',
-        reviewed_at: new Date().toISOString(),
-        reviewed_by: user.id,
-      }, ...current])
-    }
     setMessage(`Enrollment ${status}.`)
     setReviewingId(null)
   }
@@ -293,7 +290,6 @@ function TeacherDashboard() {
       return
     }
 
-    setRejectedEnrollments((current) => current.filter((item) => !ids.includes(item.id)))
     setStudentRecords((current) => current.filter((item) => !ids.includes(item.id)))
     setSelectedRejectedIds((current) => current.filter((id) => !ids.includes(id)))
     setMessage(ids.length === 1 ? 'Rejected application deleted.' : 'Selected rejected applications deleted.')
@@ -302,6 +298,7 @@ function TeacherDashboard() {
   const visibleStudentRecords = studentFilter === 'all'
     ? studentRecords
     : studentRecords.filter((enrollment) => enrollment.status === studentFilter)
+  const rejectedStudentRecords = studentRecords.filter((enrollment) => enrollment.status === 'rejected')
 
   return (
     <div className="teacher-dashboard-page">
@@ -324,63 +321,65 @@ function TeacherDashboard() {
               <button type="button" className={`teacher-tab${activeTab === 'approvals' ? ' active' : ''}`} onClick={() => setActiveTab('approvals')}>
                 Approvals
               </button>
-              <button type="button" className={`teacher-tab${activeTab === 'reference' ? ' active' : ''}`} onClick={() => setActiveTab('reference')}>
-                Reference Search
-              </button>
               <button type="button" className={`teacher-tab${activeTab === 'enrollment-window' ? ' active' : ''}`} onClick={() => setActiveTab('enrollment-window')}>
                 Enrollment Status
-              </button>
-              <button type="button" className={`teacher-tab${activeTab === 'rejected' ? ' active' : ''}`} onClick={() => setActiveTab('rejected')}>
-                Rejected
               </button>
               <button type="button" className={`teacher-tab${activeTab === 'students' ? ' active' : ''}`} onClick={() => setActiveTab('students')}>
                 Students
               </button>
-              <button type="button" className="teacher-tab" disabled>
+              <button type="button" className={`teacher-tab${activeTab === 'health-growth' ? ' active' : ''}`} onClick={() => setActiveTab('health-growth')}>
+                Health &amp; Growth
+              </button>
+              <button type="button" className={`teacher-tab${activeTab === 'attendance' ? ' active' : ''}`} onClick={() => setActiveTab('attendance')}>
                 Attendance
               </button>
-              <button type="button" className="teacher-tab" disabled>
+              <button type="button" className={`teacher-tab${activeTab === 'announcements' ? ' active' : ''}`} onClick={() => setActiveTab('announcements')}>
                 Announcement
               </button>
-              <button type="button" className="teacher-tab" disabled>
+              <button type="button" className={`teacher-tab${activeTab === 'calendar' ? ' active' : ''}`} onClick={() => setActiveTab('calendar')}>
                 Calendar
               </button>
             </nav>
 
-            {activeTab === 'reference' ? <StaffReferenceSearch /> : activeTab === 'students' ? (
+            {activeTab === 'health-growth' ? (
+              <HealthGrowthPanel enrollments={studentRecords} canManage />
+            ) : activeTab === 'calendar' ? (
+              <CalendarPanel canManage />
+            ) : activeTab === 'announcements' ? (
+              <AnnouncementsPanel canManage />
+            ) : activeTab === 'attendance' ? (
+              <AttendanceRoster enrollments={studentRecords} loading={loading} attendanceDate={attendanceDate} onDateChange={setAttendanceDate} canEdit />
+            ) : activeTab === 'students' ? (
               <section className="pending-approvals-panel student-records-panel">
                 <div className="pending-approvals-header">
                   <div><h2>Student Records</h2></div>
                   <span className="waiting-badge">{visibleStudentRecords.length} records</span>
                 </div>
                 <div className="student-status-filters" aria-label="Filter student records by status">
-                  {[['all', 'All'], ['approved', 'Accepted'], ['pending', 'Pending'], ['rejected', 'Rejected']].map(([value, label]) => <button type="button" key={value} className={studentFilter === value ? 'active' : ''} onClick={() => setStudentFilter(value)}>{label}</button>)}
+                  {[['all', 'All'], ['approved', 'Accepted'], ['pending', 'Pending'], ['rejected', 'Rejected']].map(([value, label]) => <button type="button" key={value} className={studentFilter === value ? 'active' : ''} onClick={() => { setStudentFilter(value); if (value !== 'rejected') setSelectedRejectedIds([]) }}>{label}</button>)}
                 </div>
                 {message && <p className="teacher-dashboard-message">{message}</p>}
-                {loading ? <div className="teacher-empty-state"><LoadingSpinner label="Loading student records..." compact /></div> : visibleStudentRecords.length === 0 ? <p className="teacher-empty-state">No {studentFilter === 'all' ? '' : studentFilter} student records found.</p> : <div className="approval-list">
-                  {visibleStudentRecords.map((enrollment) => <article className="approval-row student-record-row" key={enrollment.id}>
-                    <div className="approval-details"><h3>{getChildName(enrollment)}</h3><div className="application-meta"><p>Age: {calculateAge(enrollment.birth_date)} | Sex: {formatSex(enrollment.sex)} | Parent: {enrollment.parent_full_name || '—'}</p><p>BMI: {calculateBmi(enrollment.height_cm, enrollment.weight_kg)}</p></div></div>
-                    <span className={`enrollment-status ${enrollment.status}`}>{enrollment.status === 'approved' ? 'accepted' : enrollment.status}</span>
-                  </article>)}
+                {!loading && studentFilter === 'rejected' && rejectedStudentRecords.length > 0 && <div className="rejected-toolbar compact-rejected-toolbar">
+                  <label><input type="checkbox" checked={selectedRejectedIds.length === rejectedStudentRecords.length} onChange={(event) => setSelectedRejectedIds(event.target.checked ? rejectedStudentRecords.map((item) => item.id) : [])} /> Select all</label>
+                  <button type="button" className="bulk-delete-button" disabled={!selectedRejectedIds.length || deletingRejected} onClick={() => deleteRejected(selectedRejectedIds)} aria-label={`Delete ${selectedRejectedIds.length} selected records`} title={`Delete selected (${selectedRejectedIds.length})`}><i className="app-icon app-icon-trash" aria-hidden="true" /></button>
                 </div>}
-              </section>
-            ) : activeTab === 'rejected' ? (
-              <section className="pending-approvals-panel rejected-applications-panel">
-                <div className="pending-approvals-header">
-                  <div><h2>Rejected Applications</h2></div>
-                  <span className="waiting-badge">{rejectedEnrollments.length} rejected</span>
-                </div>
-                {message && <p className="teacher-dashboard-message">{message}</p>}
-                {!loading && rejectedEnrollments.length > 0 && <div className="rejected-toolbar">
-                  <label><input type="checkbox" checked={selectedRejectedIds.length === rejectedEnrollments.length} onChange={(event) => setSelectedRejectedIds(event.target.checked ? rejectedEnrollments.map((item) => item.id) : [])} /> Select all</label>
-                  <button type="button" className="bulk-delete-button" disabled={!selectedRejectedIds.length || deletingRejected} onClick={() => deleteRejected(selectedRejectedIds)}>{deletingRejected ? 'Deleting...' : `Delete Selected (${selectedRejectedIds.length})`}</button>
-                </div>}
-                {loading ? <div className="teacher-empty-state"><LoadingSpinner label="Loading rejected applications..." compact /></div> : rejectedEnrollments.length === 0 ? <p className="teacher-empty-state">No rejected applications.</p> : <div className="approval-list">
-                  {rejectedEnrollments.map((enrollment) => <article className="approval-row rejected-row" key={enrollment.id}>
-                    <label className="rejected-select"><input type="checkbox" checked={selectedRejectedIds.includes(enrollment.id)} onChange={() => toggleRejectedSelection(enrollment.id)} /><span className="visually-hidden">Select {getChildName(enrollment)}</span></label>
-                    <div className="approval-details"><h3>{getChildName(enrollment)}</h3><div className="application-meta"><p>Age: {calculateAge(enrollment.birth_date)} | Sex: {formatSex(enrollment.sex)} | Parent: {enrollment.parent_full_name || '—'}</p><p>BMI: {calculateBmi(enrollment.height_cm, enrollment.weight_kg)}</p></div></div>
-                    <button type="button" className="delete-record-button" disabled={deletingRejected} onClick={() => deleteRejected([enrollment.id])}>Delete</button>
-                  </article>)}
+                {loading ? <div className="teacher-empty-state"><LoadingSpinner label="Loading student records..." compact /></div> : visibleStudentRecords.length === 0 ? <p className="teacher-empty-state">No {studentFilter === 'all' ? '' : studentFilter} student records found.</p> : <div className="records-table-shell">
+                  <table className="records-table student-records-table">
+                    <caption className="visually-hidden">Student enrollment records</caption>
+                    <thead><tr>
+                      {studentFilter === 'rejected' && <th className="records-select-column" scope="col"><span className="visually-hidden">Select</span></th>}
+                      <th scope="col">Student</th><th scope="col">Age</th><th scope="col">Sex</th><th scope="col">Parent</th><th scope="col">BMI</th><th scope="col">Status</th>
+                    </tr></thead>
+                    <tbody>{visibleStudentRecords.map((enrollment) => <tr key={enrollment.id}>
+                      {studentFilter === 'rejected' && <td className="records-select-column" data-label="Select"><label className="rejected-select"><input type="checkbox" checked={selectedRejectedIds.includes(enrollment.id)} onChange={() => toggleRejectedSelection(enrollment.id)} /><span className="visually-hidden">Select {getChildName(enrollment)}</span></label></td>}
+                      <td data-label="Student"><strong className="records-student-name">{getChildName(enrollment)}</strong></td>
+                      <td data-label="Age">{calculateAge(enrollment.birth_date)}</td>
+                      <td data-label="Sex">{formatSex(enrollment.sex)}</td>
+                      <td data-label="Parent">{enrollment.parent_full_name || '—'}</td>
+                      <td data-label="BMI">{calculateBmi(enrollment.height_cm, enrollment.weight_kg)}</td>
+                      <td data-label="Status"><div className="student-row-actions"><span className={`enrollment-status ${enrollment.status}`}>{enrollment.status === 'approved' ? 'accepted' : enrollment.status}</span>{enrollment.status === 'rejected' && <button type="button" className="delete-record-button" disabled={deletingRejected} onClick={() => deleteRejected([enrollment.id])} aria-label={`Delete rejected record for ${getChildName(enrollment)}`} title="Delete rejected record"><i className="app-icon app-icon-trash" aria-hidden="true" /></button>}</div></td>
+                    </tr>)}</tbody>
+                  </table>
                 </div>}
               </section>
             ) : activeTab === 'enrollment-window' ? (
@@ -434,51 +433,24 @@ function TeacherDashboard() {
             ) : enrollments.length === 0 ? (
               <p className="teacher-empty-state">No pending applications.</p>
             ) : (
-              <div className="approval-list">
-                {enrollments.map((enrollment) => (
-                  <article className="approval-row" key={enrollment.id}>
-                    <div className="approval-details">
-                      <h3>{getChildName(enrollment)}</h3>
-                      <div className="application-meta">
-                        <p className="approval-summary">
-                          Age: {calculateAge(enrollment.birth_date)} | Sex:{' '}
-                          {formatSex(enrollment.sex)} | Parent:{' '}
-                          {enrollment.parent_full_name || '—'}
-                        </p>
-                        <p className="approval-bmi">
-                          BMI: {calculateBmi(
-                            enrollment.height_cm,
-                            enrollment.weight_kg,
-                          )}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="review-actions">
-                      <button
-                        type="button"
-                        className="approve-button"
-                        disabled={reviewingId === enrollment.id}
-                        onClick={() =>
-                          updateStatus(enrollment.id, 'approved')
-                        }
-                      >
-                        Accept
-                      </button>
-
-                      <button
-                        type="button"
-                        className="reject-button"
-                        disabled={reviewingId === enrollment.id}
-                        onClick={() =>
-                          updateStatus(enrollment.id, 'rejected')
-                        }
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  </article>
-                ))}
+              <div className="records-table-shell">
+                <table className="records-table approvals-table">
+                  <caption className="visually-hidden">Pending enrollment approvals</caption>
+                  <thead><tr><th scope="col">Student</th><th scope="col">Age</th><th scope="col">Sex</th><th scope="col">Parent</th><th scope="col">BMI</th><th scope="col">Review</th></tr></thead>
+                  <tbody>{enrollments.map((enrollment) => (
+                    <tr key={enrollment.id}>
+                      <td data-label="Student"><strong className="records-student-name">{getChildName(enrollment)}</strong></td>
+                      <td data-label="Age">{calculateAge(enrollment.birth_date)}</td>
+                      <td data-label="Sex">{formatSex(enrollment.sex)}</td>
+                      <td data-label="Parent">{enrollment.parent_full_name || '—'}</td>
+                      <td data-label="BMI">{calculateBmi(enrollment.height_cm, enrollment.weight_kg)}</td>
+                      <td data-label="Review"><div className="review-actions">
+                        <button type="button" className="approve-button" disabled={reviewingId === enrollment.id} onClick={() => updateStatus(enrollment.id, 'approved')}>Accept</button>
+                        <button type="button" className="reject-button" disabled={reviewingId === enrollment.id} onClick={() => updateStatus(enrollment.id, 'rejected')}>Reject</button>
+                      </div></td>
+                    </tr>
+                  ))}</tbody>
+                </table>
               </div>
             )}
             </section>}

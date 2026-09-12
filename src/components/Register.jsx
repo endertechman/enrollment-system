@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import takeAuthAttempt from '../lib/authRateLimit'
 import AppHeader from './AppHeader'
 
 function Register() {
@@ -9,12 +10,27 @@ function Register() {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [message, setMessage] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [registeredEmail, setRegisteredEmail] = useState('')
 
   async function handleRegister(e) {
     e.preventDefault()
     setMessage('')
 
+    if (password.length < 8) {
+      setMessage('Use at least 8 characters for your password.')
+      return
+    }
+
+    const rateLimit = takeAuthAttempt('signup')
+    if (!rateLimit.allowed) {
+      setMessage(`Too many registration attempts. Please wait ${rateLimit.retryAfter} seconds.`)
+      return
+    }
+
+    setSubmitting(true)
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
@@ -23,10 +39,12 @@ function Register() {
         data: {
           full_name: fullName.trim(),
         },
+        emailRedirectTo: `${window.location.origin}/login?confirmed=1`,
       },
     })
 
     if (error) {
+      setSubmitting(false)
       if (error.message === 'User already registered') {
         setMessage('This email is already registered.')
       } else {
@@ -37,6 +55,8 @@ function Register() {
     }
 
     if (!data.session) {
+      setRegisteredEmail(email.trim())
+      setSubmitting(false)
       setMessage(
         'Registration successful. Please confirm your email before logging in.',
       )
@@ -89,6 +109,7 @@ function Register() {
                     setEmail(e.target.value)
                   }
                   placeholder="Enter your email"
+                  autoComplete="email"
                   required
                 />
               </div>
@@ -96,15 +117,28 @@ function Register() {
               <div>
                 <label>Password</label>
 
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) =>
-                    setPassword(e.target.value)
-                  }
-                  placeholder="Enter your password"
-                  required
-                />
+                <div className="password-field">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) =>
+                      setPassword(e.target.value)
+                    }
+                    placeholder="Enter your password"
+                    minLength="8"
+                    autoComplete="new-password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="password-visibility-toggle"
+                    onClick={() => setShowPassword((visible) => !visible)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    aria-pressed={showPassword}
+                  >
+                    <i className={`app-icon ${showPassword ? 'app-icon-eye-alt' : 'app-icon-eye'}`} aria-hidden="true" />
+                  </button>
+                </div>
               </div>
 
               <div className="register-actions">
@@ -125,13 +159,19 @@ function Register() {
                   Already have an account?
                 </div>
 
-                <button type="submit">
-                  Register
+                <button
+                  type={registeredEmail ? 'button' : 'submit'}
+                  disabled={submitting}
+                  onClick={registeredEmail ? () => navigate('/login') : undefined}
+                >
+                  {submitting ? 'Creating Account...' : registeredEmail ? 'Done' : 'Register'}
                 </button>
               </div>
             </form>
 
-            {message && <p>{message}</p>}
+            {message && (registeredEmail
+              ? <p>Registration successful. Please confirm your <a className="auth-email-link" href="https://gmail.com" target="_blank" rel="noreferrer">email</a> before logging in.</p>
+              : <p>{message}</p>)}
           </div>
         </main>
       </div>

@@ -3,6 +3,8 @@
 ========================================================= */
 
 :root {
+  --font-sans: "Segoe UI Variable Text", "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: "Segoe UI Variable Display", "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --color-bg: #f8f7f9;
   --color-surface: #ffffff;
   --color-text: #353039;
@@ -26,7 +28,10 @@ body {
   margin: 0;
   min-height: 100vh;
 
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 
   background: radial-gradient(circle at 12% 20%,
       rgba(255, 207, 228, 0.75),
@@ -46,8 +51,18 @@ body {
 }
 
 button,
-input {
+input,
+select,
+textarea {
   font: inherit;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  text-wrap: balance;
 }
 
 button {

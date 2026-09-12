@@ -432,7 +432,7 @@ function EnrollmentForm() {
                 </div>
 
                 <div>
-                  <label>Registered *</label>
+                  <label>Registered (PSA) *</label>
                   <select
                     value={isRegistered}
                     onChange={(e) => setIsRegistered(e.target.value)}

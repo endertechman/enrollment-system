@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import StaffReferenceSearch from '../components/StaffReferenceSearch'
 import AppHeader from '../components/AppHeader'
 import LoadingSpinner from '../components/LoadingSpinner'
+import AttendanceRoster from '../components/AttendanceRoster'
+import AnnouncementsPanel from '../components/AnnouncementsPanel'
+import CalendarPanel from '../components/CalendarPanel'
+import HealthGrowthPanel from '../components/HealthGrowthPanel'
 
 function TeacherAideDashboard() {
   const navigate = useNavigate()
@@ -13,6 +16,11 @@ function TeacherAideDashboard() {
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('students')
+  const [attendanceDate, setAttendanceDate] = useState(() => {
+    const now = new Date()
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
+    return now.toISOString().slice(0, 10)
+  })
 
   useEffect(() => {
     loadDashboard()
@@ -150,21 +158,29 @@ function TeacherAideDashboard() {
               <button type="button" className={`teacher-tab${activeTab === 'students' ? ' active' : ''}`} onClick={() => setActiveTab('students')}>
                 Students
               </button>
-              <button type="button" className={`teacher-tab${activeTab === 'reference' ? ' active' : ''}`} onClick={() => setActiveTab('reference')}>
-                Reference Search
+              <button type="button" className={`teacher-tab${activeTab === 'health-growth' ? ' active' : ''}`} onClick={() => setActiveTab('health-growth')}>
+                Health &amp; Growth
               </button>
-              <button type="button" className="teacher-tab" disabled>
+              <button type="button" className={`teacher-tab${activeTab === 'attendance' ? ' active' : ''}`} onClick={() => setActiveTab('attendance')}>
                 Attendance
               </button>
-              <button type="button" className="teacher-tab" disabled>
+              <button type="button" className={`teacher-tab${activeTab === 'announcements' ? ' active' : ''}`} onClick={() => setActiveTab('announcements')}>
                 Announcement
               </button>
-              <button type="button" className="teacher-tab" disabled>
+              <button type="button" className={`teacher-tab${activeTab === 'calendar' ? ' active' : ''}`} onClick={() => setActiveTab('calendar')}>
                 Calendar
               </button>
             </nav>
 
-            {activeTab === 'reference' ? <StaffReferenceSearch /> : <section className="pending-approvals-panel">
+            {activeTab === 'health-growth' ? (
+              <HealthGrowthPanel enrollments={enrollments} />
+            ) : activeTab === 'calendar' ? (
+              <CalendarPanel />
+            ) : activeTab === 'announcements' ? (
+              <AnnouncementsPanel />
+            ) : activeTab === 'attendance' ? (
+              <AttendanceRoster enrollments={enrollments} loading={loading} attendanceDate={attendanceDate} onDateChange={setAttendanceDate} />
+            ) : <section className="pending-approvals-panel">
             <div className="pending-approvals-header">
               <h2>Student Records</h2>
               <span className="waiting-badge">

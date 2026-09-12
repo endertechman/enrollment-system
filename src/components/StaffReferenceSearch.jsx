@@ -21,18 +21,7 @@ function StaffReferenceSearch() {
     setLoading(true)
     const { data, error } = await supabase
       .from('enrollments')
-      .select(`
-        id,
-        child_first_name,
-        child_middle_name,
-        child_last_name,
-        child_suffix,
-        birth_date,
-        sex,
-        status,
-        reference_code,
-        submitted_at
-      `)
+      .select('child_first_name, child_middle_name, child_last_name, child_suffix, status, reference_code, submitted_at')
       .eq('reference_code', cleanedCode)
       .maybeSingle()
     setLoading(false)
@@ -51,51 +40,54 @@ function StaffReferenceSearch() {
   }
 
   const childName = result
-    ? [
-        result.child_first_name,
-        result.child_middle_name,
-        result.child_last_name,
-        result.child_suffix,
-      ].filter(Boolean).join(' ')
+    ? [result.child_first_name, result.child_middle_name, result.child_last_name, result.child_suffix]
+        .filter(Boolean)
+        .join(' ')
     : ''
 
   return (
-    <section className="pending-approvals-panel staff-reference-panel">
-      <div className="pending-approvals-header">
+    <section className="home-staff-tracker">
+      <div className="hero-card-header">
         <div>
-          <h2>Find an Application</h2>
+          <span>Live Enrollment Status</span>
+          <small>Search using the parent&apos;s reference code</small>
         </div>
+        <span className="status-dot" />
       </div>
 
-      <form className="staff-reference-form" onSubmit={handleSearch}>
-        <input
-          type="text"
-          value={referenceCode}
-          onChange={(event) => setReferenceCode(event.target.value)}
-          placeholder="ENR-2026-ABC123"
-          aria-label="Enrollment reference code"
-        />
-        <button type="submit" disabled={loading}>
-          {loading ? 'Searching...' : 'Search'}
-        </button>
+      <form className="home-tracker-form" onSubmit={handleSearch}>
+        <label htmlFor="home-reference-code">Reference code</label>
+        <div>
+          <input
+            id="home-reference-code"
+            type="text"
+            value={referenceCode}
+            onChange={(event) => setReferenceCode(event.target.value)}
+            placeholder="ENR-2026-ABC123"
+            autoComplete="off"
+          />
+          <button type="submit" disabled={loading}>
+            {loading ? 'Searching...' : 'Check Status'}
+          </button>
+        </div>
       </form>
 
-      {message && <p className="teacher-dashboard-message">{message}</p>}
+      {message && <p className="home-tracker-message">{message}</p>}
 
       {result && (
-        <article className="staff-reference-result">
+        <article className="home-tracker-result">
           <div>
             <span>Child</span>
             <strong>{childName}</strong>
           </div>
           <div>
-            <span>Reference Code</span>
+            <span>Reference</span>
             <strong>{result.reference_code}</strong>
           </div>
           <div>
             <span>Status</span>
             <strong className={`enrollment-status ${result.status}`}>
-              {result.status}
+              {result.status === 'approved' ? 'accepted' : result.status}
             </strong>
           </div>
         </article>

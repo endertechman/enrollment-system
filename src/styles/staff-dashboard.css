@@ -32,15 +32,8 @@
 .reject-button:hover:not(:disabled) { background:color-mix(in srgb, var(--color-accent) 30%, var(--color-surface)); }
 .approve-button:disabled,.reject-button:disabled { opacity:.55; cursor:not-allowed; }
 .teacher-empty-state { margin:18px 0 0; padding:50px 20px; border-radius:15px; background: rgba(255, 255, 255, 0.5); color: #758296; text-align:center; }
-.staff-reference-form { display:flex; gap:10px; margin:20px 0 0; }
-.staff-reference-form input,.enrollment-window-form input { height:44px; padding:0 13px; border:1px solid color-mix(in srgb, var(--color-muted) 22%, var(--color-surface)); border-radius:11px; background:var(--color-surface); color:var(--color-text); font:inherit; font-size:14px; outline:none; }
-.staff-reference-form input { min-width:0; flex:1; }
-.staff-reference-form input:focus,.enrollment-window-form input:focus { border-color:color-mix(in srgb, var(--color-primary) 16%, var(--color-surface)); box-shadow:0 0 0 3px color-mix(in srgb, var(--color-primary) 14%, transparent); }
-.staff-reference-form button { padding:10px 19px; border: 0; border-radius:99px; background: #ef92b3; color: #fff; font:inherit; font-weight:700; cursor:pointer; }
-.staff-reference-form button:hover:not(:disabled) { background:color-mix(in srgb, var(--color-primary) 86%, var(--color-text)); }
-.staff-reference-result { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:16px; padding:15px; border-radius:14px; background: #f5fbfb; }
-.staff-reference-result div { display:grid; gap:5px; min-width:0; }
-.staff-reference-result span { color: #686868; font-size:11px; font-weight:650; text-transform:uppercase; }
+.enrollment-window-form input { height:44px; padding:0 13px; border:1px solid color-mix(in srgb, var(--color-muted) 22%, var(--color-surface)); border-radius:11px; background:var(--color-surface); color:var(--color-text); font:inherit; font-size:14px; outline:none; }
+.enrollment-window-form input:focus { border-color:color-mix(in srgb, var(--color-primary) 16%, var(--color-surface)); box-shadow:0 0 0 3px color-mix(in srgb, var(--color-primary) 14%, transparent); }
 .enrollment-window-form { display:grid; gap:16px; margin-top:20px; }
 .enrollment-window-summary { display:grid; gap:16px; margin-top:20px; }
 .enrollment-window-summary dl { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:0; }
@@ -62,18 +55,18 @@
 .enrollment-window-actions .button-secondary:disabled { opacity:.55; cursor:not-allowed; }
 .enrollment-window-note { margin:16px 0 0; color:var(--color-muted); font-size:12.5px; line-height:1.55; }
 @media(max-width:760px) { .teacher-dashboard-content{width:calc(100% - 28px);padding:28px 0 46px}.staff-dashboard-layout{grid-template-columns:1fr;gap:14px}.teacher-tabs{position:static;flex-direction:row;overflow-x:auto;overflow-y:hidden;white-space:nowrap}.teacher-tab{width:auto;min-width:126px;flex-shrink:0;text-align:center} }
-@media(max-width:620px) { .pending-approvals-header{align-items:flex-start;flex-direction:column}.approval-row{align-items:stretch;flex-direction:column;gap:14px}.approval-row .review-actions{width:100%}.review-actions button{flex:1}.staff-reference-form{flex-direction:column}.staff-reference-result{grid-template-columns:1fr} }
+@media(max-width:620px) { .pending-approvals-header{align-items:flex-start;flex-direction:column}.approval-row{align-items:stretch;flex-direction:column;gap:14px}.approval-row .review-actions{width:100%}.review-actions button{flex:1} }
 @media(max-width:430px) { .teacher-dashboard-content{width:calc(100% - 24px)}.pending-approvals-panel{border-radius:17px}.enrollment-window-fields,.enrollment-window-summary dl{grid-template-columns:1fr}.enrollment-window-summary>button{width:100%}.enrollment-window-actions{display:grid;grid-template-columns:1fr 1fr}.enrollment-window-actions button{min-width:0;width:100%} }
 .rejected-toolbar { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-top:18px; padding:11px 13px; border-radius:12px; background:#faf8f9; }
 .rejected-toolbar label { display:inline-flex; align-items:center; gap:8px; color:#5f5860; font-size:13px; font-weight:600; cursor:pointer; }
 .rejected-toolbar input,
 .rejected-select input { width:16px; height:16px; accent-color:#d94b70; cursor:pointer; }
 .bulk-delete-button,
-.delete-record-button { border:1px solid #ffc4d4; border-radius:10px; background:#fff1f5; color:#d94b70; font:inherit; font-size:13px; font-weight:700; cursor:pointer; transition:background-color .2s ease,border-color .2s ease; }
-.bulk-delete-button { min-height:38px; padding:8px 14px; }
-.delete-record-button { flex:0 0 auto; min-height:38px; padding:8px 15px; }
+.delete-record-button { width:34px; height:34px; padding:0; flex:0 0 34px; display:inline-grid; place-items:center; border:0; border-radius:50%; background:transparent; color:#d94b70; font:inherit; cursor:pointer; transition:background-color .2s ease,color .2s ease; }
+.bulk-delete-button .app-icon,.delete-record-button .app-icon { width:15px; height:15px; flex-basis:15px; }
 .bulk-delete-button:hover:not(:disabled),
-.delete-record-button:hover:not(:disabled) { border-color:#ffa8c0; background:#ffe2ea; }
+.delete-record-button:hover:not(:disabled) { background:#ffe2ea; color:#bd3158; }
+.bulk-delete-button:focus-visible,.delete-record-button:focus-visible { outline:3px solid rgba(217,75,112,.2); outline-offset:1px; }
 .bulk-delete-button:disabled,
 .delete-record-button:disabled { opacity:.5; cursor:not-allowed; }
 .rejected-row { justify-content:flex-start; }
@@ -81,8 +74,8 @@
 .rejected-select { display:grid; place-items:center; flex:0 0 auto; }
 
 @media(max-width:620px) {
-  .rejected-toolbar { align-items:stretch; flex-direction:column; }
-  .bulk-delete-button { width:100%; }
+  .rejected-toolbar { align-items:center; flex-direction:row; }
+  .bulk-delete-button { width:34px; }
   .rejected-row { display:grid; grid-template-columns:auto minmax(0,1fr); }
   .rejected-row .delete-record-button { grid-column:1 / -1; width:100%; }
 }
@@ -92,3 +85,244 @@
 .student-status-filters button:hover { border-color:#a9e9ed; background:#f2fafa; color:#138891; }
 .student-status-filters button.active { border-color:#8de1e5; background:#dff8fa; color:#138891; }
 .student-record-row .enrollment-status { flex:0 0 auto; }
+
+.attendance-header p { margin:5px 0 0; color:var(--color-muted); font-size:12.5px; line-height:1.5; }
+.attendance-toolbar { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-top:18px; padding:13px 15px; border-radius:13px; background:rgba(255,255,255,.72); }
+.attendance-toolbar label { color:var(--color-text); font-size:13px; font-weight:700; }
+.attendance-toolbar input { min-height:40px; padding:7px 11px; border:1px solid #ded7dd; border-radius:10px; background:#fff; color:var(--color-text); font:inherit; font-size:13px; outline:none; }
+.attendance-toolbar input:focus { border-color:#8de1e5; box-shadow:0 0 0 3px rgba(53,200,208,.13); }
+.attendance-list { display:grid; gap:9px; margin-top:16px; }
+.attendance-row { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:15px 17px; border:1px solid rgba(223,218,226,.8); border-radius:14px; background:rgba(255,255,255,.92); }
+.attendance-row h3 { margin:0; color:#334155; font-size:15px; overflow-wrap:anywhere; }
+.attendance-row p { margin:5px 0 0; color:var(--color-muted); font-size:12px; }
+.attendance-options { display:flex; flex:0 0 auto; gap:6px; }
+.attendance-options button { min-height:34px; padding:7px 11px; border:1px solid #ded7dd; border-radius:999px; background:#fff; color:#6a636b; font:inherit; font-size:11px; font-weight:700; cursor:pointer; transition:background-color .2s ease,border-color .2s ease,color .2s ease; }
+.attendance-options button:hover:not(:disabled) { background:#f8f6f8; color:#3f3940; }
+.attendance-options button[data-status="present"].active { border-color:#8de1e5; background:#dff8fa; color:#138891; }
+.attendance-options button[data-status="absent"].active { border-color:#ffc4d4; background:#ffe1ed; color:#b84469; }
+.attendance-options button[data-status="late"].active { border-color:#d9c9ec; background:#f1e9fa; color:#765c91; }
+.attendance-options button:disabled { opacity:.58; cursor:wait; }
+.attendance-value { flex:0 0 auto; padding:6px 10px; border-radius:999px; font-size:11px; font-weight:700; }
+.attendance-value.present { background:#dff8fa; color:#138891; }
+.attendance-value.absent { background:#ffe1ed; color:#b84469; }
+.attendance-value.late { background:#f1e9fa; color:#765c91; }
+.attendance-value.unrecorded { background:#f3f1f3; color:#716a72; }
+.attendance-note { margin:16px 0 0; color:var(--color-muted); font-size:12px; line-height:1.55; }
+
+@media(max-width:520px) {
+  .attendance-toolbar,.attendance-row { align-items:stretch; flex-direction:column; }
+  .attendance-toolbar input { width:100%; }
+  .attendance-options { width:100%; }
+  .attendance-options button { flex:1; }
+  .attendance-value { align-self:flex-start; }
+}
+
+/* Compact student directory and integrated rejected-record controls */
+.student-records-panel { padding:20px; }
+.student-records-panel .pending-approvals-header { padding-bottom:13px; }
+.student-records-panel .student-status-filters { margin-top:13px; }
+.student-records-panel .approval-list { gap:6px; margin-top:12px; }
+.student-record-row {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  min-height:0;
+  padding:10px 12px;
+  border-radius:11px;
+}
+.student-record-row.rejected-row { grid-template-columns:minmax(0,1fr) auto; }
+.student-record-row.rejected-row:has(.rejected-select) { grid-template-columns:auto minmax(0,1fr) auto; }
+.student-record-row .approval-details h3 { font-size:13.5px; line-height:1.25; }
+.student-record-row .application-meta { gap:1px; margin-top:3px; }
+.student-record-row .application-meta p { font-size:10.75px; line-height:1.35; }
+.student-record-row .enrollment-status { padding:5px 8px; font-size:9.5px; }
+.student-row-actions { display:flex; align-items:center; justify-content:flex-end; gap:7px; }
+.student-row-actions .delete-record-button { width:30px; height:30px; min-height:30px; padding:0; flex-basis:30px; border-radius:50%; }
+.student-record-row .rejected-select input { width:14px; height:14px; }
+.compact-rejected-toolbar { margin-top:11px; padding:8px 10px; }
+.compact-rejected-toolbar label { font-size:11.5px; }
+.compact-rejected-toolbar .bulk-delete-button { width:30px; height:30px; min-height:30px; padding:0; flex-basis:30px; }
+
+@media(max-width:620px) {
+  .student-record-row,
+  .student-record-row.rejected-row { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:9px; }
+  .student-record-row.rejected-row:has(.rejected-select) { grid-template-columns:auto minmax(0,1fr) auto; }
+  .student-record-row.rejected-row .delete-record-button { grid-column:auto; width:auto; }
+  .student-row-actions { align-items:flex-end; flex-direction:column; }
+}
+
+@media(max-width:430px) {
+  .student-records-panel { padding:16px; }
+  .student-record-row.rejected-row:has(.rejected-select) { grid-template-columns:auto minmax(0,1fr); }
+  .student-record-row.rejected-row:has(.rejected-select) .student-row-actions { grid-column:2; flex-direction:row; justify-content:flex-start; }
+}
+
+/* Compact tables for approvals and student records */
+.records-table-shell {
+  width: 100%;
+  margin-top: 14px;
+  overflow-x: auto;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: inset 0 0 0 1px rgba(223, 218, 226, 0.78);
+}
+
+.records-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  color: #5f5860;
+  font-size: 11.5px;
+  line-height: 1.35;
+}
+
+.records-table th,
+.records-table td {
+  padding: 11px 12px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.records-table th {
+  background: #f7f4f6;
+  color: #766e77;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.records-table td {
+  border-top: 1px solid #eee8ec;
+}
+
+.records-table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.records-table tbody tr:hover {
+  background: #fff7fa;
+}
+
+.records-student-name {
+  display: block;
+  min-width: 130px;
+  color: #353039;
+  font-size: 12.5px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.records-table td[data-label="Parent"] {
+  max-width: 190px;
+  overflow-wrap: anywhere;
+}
+
+.records-table .review-actions {
+  justify-content: flex-end;
+}
+
+.records-table .approve-button,
+.records-table .reject-button {
+  min-height: 32px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 10.5px;
+}
+
+.records-table .enrollment-status {
+  padding: 5px 8px;
+  font-size: 9.5px;
+}
+
+.records-select-column {
+  width: 38px;
+  padding-right: 4px !important;
+  text-align: center !important;
+}
+
+@media (max-width: 620px) {
+  .records-table-shell {
+    overflow: visible;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .records-table,
+  .records-table tbody,
+  .records-table tr,
+  .records-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .records-table {
+    min-width: 0;
+  }
+
+  .records-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .records-table tbody {
+    display: grid;
+    gap: 9px;
+  }
+
+  .records-table tr {
+    padding: 11px 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: inset 0 0 0 1px rgba(223, 218, 226, 0.78);
+  }
+
+  .records-table td {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 10px;
+    padding: 5px 0;
+    border: 0;
+  }
+
+  .records-table td::before {
+    content: attr(data-label);
+    color: #8a828a;
+    font-size: 9.5px;
+    font-weight: 750;
+    letter-spacing: 0.035em;
+    text-transform: uppercase;
+  }
+
+  .records-table td[data-label="Student"] {
+    padding-bottom: 8px;
+  }
+
+  .records-table td[data-label="Parent"] {
+    max-width: none;
+  }
+
+  .records-table .records-select-column {
+    display: block;
+    width: auto;
+    padding: 0 0 7px !important;
+    text-align: left !important;
+  }
+
+  .records-table .records-select-column::before {
+    content: none;
+  }
+
+  .records-table .review-actions,
+  .records-table .student-row-actions {
+    justify-content: flex-start;
+  }
+}

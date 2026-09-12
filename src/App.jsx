@@ -4,6 +4,8 @@ import HomePage from './pages/HomePage'
 
 import Login from './components/Login'
 import Register from './components/Register'
+import ForgotPassword from './components/ForgotPassword'
+import ResetPassword from './components/ResetPassword'
 import EnrollmentForm from './components/EnrollmentForm'
 import ParentDashboard from './pages/ParentDashboard'
 import TeacherDashboard from './pages/TeacherDashboard'
@@ -18,6 +20,8 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Parent only */}
         <Route

@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import AppHeader from '../components/AppHeader'
-import LoadingSpinner from '../components/LoadingSpinner'
 import StaffReferenceSearch from '../components/StaffReferenceSearch'
 import { getEnrollmentWindow, getEnrollmentWindowStatus } from '../lib/enrollmentWindow'
 
@@ -16,12 +15,6 @@ function HomePage() {
   const [loading, setLoading] = useState(true)
   const [enrollmentWindow, setEnrollmentWindow] = useState(undefined)
 
-  useEffect(() => {
-    checkUser()
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(checkUser)
-    return () => subscription.unsubscribe()
-  }, [])
-
   async function checkUser() {
     setLoading(true)
     const windowResult = await getEnrollmentWindow()
@@ -34,7 +27,10 @@ function HomePage() {
 
     setUser(currentUser)
     const { data: profile, error } = await supabase.from('profiles').select('role, full_name').eq('id', currentUser.id).single()
-    if (error) { setLoading(false); return }
+    if (error) {
+      setUser(null); setRole(null); setEnrollments([]); setSelectedId(null); setLoading(false)
+      return
+    }
     setRole(profile.role)
 
     if (profile.role === 'parent') {
@@ -50,6 +46,15 @@ function HomePage() {
     } else setEnrollments([])
     setLoading(false)
   }
+
+  useEffect(() => {
+    const initialCheck = window.setTimeout(checkUser, 0)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(checkUser)
+    return () => {
+      window.clearTimeout(initialCheck)
+      subscription.unsubscribe()
+    }
+  }, [])
 
   function openParentDashboard() {
     if (enrollments.length > 1) {
@@ -89,13 +94,13 @@ function HomePage() {
   return <div className="landing-page">
     <AppHeader loggedOutAction="login" />
 
-    <div className="landing-scroll"><main className={`landing-hero${!loading && !user ? ' landing-hero-public' : ''}`}>
+    <div className="landing-scroll"><main className={`landing-hero${loading || !user ? ' landing-hero-public' : ''}`}>
       <div className="hero-content">
         <p className={`hero-label enrollment-window-${windowStatus}`}>{windowLabel}</p>
         <h1>Every Child is a Beginning of <span>Something Big.</span></h1>
         <p className="hero-description">Give your little one the best start in learning.<br />Enroll today and become part of the BCDC Family!</p>
         <div className="hero-actions">
-          {!loading && !user && <><button type="button" className="primary-cta" onClick={() => navigate('/login')}>Start Enrollment</button><button type="button" className="secondary-cta" onClick={() => navigate('/register')}>Sign Up</button></>}
+          {(loading || !user) && <><button type="button" className="primary-cta" onClick={() => navigate('/login')}>Start Enrollment</button><button type="button" className="secondary-cta" onClick={() => navigate('/register')}>Sign Up</button></>}
           {!loading && role === 'parent' && enrollments.length === 0 && <button type="button" className="primary-cta role-dashboard-button" onClick={() => navigate('/enroll')}>Start Enrollment</button>}
           {!loading && role === 'parent' && enrollments.length > 0 && <button type="button" className="primary-cta role-dashboard-button" onClick={openParentDashboard}>Open Parent Dashboard</button>}
           {!loading && role === 'parent' && enrollments.length > 0 && enrollments.length < 3 && <button type="button" className="secondary-cta role-enroll-button" onClick={() => navigate('/enroll')}>Enroll Another</button>}
@@ -104,8 +109,8 @@ function HomePage() {
         </div>
       </div>
 
-      {(loading || user) && <div className="hero-panel"><div className={`hero-card${!loading && user && role === 'parent' ? ' home-child-card' : ''}`}>
-        {loading ? <LoadingSpinner label="Loading your home page..." /> : user && role === 'parent' ? (selected ? <>
+      {!loading && user && role && <div className="hero-panel"><div className={`hero-card${role === 'parent' ? ' home-child-card' : ''}`}>
+        {role === 'parent' ? (selected ? <>
           <header className="hero-card-header enrolled-child-header"><div><span>Enrolled Child</span><small>Enrollment record and current status</small></div>{enrollments.length > 1 && <button type="button" className="home-switch-child" onClick={() => setSelectedId(null)} aria-label="Switch child"><i className="app-icon app-icon-swap" aria-hidden="true" /></button>}</header>
           <div className="home-child-card-body">
             <div className="home-selected-child-heading"><div className="home-child-avatar" style={{ backgroundColor: avatarColor(selected) }}>{initials(selected)}</div><div><h3>{selected.child_first_name} {selected.child_last_name}</h3><span className={`enrollment-status ${selected.status}`}>{selected.status}</span></div></div>

@@ -1,10 +1,9 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom'
 
 import HomePage from './pages/HomePage'
 
 import Login from './components/Login'
 import Register from './components/Register'
-import ForgotPassword from './components/ForgotPassword'
 import ResetPassword from './components/ResetPassword'
 import EnrollmentForm from './components/EnrollmentForm'
 import ParentDashboard from './pages/ParentDashboard'
@@ -20,7 +19,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/forgot-password" element={<Navigate to="/login?forgot=1" replace />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Parent only */}

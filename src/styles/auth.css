@@ -298,6 +298,100 @@
 
 /* Supabase Messages */
 
+.auth-toast {
+  position: fixed;
+  top: 82px;
+  left: 50%;
+  z-index: 1200;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: min(380px, calc(100vw - 40px));
+  padding: 14px 14px 14px 16px;
+  border: 1px solid #eadde0;
+  border-left: 4px solid #c45d6c;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #3f3437;
+  box-shadow: 0 14px 36px rgba(55, 42, 48, 0.16);
+  font-size: 13px;
+  line-height: 1.5;
+  transform: translateX(-50%);
+  animation: auth-toast-enter 0.2s ease-out;
+}
+
+.auth-toast-success {
+  border-color: #d6ecee;
+  border-left-color: #20aeb8;
+  color: #27484b;
+}
+
+.auth-toast-leaving {
+  pointer-events: none;
+  animation: auth-toast-exit 0.3s ease-in forwards;
+}
+
+.auth-toast > span {
+  flex: 1;
+}
+
+.auth-toast > button {
+  display: grid;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  margin: -4px -4px 0 0;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  box-shadow: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.auth-toast > button .app-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.auth-toast > button:hover {
+  background: rgba(48, 42, 50, 0.08);
+}
+
+@keyframes auth-toast-enter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes auth-toast-exit {
+  from {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+}
+
+@media (max-width: 560px) {
+  .auth-toast {
+    top: 72px;
+    width: calc(100vw - 28px);
+  }
+}
+
 .auth-container>p {
   margin: 18px 0 0;
 
@@ -307,23 +401,6 @@
 
   font-size: 14px;
   line-height: 1.5;
-}
-
-.auth-email-link {
-  color: #20aeb8;
-  font-weight: 650;
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-.auth-email-link:hover {
-  color: #138891;
-}
-
-.auth-email-link:focus-visible {
-  border-radius: 2px;
-  outline: 3px solid rgba(53, 200, 208, 0.2);
-  outline-offset: 2px;
 }
 
 .password-field { position:relative; }

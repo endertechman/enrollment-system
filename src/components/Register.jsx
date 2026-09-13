@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import takeAuthAttempt from '../lib/authRateLimit'
+import takeAuthAttempt, { startAuthCooldown } from '../lib/authRateLimit'
 import AppHeader from './AppHeader'
+import AuthToast from './AuthToast'
 
 function Register() {
   const navigate = useNavigate()
@@ -14,6 +15,18 @@ function Register() {
   const [message, setMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [registeredEmail, setRegisteredEmail] = useState('')
+  const [resendingConfirmation, setResendingConfirmation] = useState(false)
+  const [confirmationCooldown, setConfirmationCooldown] = useState(0)
+
+  useEffect(() => {
+    if (confirmationCooldown <= 0) return undefined
+
+    const timer = window.setTimeout(() => {
+      setConfirmationCooldown((seconds) => Math.max(0, seconds - 1))
+    }, 1000)
+
+    return () => window.clearTimeout(timer)
+  }, [confirmationCooldown])
 
   async function handleRegister(e) {
     e.preventDefault()
@@ -55,7 +68,10 @@ function Register() {
     }
 
     if (!data.session) {
-      setRegisteredEmail(email.trim())
+      const pendingEmail = email.trim()
+      startAuthCooldown('confirmationRetry')
+      setConfirmationCooldown(60)
+      setRegisteredEmail(pendingEmail)
       setSubmitting(false)
       setMessage(
         'Registration successful. Please confirm your email before logging in.',
@@ -64,6 +80,33 @@ function Register() {
     }
 
     navigate('/')
+  }
+
+  async function sendAnotherConfirmation() {
+    const rateLimit = takeAuthAttempt('confirmationRetry')
+    if (!rateLimit.allowed) {
+      setConfirmationCooldown(rateLimit.retryAfter)
+      setMessage(`Please wait ${rateLimit.retryAfter} seconds before requesting another email.`)
+      return
+    }
+
+    setConfirmationCooldown(60)
+    setResendingConfirmation(true)
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: registeredEmail,
+      options: { emailRedirectTo: `${window.location.origin}/login?confirmed=1` },
+    })
+    setResendingConfirmation(false)
+
+    if (error) {
+      setMessage(error.status === 429
+        ? 'Too many requests. Please wait before trying again.'
+        : 'Unable to request another verification email right now.')
+      return
+    }
+
+    setMessage('Another verification email has been requested. Please check your inbox.')
   }
 
   return (
@@ -169,9 +212,17 @@ function Register() {
               </div>
             </form>
 
-            {message && (registeredEmail
-              ? <p>Registration successful. Please confirm your <a className="auth-email-link" href="https://gmail.com" target="_blank" rel="noreferrer">email</a> before logging in.</p>
-              : <p>{message}</p>)}
+            <AuthToast message={message} onDismiss={() => setMessage('')} />
+            {registeredEmail && (
+              <button
+                type="button"
+                className="login-recovery-link"
+                onClick={sendAnotherConfirmation}
+                disabled={resendingConfirmation || confirmationCooldown > 0}
+              >
+                {resendingConfirmation ? 'Sending...' : confirmationCooldown > 0 ? `Resend email verification in ${confirmationCooldown}s` : 'Resend email verification now'}
+              </button>
+            )}
           </div>
         </main>
       </div>

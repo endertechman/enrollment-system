@@ -408,6 +408,7 @@
 .app-icon-user-list { --icon-url: url('/icons/user-list.svg'); }
 .app-icon-trash { --icon-url: url('/icons/trash.svg'); }
 .app-icon-redo { --icon-url: url('/icons/redo.svg'); }
+.app-icon-close { --icon-url: url('/icons/close-o.svg'); }
 
 
 .nav-home-icon {

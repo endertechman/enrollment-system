@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import takeAuthAttempt from '../lib/authRateLimit'
+import takeAuthAttempt, { getAuthCooldownRemaining } from '../lib/authRateLimit'
 import AppHeader from './AppHeader'
+import AuthToast from './AuthToast'
 
 function Login() {
   const navigate = useNavigate()
@@ -25,16 +26,29 @@ function Login() {
         ? 'Password updated. Log in with your new password.'
         : '')
   const [submitting, setSubmitting] = useState(false)
-  const [showRecoveryHelp, setShowRecoveryHelp] = useState(false)
-  const [showConfirmationHelp, setShowConfirmationHelp] = useState(false)
-  const [showConfirmationRetry, setShowConfirmationRetry] = useState(Boolean(confirmationExpired))
+  const [showRecoveryHelp, setShowRecoveryHelp] = useState(searchParams.get('forgot') === '1')
+  const [showConfirmationRetry, setShowConfirmationRetry] = useState(false)
   const [retryingConfirmation, setRetryingConfirmation] = useState(false)
+  const [confirmationCooldown, setConfirmationCooldown] = useState(0)
+  const [requestingRecovery, setRequestingRecovery] = useState(false)
+  const [recoveryRequested, setRecoveryRequested] = useState(false)
+  const [recoveryCooldown, setRecoveryCooldown] = useState(0)
+
+  useEffect(() => {
+    if (confirmationCooldown <= 0 && recoveryCooldown <= 0) return undefined
+
+    const timer = window.setTimeout(() => {
+      setConfirmationCooldown((seconds) => Math.max(0, seconds - 1))
+      setRecoveryCooldown((seconds) => Math.max(0, seconds - 1))
+    }, 1000)
+
+    return () => window.clearTimeout(timer)
+  }, [confirmationCooldown, recoveryCooldown])
 
   async function handleLogin(e) {
     e.preventDefault()
     setMessage('')
     setShowRecoveryHelp(false)
-    setShowConfirmationHelp(false)
     setShowConfirmationRetry(false)
 
     const rateLimit = takeAuthAttempt('login')
@@ -53,7 +67,8 @@ function Login() {
       setSubmitting(false)
       if (error.message.toLowerCase().includes('email not confirmed')) {
         setMessage('Confirm your email using the verification link we sent before logging in.')
-        setShowConfirmationHelp(true)
+        setShowConfirmationRetry(true)
+        setConfirmationCooldown(getAuthCooldownRemaining('confirmationRetry'))
       } else {
         setMessage(error.status === 429 ? 'Too many requests. Please wait before trying again.' : 'Invalid email or password.')
         setShowRecoveryHelp(error.status !== 429)
@@ -105,10 +120,12 @@ function Login() {
 
     const rateLimit = takeAuthAttempt('confirmationRetry')
     if (!rateLimit.allowed) {
+      setConfirmationCooldown(rateLimit.retryAfter)
       setMessage(`Please wait ${rateLimit.retryAfter} seconds before requesting another email.`)
       return
     }
 
+    setConfirmationCooldown(60)
     setRetryingConfirmation(true)
     const { error } = await supabase.auth.resend({
       type: 'signup',
@@ -125,7 +142,40 @@ function Login() {
     }
 
     setMessage('If the account is awaiting confirmation, another verification email has been sent.')
-    setShowConfirmationRetry(false)
+  }
+
+  async function requestPasswordReset() {
+    const trimmedEmail = email.trim()
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setMessage('Enter your account email above, then select Forgot your password again.')
+      return
+    }
+
+    const rateLimit = takeAuthAttempt('recovery')
+    if (!rateLimit.allowed) {
+      setRecoveryRequested(true)
+      setRecoveryCooldown(rateLimit.retryAfter)
+      setMessage(`Please wait ${rateLimit.retryAfter} seconds before requesting another email.`)
+      return
+    }
+
+    setRecoveryRequested(true)
+    setRecoveryCooldown(60)
+    setRequestingRecovery(true)
+    const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    })
+    setRequestingRecovery(false)
+
+    if (error) {
+      setMessage(error.status === 429
+        ? 'Too many requests. Please wait before trying again.'
+        : 'Unable to send a reset email right now. Please try again later.')
+      return
+    }
+
+    setMessage('If an account exists for that email, a password reset link has been sent. Please check your Gmail inbox and Spam folder.')
   }
 
   return (
@@ -199,11 +249,9 @@ function Login() {
               </div>
             </form>
 
-            {message && (showConfirmationHelp
-              ? <p>Confirm your <a className="auth-email-link" href="https://gmail.com" target="_blank" rel="noreferrer">email</a> using the verification link we sent before logging in.</p>
-              : <p>{message}</p>)}
-            {showRecoveryHelp && <button type="button" className="login-recovery-link" onClick={() => navigate('/forgot-password')}>Forgot your password?</button>}
-            {showConfirmationRetry && <button type="button" className="login-recovery-link" onClick={sendAnotherConfirmation} disabled={retryingConfirmation}>{retryingConfirmation ? 'Sending...' : 'Send another verification email'}</button>}
+            <AuthToast message={message} onDismiss={() => setMessage('')} />
+            {showRecoveryHelp && <button type="button" className="login-recovery-link" onClick={requestPasswordReset} disabled={requestingRecovery || recoveryCooldown > 0}>{requestingRecovery ? 'Sending...' : recoveryRequested && recoveryCooldown > 0 ? `Resend password reset in ${recoveryCooldown}s` : recoveryRequested ? 'Resend password reset now' : 'Forgot your password?'}</button>}
+            {showConfirmationRetry && <button type="button" className="login-recovery-link" onClick={sendAnotherConfirmation} disabled={retryingConfirmation || confirmationCooldown > 0}>{retryingConfirmation ? 'Sending...' : confirmationCooldown > 0 ? `Resend email verification in ${confirmationCooldown}s` : 'Resend email verification now'}</button>}
           </div>
         </main>
       </div>

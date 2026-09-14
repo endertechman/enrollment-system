@@ -3,6 +3,8 @@
 ========================================================= */
 
 .landing-page {
+  position: relative;
+  isolation: isolate;
   width: 100%;
   height: 100dvh;
 
@@ -11,22 +13,30 @@
 
   overflow: hidden;
 
-  animation: landing-background-drift 48s ease-in-out infinite alternate;
-
-  background: radial-gradient(circle at 10% 18%,
-      rgba(255, 205, 228, 0.82),
-      transparent 38%),
-    radial-gradient(circle at 88% 20%,
-      rgba(188, 244, 247, 0.82),
-      transparent 40%),
-    radial-gradient(circle at 52% 85%,
-      rgba(230, 211, 255, 0.72),
-      transparent 46%),
-    linear-gradient(135deg,
+  background: linear-gradient(135deg,
       #fff0f7 0%,
       #f8edff 46%,
       #e3fbff 100%);
-  background-size: 135% 135%;
+}
+
+.landing-page::before {
+  content: "";
+  position: fixed;
+  inset: -12%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 10% 18%, rgba(255, 205, 228, 0.82), transparent 38%),
+    radial-gradient(circle at 88% 20%, rgba(188, 244, 247, 0.82), transparent 40%),
+    radial-gradient(circle at 52% 85%, rgba(230, 211, 255, 0.72), transparent 46%);
+  transform: translate3d(-1.5%, -1%, 0) scale(1.03);
+  will-change: transform;
+  animation: landing-background-drift 48s ease-in-out infinite alternate;
+}
+
+.landing-page > * {
+  position: relative;
+  z-index: 1;
 }
 
 .landing-scroll {
@@ -178,12 +188,12 @@
 }
 
 @keyframes landing-background-drift {
-  from { background-position: 0% 0%; }
-  to { background-position: 100% 100%; }
+  from { transform: translate3d(-1.5%, -1%, 0) scale(1.03); }
+  to { transform: translate3d(1.5%, 1%, 0) scale(1.03); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .landing-page { animation: none; }
+  .landing-page::before { animation: none; }
 }
 
 
@@ -410,6 +420,8 @@
 .app-icon-redo { --icon-url: url('/icons/redo.svg'); }
 .app-icon-close { --icon-url: url('/icons/close-o.svg'); }
 .app-icon-options { --icon-url: url('/icons/options.svg'); }
+.app-icon-pen { --icon-url: url('/icons/pen.svg'); }
+.app-icon-mail { --icon-url: url('/icons/mail.svg'); }
 
 
 .nav-home-icon {

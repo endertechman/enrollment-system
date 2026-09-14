@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import AppHeader from './AppHeader'
 import LoadingSpinner from './LoadingSpinner'
 import { getEnrollmentWindow, isEnrollmentOpen } from '../lib/enrollmentWindow'
-import useAutoRefresh from '../hooks/useAutoRefresh'
+import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 
 function EnrollmentForm() {
   const navigate = useNavigate()
@@ -96,7 +96,10 @@ function EnrollmentForm() {
     return () => window.clearTimeout(initializationTimer)
   }, [initializeForm])
 
-  useAutoRefresh(initializeForm)
+  useRealtimeRefresh(initializeForm, {
+    channelName: 'enrollment-form',
+    tables: ['enrollment_settings', 'enrollments'],
+  })
 
   function calculateAge() {
     if (!birthDate) return ''
@@ -252,6 +255,7 @@ function EnrollmentForm() {
       return
     }
 
+    window.sessionStorage.setItem('bcdc:enrollment-success', 'Enrollment application submitted successfully.')
     navigate('/parent', { replace: true })
   }
 

@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import LoadingSpinner from './LoadingSpinner'
-import useAutoRefresh from '../hooks/useAutoRefresh'
+import AuthToast from './AuthToast'
+import ConfirmDialog from './ConfirmDialog'
+import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 
 const TITLE_LIMIT = 100
 const BODY_LIMIT = 500
@@ -14,6 +16,9 @@ function AnnouncementsPanel({ canManage = false }) {
   const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState(null)
   const [message, setMessage] = useState('')
+  const [notice, setNotice] = useState('')
+  const [composerOpen, setComposerOpen] = useState(false)
+  const [pendingDelete, setPendingDelete] = useState(null)
 
   const loadAnnouncements = useCallback(async () => {
     const { data, error } = await supabase
@@ -34,7 +39,10 @@ function AnnouncementsPanel({ canManage = false }) {
     return () => window.clearTimeout(loadTimer)
   }, [loadAnnouncements])
 
-  useAutoRefresh(loadAnnouncements)
+  useRealtimeRefresh(loadAnnouncements, {
+    channelName: 'announcements-panel',
+    tables: ['announcements'],
+  })
 
   async function publishAnnouncement(event) {
     event.preventDefault()
@@ -44,6 +52,7 @@ function AnnouncementsPanel({ canManage = false }) {
 
     setSaving(true)
     setMessage('')
+    setNotice('')
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
@@ -64,25 +73,28 @@ function AnnouncementsPanel({ canManage = false }) {
       setAnnouncements((current) => [data, ...current])
       setTitle('')
       setBody('')
-      setMessage('Announcement published.')
+      setComposerOpen(false)
+      setNotice('Announcement published.')
     }
     setSaving(false)
   }
 
-  async function deleteAnnouncement(id) {
-    if (!window.confirm('Delete this announcement? This cannot be undone.')) return
-
+  async function deleteAnnouncement() {
+    const id = pendingDelete?.id
+    if (!id) return
     setDeletingId(id)
     setMessage('')
+    setNotice('')
     const { error } = await supabase.from('announcements').delete().eq('id', id)
 
     if (error) {
       setMessage(error.message)
     } else {
       setAnnouncements((current) => current.filter((announcement) => announcement.id !== id))
-      setMessage('Announcement deleted.')
+      setNotice('Announcement deleted.')
     }
     setDeletingId(null)
+    setPendingDelete(null)
   }
 
   function formatDate(value) {
@@ -91,14 +103,19 @@ function AnnouncementsPanel({ canManage = false }) {
 
   return (
     <section className="announcements-panel">
+      <AuthToast message={notice} onDismiss={() => setNotice('')} duration={5000} variant="success" />
+      {pendingDelete && <ConfirmDialog title="Delete announcement?" message={`“${pendingDelete.title}” will be permanently removed.`} confirmLabel="Delete" busy={deletingId === pendingDelete.id} onConfirm={deleteAnnouncement} onCancel={() => setPendingDelete(null)} />}
       <header className="announcements-header">
         <div>
           <h2>Announcements</h2>
         </div>
-        <span>{announcements.length} posted</span>
+        <div className="announcements-header-actions">
+          <span>{announcements.length} posted</span>
+          {canManage && <button type="button" className="announcement-compose-toggle" aria-expanded={composerOpen} onClick={() => setComposerOpen((open) => !open)}><i className="app-icon app-icon-pen" aria-hidden="true" /><span>{composerOpen ? 'Close' : 'Add announcement'}</span></button>}
+        </div>
       </header>
 
-      {canManage && (
+      {canManage && composerOpen && (
         <form className="announcement-form" onSubmit={publishAnnouncement}>
           <label>
             Title
@@ -110,7 +127,7 @@ function AnnouncementsPanel({ canManage = false }) {
             <textarea value={body} onChange={(event) => setBody(event.target.value)} maxLength={BODY_LIMIT} rows="5" placeholder="Write the announcement clearly and briefly." required />
             <small>{body.length}/{BODY_LIMIT}</small>
           </label>
-          <button type="submit" disabled={saving || !title.trim() || !body.trim()}>{saving ? <LoadingSpinner label="Publishing..." inline /> : 'Publish Announcement'}</button>
+          <button type="submit" disabled={saving || !title.trim() || !body.trim()}>{saving ? <LoadingSpinner label="Publishing..." inline /> : <><i className="app-icon app-icon-mail" aria-hidden="true" /><span>Publish Announcement</span></>}</button>
         </form>
       )}
 
@@ -129,7 +146,7 @@ function AnnouncementsPanel({ canManage = false }) {
                   <h3>{announcement.title}</h3>
                   <time dateTime={announcement.published_at}>{formatDate(announcement.published_at)}</time>
                 </div>
-                {canManage && <button type="button" disabled={deletingId === announcement.id} onClick={() => deleteAnnouncement(announcement.id)} aria-label={`Delete announcement: ${announcement.title}`} title="Delete announcement"><i className="app-icon app-icon-trash" aria-hidden="true" /></button>}
+                {canManage && <button type="button" disabled={deletingId === announcement.id} onClick={() => setPendingDelete(announcement)} aria-label={`Delete announcement: ${announcement.title}`} title="Delete announcement"><i className="app-icon app-icon-trash" aria-hidden="true" /></button>}
               </div>
               <p>{announcement.body}</p>
             </article>

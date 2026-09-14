@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import LoadingSpinner from './LoadingSpinner'
-import useAutoRefresh from '../hooks/useAutoRefresh'
+import AuthToast from './AuthToast'
+import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 
 function getLocalDateValue() {
   const now = new Date()
@@ -30,6 +31,7 @@ function AttendanceRoster({ enrollments, loading, attendanceDate, onDateChange, 
   const [recordsLoading, setRecordsLoading] = useState(true)
   const [savingId, setSavingId] = useState(null)
   const [message, setMessage] = useState('')
+  const [notice, setNotice] = useState('')
 
   const loadAttendance = useCallback(async ({ silent = false } = {}) => {
     if (!silent) {
@@ -57,13 +59,17 @@ function AttendanceRoster({ enrollments, loading, attendanceDate, onDateChange, 
     return () => window.clearTimeout(loadTimer)
   }, [loadAttendance])
 
-  useAutoRefresh(() => loadAttendance({ silent: true }))
+  useRealtimeRefresh(() => loadAttendance({ silent: true }), {
+    channelName: 'attendance-roster',
+    tables: ['attendance_records'],
+  })
 
   async function markAttendance(enrollmentId, status) {
     if (!canEdit || savingId) return
 
     setSavingId(enrollmentId)
     setMessage('')
+    setNotice('')
 
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
@@ -86,6 +92,7 @@ function AttendanceRoster({ enrollments, loading, attendanceDate, onDateChange, 
       setMessage(error.message)
     } else {
       setRecords((current) => ({ ...current, [enrollmentId]: status }))
+      setNotice(`Attendance marked ${status}.`)
     }
 
     setSavingId(null)
@@ -93,6 +100,7 @@ function AttendanceRoster({ enrollments, loading, attendanceDate, onDateChange, 
 
   return (
     <section className="pending-approvals-panel attendance-panel">
+      <AuthToast message={notice} onDismiss={() => setNotice('')} duration={5000} variant="success" />
       <div className="pending-approvals-header attendance-header">
         <div><h2>Attendance</h2></div>
         <span className="waiting-badge">{students.length} students</span>

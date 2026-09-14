@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import RoleManagerDialog from './RoleManagerDialog'
 import NotificationsMenu from './NotificationsMenu'
 import AccountSettingsDialog from './AccountSettingsDialog'
-import useAutoRefresh from '../hooks/useAutoRefresh'
+import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 
 function AppHeader({ loggedOutAction = 'home' }) {
   const navigate = useNavigate()
@@ -45,7 +45,11 @@ function AppHeader({ loggedOutAction = 'home' }) {
     }
   }, [loadAccount])
 
-  useAutoRefresh(loadAccount)
+  useRealtimeRefresh(loadAccount, {
+    channelName: 'app-header',
+    tables: ['profiles'],
+    enabled: Boolean(user),
+  })
 
   useEffect(() => {
     if (!menuOpen) return undefined

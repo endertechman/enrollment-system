@@ -1,19 +1,22 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom'
 
 import HomePage from './pages/HomePage'
-
-import Login from './components/Login'
-import Register from './components/Register'
-import ResetPassword from './components/ResetPassword'
-import EnrollmentForm from './components/EnrollmentForm'
-import ParentDashboard from './pages/ParentDashboard'
-import TeacherDashboard from './pages/TeacherDashboard'
-import TeacherAideDashboard from './pages/TeacherAideDashboard'
 import RoleRoute from './components/RoleRoute'
+import LoadingSpinner from './components/LoadingSpinner'
+
+const Login = lazy(() => import('./components/Login'))
+const Register = lazy(() => import('./components/Register'))
+const ResetPassword = lazy(() => import('./components/ResetPassword'))
+const EnrollmentForm = lazy(() => import('./components/EnrollmentForm'))
+const ParentDashboard = lazy(() => import('./pages/ParentDashboard'))
+const TeacherDashboard = lazy(() => import('./pages/TeacherDashboard'))
+const TeacherAideDashboard = lazy(() => import('./pages/TeacherAideDashboard'))
 
 function App() {
   return (
     <BrowserRouter>
+      <Suspense fallback={<LoadingSpinner label="Loading page..." fullPage />}>
       <Routes>
         {/* Public */}
         <Route path="/" element={<HomePage />} />
@@ -61,6 +64,7 @@ function App() {
           }
         />
       </Routes>
+      </Suspense>
     </BrowserRouter>
   )
 }

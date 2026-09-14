@@ -7,7 +7,7 @@ import AttendanceRoster from '../components/AttendanceRoster'
 import AnnouncementsPanel from '../components/AnnouncementsPanel'
 import CalendarPanel from '../components/CalendarPanel'
 import HealthGrowthPanel from '../components/HealthGrowthPanel'
-import useAutoRefresh from '../hooks/useAutoRefresh'
+import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 
 function TeacherAideDashboard() {
   const navigate = useNavigate()
@@ -58,7 +58,7 @@ function TeacherAideDashboard() {
         .single(),
       supabase
         .from('enrollments')
-        .select('*')
+        .select('id, parent_id, child_first_name, child_middle_name, child_last_name, child_suffix, birth_date, sex, height_cm, weight_kg, status, reference_code, submitted_at, reviewed_at')
         .order('submitted_at', { ascending: false }),
       supabase.rpc('get_staff_parent_names'),
     ])
@@ -148,7 +148,10 @@ function TeacherAideDashboard() {
     return () => window.clearTimeout(loadTimer)
   }, [loadDashboard])
 
-  useAutoRefresh(() => loadDashboard({ silent: true }))
+  useRealtimeRefresh(() => loadDashboard({ silent: true }), {
+    channelName: 'teacher-aide-dashboard',
+    tables: ['profiles', 'enrollments'],
+  })
 
   function formatSex(sex) {
     if (!sex) return 'Not specified'

@@ -1,13 +1,19 @@
 .announcements-panel { min-width:0; padding:clamp(20px,3vw,28px); border:1px solid rgba(255,255,255,.78); border-radius:20px; background:rgba(255,255,255,.68); box-shadow:0 18px 45px rgba(116,87,105,.1); }
 .announcements-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:12px 14px; border:0; border-radius:14px; background:rgba(255,255,255,.7); }
 .announcements-header h2 { margin:0; color:var(--color-text); font-size:18px; }
-.announcements-header>span { flex:0 0 auto; padding:6px 11px; border-radius:999px; background:#ffe1ed; color:#c14c72; font-size:11px; font-weight:750; }
+.announcements-header-actions { display:flex; align-items:center; gap:8px; }
+.announcements-header-actions>span { flex:0 0 auto; padding:6px 11px; border-radius:999px; background:#ffe1ed; color:#c14c72; font-size:11px; font-weight:750; }
+.announcement-compose-toggle { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:34px; padding:7px 12px; border:0; border-radius:999px; background:#ef92b3; color:#fff; font:inherit; font-size:11.5px; font-weight:750; cursor:pointer; transition:background-color .2s ease; }
+.announcement-compose-toggle:hover { background:#e781a6; }
+.announcement-compose-toggle:focus-visible { outline:3px solid rgba(239,146,179,.25); outline-offset:2px; }
+.announcement-compose-toggle .app-icon { width:14px; height:14px; flex:0 0 14px; }
 .announcement-form { display:grid; gap:14px; margin-top:18px; padding:17px; border-radius:15px; background:rgba(255,255,255,.82); }
 .announcement-form label { position:relative; display:grid; gap:7px; color:var(--color-text); font-size:12.5px; font-weight:700; }
 .announcement-form input,.announcement-form textarea { width:100%; padding:11px 13px; border:1px solid #ded7dd; border-radius:11px; background:#fff; color:var(--color-text); font:inherit; font-size:13.5px; line-height:1.5; outline:none; resize:vertical; transition:border-color .2s ease,box-shadow .2s ease; }
 .announcement-form input:focus,.announcement-form textarea:focus { border-color:#8de1e5; box-shadow:0 0 0 3px rgba(53,200,208,.13); }
 .announcement-form label small { position:absolute; right:10px; top:1px; color:var(--color-muted); font-size:10.5px; font-weight:600; }
-.announcement-form button { justify-self:end; min-height:40px; padding:9px 17px; border:0; border-radius:999px; background:#ef92b3; color:#fff; font:inherit; font-size:12.5px; font-weight:700; cursor:pointer; transition:background-color .2s ease; }
+.announcement-form button { display:inline-flex; align-items:center; justify-content:center; gap:8px; justify-self:end; min-height:40px; padding:9px 17px; border:0; border-radius:999px; background:#ef92b3; color:#fff; font:inherit; font-size:12.5px; font-weight:700; cursor:pointer; transition:background-color .2s ease; }
+.announcement-form button .app-icon { width:15px; height:15px; flex:0 0 15px; }
 .announcement-form button:hover:not(:disabled) { background:#e781a6; }
 .announcement-form button:disabled { opacity:.55; cursor:not-allowed; }
 .announcement-message { margin:15px 0 0; padding:11px 13px; border-radius:11px; background:#fff1f5; color:#a83e60; font-size:12.5px; font-weight:600; }
@@ -23,4 +29,4 @@
 .announcement-card-heading button:focus-visible { outline:3px solid rgba(217,75,112,.2); outline-offset:1px; }
 .announcement-card-heading button:disabled { opacity:.55; cursor:wait; }
 .announcement-empty { margin:18px 0 0; padding:48px 20px; border-radius:15px; background:rgba(255,255,255,.5); color:var(--color-muted); text-align:center; }
-@media(max-width:520px) { .announcements-header{flex-direction:column}.announcement-form{padding:14px}.announcement-form button{width:100%}.announcement-card-heading{gap:12px}.announcement-card-heading button{align-self:flex-start} }
+@media(max-width:520px) { .announcements-header{align-items:flex-start;flex-direction:column}.announcements-header-actions{width:100%;justify-content:space-between}.announcement-form{padding:14px}.announcement-form button{width:100%}.announcement-card-heading{gap:12px}.announcement-card-heading button{align-self:flex-start} }

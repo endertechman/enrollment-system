@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import LoadingSpinner from './LoadingSpinner'
@@ -8,11 +8,7 @@ function RoleRoute({ allowedRole, children }) {
   const [userExists, setUserExists] = useState(false)
   const [allowed, setAllowed] = useState(false)
 
-  useEffect(() => {
-    checkRole()
-  }, [allowedRole])
-
-  async function checkRole() {
+  const checkRole = useCallback(async () => {
     setLoading(true)
 
     const {
@@ -44,7 +40,12 @@ function RoleRoute({ allowedRole, children }) {
 
     setAllowed(profile.role === allowedRole)
     setLoading(false)
-  }
+  }, [allowedRole])
+
+  useEffect(() => {
+    const checkTimer = window.setTimeout(checkRole, 0)
+    return () => window.clearTimeout(checkTimer)
+  }, [checkRole])
 
   if (loading) {
     return <LoadingSpinner label="Checking account access..." fullPage />

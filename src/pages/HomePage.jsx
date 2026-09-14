@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { getEnrollmentWindow } from '../lib/enrollmentWindow'
-import useAutoRefresh from '../hooks/useAutoRefresh'
+import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 import LoadingSpinner from '../components/LoadingSpinner'
 import GuestHomeView from '../components/home/GuestHomeView'
 import SignedInHomeView from '../components/home/SignedInHomeView'
@@ -70,7 +70,10 @@ function HomePage() {
     }
   }, [loadHome])
 
-  useAutoRefresh(() => loadHome({ silent: true }))
+  useRealtimeRefresh(() => loadHome({ silent: true }), {
+    channelName: 'home',
+    tables: ['profiles', 'enrollments', 'enrollment_settings'],
+  })
 
   if (homeState.status === 'loading') {
     return <LoadingSpinner label="Loading your BCDC account..." fullPage />

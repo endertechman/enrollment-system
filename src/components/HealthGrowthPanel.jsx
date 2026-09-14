@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import LoadingSpinner from './LoadingSpinner'
-import useAutoRefresh from '../hooks/useAutoRefresh'
+import AuthToast from './AuthToast'
+import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 
 function localDateValue() {
   const now = new Date()
@@ -32,6 +33,7 @@ function HealthGrowthPanel({ enrollments, canManage = false }) {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
+  const [notice, setNotice] = useState('')
 
   const activeEnrollmentId = useMemo(
     () => students.some((item) => item.id === selectedEnrollmentId)
@@ -72,7 +74,11 @@ function HealthGrowthPanel({ enrollments, canManage = false }) {
     return () => window.clearTimeout(loadTimer)
   }, [loadRecords])
 
-  useAutoRefresh(() => loadRecords({ silent: true }), { enabled: Boolean(activeEnrollmentId) })
+  useRealtimeRefresh(() => loadRecords({ silent: true }), {
+    channelName: `health-growth-${activeEnrollmentId || 'none'}`,
+    tables: ['growth_records'],
+    enabled: Boolean(activeEnrollmentId),
+  })
 
   function selectStudent(id) {
     setSelectedEnrollmentId(id)
@@ -101,6 +107,7 @@ function HealthGrowthPanel({ enrollments, canManage = false }) {
 
     setSaving(true)
     setMessage('')
+    setNotice('')
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       setMessage('You must be logged in to save a measurement.')
@@ -129,13 +136,14 @@ function HealthGrowthPanel({ enrollments, canManage = false }) {
       setHeightCm('')
       setWeightKg('')
       setMeasuredOn(localDateValue())
-      setMessage('Growth measurement saved. BMI was calculated automatically.')
+      setNotice('Growth measurement saved. BMI was calculated automatically.')
     }
     setSaving(false)
   }
 
   return (
     <section className="growth-panel">
+      <AuthToast message={notice} onDismiss={() => setNotice('')} duration={5000} variant="success" />
       <header className="growth-header">
         <div><h2>Health &amp; Growth</h2></div>
       </header>

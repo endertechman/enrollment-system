@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import LoadingSpinner from './LoadingSpinner'
-import useAutoRefresh from '../hooks/useAutoRefresh'
+import AuthToast from './AuthToast'
+import ConfirmDialog from './ConfirmDialog'
+import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 
 const TITLE_LIMIT = 100
 const DESCRIPTION_LIMIT = 500
@@ -28,6 +30,8 @@ function CalendarPanel({ canManage = false }) {
   const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState(null)
   const [message, setMessage] = useState('')
+  const [notice, setNotice] = useState('')
+  const [pendingDelete, setPendingDelete] = useState(null)
 
   const monthKey = `${visibleMonth.getFullYear()}-${String(visibleMonth.getMonth() + 1).padStart(2, '0')}`
 
@@ -60,7 +64,10 @@ function CalendarPanel({ canManage = false }) {
     return () => window.clearTimeout(loadTimer)
   }, [loadEvents])
 
-  useAutoRefresh(() => loadEvents({ silent: true }))
+  useRealtimeRefresh(() => loadEvents({ silent: true }), {
+    channelName: 'calendar-panel',
+    tables: ['calendar_events'],
+  })
 
   function changeMonth(amount) {
     const nextMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + amount, 1)
@@ -84,6 +91,7 @@ function CalendarPanel({ canManage = false }) {
 
     setSaving(true)
     setMessage('')
+    setNotice('')
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       setMessage('You must be logged in to create an event.')
@@ -108,22 +116,25 @@ function CalendarPanel({ canManage = false }) {
       setEvents((current) => [...current, data].sort((a, b) => a.event_date.localeCompare(b.event_date)))
       setTitle('')
       setDescription('')
-      setMessage('Calendar event added.')
+      setNotice('Calendar event added.')
     }
     setSaving(false)
   }
 
-  async function deleteEvent(id) {
-    if (!window.confirm('Delete this calendar event? This cannot be undone.')) return
+  async function deleteEvent() {
+    const id = pendingDelete?.id
+    if (!id) return
     setDeletingId(id)
     setMessage('')
+    setNotice('')
     const { error } = await supabase.from('calendar_events').delete().eq('id', id)
     if (error) setMessage(error.message)
     else {
       setEvents((current) => current.filter((item) => item.id !== id))
-      setMessage('Calendar event deleted.')
+      setNotice('Calendar event deleted.')
     }
     setDeletingId(null)
+    setPendingDelete(null)
   }
 
   const daysInMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 0).getDate()
@@ -139,6 +150,8 @@ function CalendarPanel({ canManage = false }) {
 
   return (
     <section className="calendar-panel">
+      <AuthToast message={notice} onDismiss={() => setNotice('')} duration={5000} variant="success" />
+      {pendingDelete && <ConfirmDialog title="Delete calendar event?" message={`“${pendingDelete.title}” will be permanently removed from the calendar.`} confirmLabel="Delete" busy={deletingId === pendingDelete.id} onConfirm={deleteEvent} onCancel={() => setPendingDelete(null)} />}
       <header className="calendar-header">
         <div><h2>Calendar</h2></div>
       </header>
@@ -180,7 +193,7 @@ function CalendarPanel({ canManage = false }) {
 
           {message && <p className="calendar-message">{message}</p>}
           {loading ? <div className="calendar-empty"><LoadingSpinner label="Loading events..." compact /></div> : selectedEvents.length === 0 ? <p className="calendar-empty">No events for this day.</p> : <div className="calendar-event-list">
-            {selectedEvents.map((item) => <article key={item.id}><div><h4>{item.title}</h4>{item.description && <p>{item.description}</p>}</div>{canManage && <button type="button" disabled={deletingId === item.id} onClick={() => deleteEvent(item.id)} aria-label={`Delete calendar event: ${item.title}`} title="Delete calendar event"><i className="app-icon app-icon-trash" aria-hidden="true" /></button>}</article>)}
+            {selectedEvents.map((item) => <article key={item.id}><div><h4>{item.title}</h4>{item.description && <p>{item.description}</p>}</div>{canManage && <button type="button" disabled={deletingId === item.id} onClick={() => setPendingDelete(item)} aria-label={`Delete calendar event: ${item.title}`} title="Delete calendar event"><i className="app-icon app-icon-trash" aria-hidden="true" /></button>}</article>)}
           </div>}
         </aside>
       </div>

@@ -6,7 +6,8 @@ import LoadingSpinner from '../components/LoadingSpinner'
 import AnnouncementsPanel from '../components/AnnouncementsPanel'
 import CalendarPanel from '../components/CalendarPanel'
 import HealthGrowthPanel from '../components/HealthGrowthPanel'
-import useAutoRefresh from '../hooks/useAutoRefresh'
+import AuthToast from '../components/AuthToast'
+import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 
 function ParentDashboard() {
   const navigate = useNavigate()
@@ -15,6 +16,11 @@ function ParentDashboard() {
   const [parentName, setParentName] = useState('Parent')
   const [enrollments, setEnrollments] = useState([])
   const [message, setMessage] = useState('')
+  const [notice, setNotice] = useState(() => {
+    const savedNotice = window.sessionStorage.getItem('bcdc:enrollment-success') || ''
+    window.sessionStorage.removeItem('bcdc:enrollment-success')
+    return savedNotice
+  })
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState(() => {
     const requestedTab = searchParams.get('tab')
@@ -107,7 +113,10 @@ function ParentDashboard() {
     return () => window.clearTimeout(loadTimer)
   }, [loadDashboard])
 
-  useAutoRefresh(() => loadDashboard({ silent: true }))
+  useRealtimeRefresh(() => loadDashboard({ silent: true }), {
+    channelName: 'parent-dashboard',
+    tables: ['profiles', 'enrollments'],
+  })
 
   function formatDate(date) {
     if (!date) return '—'
@@ -154,6 +163,7 @@ function ParentDashboard() {
   return (
     <div className="parent-dashboard-page">
       <AppHeader />
+      <AuthToast message={notice} onDismiss={() => setNotice('')} duration={5000} variant="success" />
 
       <main className="parent-dashboard-scroll">
         <div className="parent-dashboard-content">

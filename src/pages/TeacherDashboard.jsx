@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import AppHeader from '../components/AppHeader'
 import AuthToast from '../components/AuthToast'
+import ConfirmDialog from '../components/ConfirmDialog'
 import LoadingSpinner from '../components/LoadingSpinner'
 import AttendanceRoster from '../components/AttendanceRoster'
 import AnnouncementsPanel from '../components/AnnouncementsPanel'
 import CalendarPanel from '../components/CalendarPanel'
 import HealthGrowthPanel from '../components/HealthGrowthPanel'
 import { getEnrollmentWindow, getEnrollmentWindowStatus, toDateTimeLocalValue } from '../lib/enrollmentWindow'
-import useAutoRefresh from '../hooks/useAutoRefresh'
+import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 
 function TeacherDashboard() {
   const navigate = useNavigate()
@@ -34,6 +35,7 @@ function TeacherDashboard() {
   const [savedClosesAt, setSavedClosesAt] = useState('')
   const [deletingRejected, setDeletingRejected] = useState(false)
   const [studentFilter, setStudentFilter] = useState('all')
+  const [pendingRejectedDelete, setPendingRejectedDelete] = useState([])
   const [attendanceDate, setAttendanceDate] = useState(() => {
     const now = new Date()
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
@@ -72,7 +74,7 @@ function TeacherDashboard() {
         .single(),
       supabase
         .from('enrollments')
-        .select('*')
+        .select('id, parent_id, child_first_name, child_middle_name, child_last_name, child_suffix, birth_date, sex, height_cm, weight_kg, status, reference_code, submitted_at, reviewed_at, reviewed_by')
         .order('submitted_at', { ascending: false }),
       supabase.rpc('get_staff_parent_names'),
       getEnrollmentWindow(),
@@ -124,7 +126,10 @@ function TeacherDashboard() {
     return () => window.clearTimeout(initialLoad)
   }, [loadDashboard])
 
-  useAutoRefresh(() => loadDashboard({ silent: true }))
+  useRealtimeRefresh(() => loadDashboard({ silent: true }), {
+    channelName: 'teacher-dashboard',
+    tables: ['profiles', 'enrollments', 'enrollment_settings'],
+  })
 
   async function updateStatus(id, status) {
     setMessage('')
@@ -221,6 +226,7 @@ function TeacherDashboard() {
   async function saveEnrollmentWindow(event) {
     event.preventDefault()
     setMessage('')
+    setReviewNotice('')
 
     const minimumOpeningTime = toDateTimeLocalValue(new Date(Date.now() + 60000))
     const keepingCurrentOpening = opensAt === savedOpensAt
@@ -250,7 +256,7 @@ function TeacherDashboard() {
     setSavedOpensAt(opensAt)
     setSavedClosesAt(closesAt)
     setEditingWindow(false)
-    setMessage('Enrollment schedule updated.')
+    setReviewNotice('Enrollment schedule updated.')
   }
 
   const nextTimeSlot = new Date()
@@ -292,13 +298,12 @@ function TeacherDashboard() {
       : [...current, id])
   }
 
-  async function deleteRejected(ids) {
+  async function deleteRejected() {
+    const ids = pendingRejectedDelete
     if (!ids.length) return
-    const label = ids.length === 1 ? 'this rejected application' : `${ids.length} rejected applications`
-    if (!window.confirm(`Permanently delete ${label}? This cannot be undone.`)) return
-
     setDeletingRejected(true)
     setMessage('')
+    setReviewNotice('')
     const { error } = await supabase
       .from('enrollments')
       .delete()
@@ -313,7 +318,8 @@ function TeacherDashboard() {
 
     setStudentRecords((current) => current.filter((item) => !ids.includes(item.id)))
     setSelectedRejectedIds((current) => current.filter((id) => !ids.includes(id)))
-    setMessage(ids.length === 1 ? 'Rejected application deleted.' : 'Selected rejected applications deleted.')
+    setReviewNotice(ids.length === 1 ? 'Rejected application deleted.' : 'Selected rejected applications deleted.')
+    setPendingRejectedDelete([])
   }
 
   const studentDirectoryRecords = studentRecords.filter((enrollment) => enrollment.status !== 'pending')
@@ -325,7 +331,8 @@ function TeacherDashboard() {
   return (
     <div className="teacher-dashboard-page">
       <AppHeader />
-      <AuthToast message={reviewNotice} onDismiss={() => setReviewNotice('')} duration={5000} />
+      <AuthToast message={reviewNotice} onDismiss={() => setReviewNotice('')} duration={5000} variant="success" />
+      {pendingRejectedDelete.length > 0 && <ConfirmDialog title={pendingRejectedDelete.length === 1 ? 'Delete rejected application?' : `Delete ${pendingRejectedDelete.length} rejected applications?`} message="The selected enrollment records will be permanently removed. This action cannot be undone." confirmLabel="Delete" busy={deletingRejected} onConfirm={deleteRejected} onCancel={() => setPendingRejectedDelete([])} />}
 
       <main className="teacher-dashboard-scroll">
         <div className="teacher-dashboard-content">
@@ -390,7 +397,7 @@ function TeacherDashboard() {
                 {message && <p className="teacher-dashboard-message">{message}</p>}
                 {!loading && studentFilter === 'rejected' && rejectedStudentRecords.length > 0 && <div className="rejected-toolbar compact-rejected-toolbar">
                   <label><input type="checkbox" checked={selectedRejectedIds.length === rejectedStudentRecords.length} onChange={(event) => setSelectedRejectedIds(event.target.checked ? rejectedStudentRecords.map((item) => item.id) : [])} /> Select all</label>
-                  <button type="button" className="bulk-delete-button" disabled={!selectedRejectedIds.length || deletingRejected} onClick={() => deleteRejected(selectedRejectedIds)} aria-label={`Delete ${selectedRejectedIds.length} selected records`} title={`Delete selected (${selectedRejectedIds.length})`}><i className="app-icon app-icon-trash" aria-hidden="true" /></button>
+                  <button type="button" className="bulk-delete-button" disabled={!selectedRejectedIds.length || deletingRejected} onClick={() => setPendingRejectedDelete(selectedRejectedIds)} aria-label={`Delete ${selectedRejectedIds.length} selected records`} title={`Delete selected (${selectedRejectedIds.length})`}><i className="app-icon app-icon-trash" aria-hidden="true" /></button>
                 </div>}
                 {loading ? <div className="teacher-empty-state"><LoadingSpinner label="Loading student records..." compact /></div> : visibleStudentRecords.length === 0 ? <p className="teacher-empty-state">No {studentFilter === 'all' ? '' : studentFilter} student records found.</p> : <div className="records-table-shell">
                   <table className="records-table student-records-table">
@@ -406,7 +413,7 @@ function TeacherDashboard() {
                       <td data-label="Sex">{formatSex(enrollment.sex)}</td>
                       <td data-label="Parent">{enrollment.parent_full_name || '—'}</td>
                       <td data-label="BMI">{calculateBmi(enrollment.height_cm, enrollment.weight_kg)}</td>
-                      <td data-label="Status"><div className="student-row-actions"><span className={`enrollment-status ${enrollment.status}`}>{enrollment.status === 'approved' ? 'accepted' : enrollment.status}</span>{enrollment.status === 'rejected' && <button type="button" className="delete-record-button" disabled={deletingRejected} onClick={() => deleteRejected([enrollment.id])} aria-label={`Delete rejected record for ${getChildName(enrollment)}`} title="Delete rejected record"><i className="app-icon app-icon-trash" aria-hidden="true" /></button>}</div></td>
+                      <td data-label="Status"><div className="student-row-actions"><span className={`enrollment-status ${enrollment.status}`}>{enrollment.status === 'approved' ? 'accepted' : enrollment.status}</span>{enrollment.status === 'rejected' && <button type="button" className="delete-record-button" disabled={deletingRejected} onClick={() => setPendingRejectedDelete([enrollment.id])} aria-label={`Delete rejected record for ${getChildName(enrollment)}`} title="Delete rejected record"><i className="app-icon app-icon-trash" aria-hidden="true" /></button>}</div></td>
                     </tr>)}</tbody>
                   </table>
                 </div>}

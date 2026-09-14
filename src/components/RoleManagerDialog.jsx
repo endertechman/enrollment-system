@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import LoadingSpinner from './LoadingSpinner'
+import AuthToast from './AuthToast'
+import ConfirmDialog from './ConfirmDialog'
 
 function formatRole(role) {
   if (role === 'teacher_aide') return 'Teacher Aide'
@@ -11,16 +13,18 @@ function RoleManagerDialog({ onClose }) {
   const [email, setEmail] = useState('')
   const [account, setAccount] = useState(null)
   const [message, setMessage] = useState('')
+  const [notice, setNotice] = useState('')
   const [searching, setSearching] = useState(false)
   const [updatingRole, setUpdatingRole] = useState('')
+  const [pendingRole, setPendingRole] = useState('')
 
   useEffect(() => {
     function closeOnEscape(event) {
-      if (event.key === 'Escape') onClose()
+      if (event.key === 'Escape' && !pendingRole) onClose()
     }
     document.addEventListener('keydown', closeOnEscape)
     return () => document.removeEventListener('keydown', closeOnEscape)
-  }, [onClose])
+  }, [onClose, pendingRole])
 
   async function findAccount(event) {
     event.preventDefault()
@@ -40,14 +44,12 @@ function RoleManagerDialog({ onClose }) {
     setSearching(false)
   }
 
-  async function changeRole(nextRole) {
-    if (!account || updatingRole) return
-
-    const nextLabel = formatRole(nextRole)
-    if (!window.confirm(`Change ${account.full_name}'s role to ${nextLabel}?`)) return
-
+  async function changeRole() {
+    const nextRole = pendingRole
+    if (!account || !nextRole || updatingRole) return
     setUpdatingRole(nextRole)
     setMessage('')
+    setNotice('')
     const { data, error } = await supabase
       .rpc('set_account_role', { p_user_id: account.user_id, p_role: nextRole })
       .single()
@@ -55,9 +57,10 @@ function RoleManagerDialog({ onClose }) {
     if (error) setMessage(error.message)
     else {
       setAccount(data)
-      setMessage(`Account role changed to ${formatRole(data.account_role)}.`)
+      setNotice(`Account role changed to ${formatRole(data.account_role)}.`)
     }
     setUpdatingRole('')
+    setPendingRole('')
   }
 
   const availableRoles = account?.account_role === 'parent'
@@ -68,6 +71,8 @@ function RoleManagerDialog({ onClose }) {
 
   return (
     <div className="role-manager-overlay" role="dialog" aria-modal="true" aria-labelledby="role-manager-title" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
+      <AuthToast message={notice} onDismiss={() => setNotice('')} duration={5000} variant="success" />
+      {pendingRole && account && <ConfirmDialog title="Change account role?" message={`${account.full_name} will become ${formatRole(pendingRole)}.`} confirmLabel="Change Role" tone="primary" iconClass="app-icon-user-add" busy={Boolean(updatingRole)} onConfirm={changeRole} onCancel={() => setPendingRole('')} />}
       <section className="role-manager-dialog">
         <button type="button" className="role-manager-close" onClick={onClose} aria-label="Close role manager"><i className="app-icon app-icon-close" aria-hidden="true" /></button>
         <header>
@@ -86,7 +91,7 @@ function RoleManagerDialog({ onClose }) {
         {account && <article className="role-manager-result">
           <div className="role-manager-account"><i className="app-icon app-icon-user-list" aria-hidden="true" /><div><span>Account</span><strong>{account.full_name}</strong></div></div>
           <div><span>Current role</span><strong>{formatRole(account.account_role)}</strong></div>
-          {account.account_role === 'teacher' ? <p>Teacher accounts are protected and cannot be changed here.</p> : <div className="role-manager-actions">{availableRoles.map(([role, label]) => <button type="button" key={role} disabled={Boolean(updatingRole)} onClick={() => changeRole(role)}>{updatingRole === role ? <LoadingSpinner label="Updating..." inline /> : label}</button>)}</div>}
+          {account.account_role === 'teacher' ? <p>Teacher accounts are protected and cannot be changed here.</p> : <div className="role-manager-actions">{availableRoles.map(([role, label]) => <button type="button" key={role} disabled={Boolean(updatingRole)} onClick={() => setPendingRole(role)}>{updatingRole === role ? <LoadingSpinner label="Updating..." inline /> : label}</button>)}</div>}
         </article>}
 
         <p className="role-manager-note">Teacher accounts cannot be changed or demoted here.</p>

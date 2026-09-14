@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import LoadingSpinner from './LoadingSpinner'
-import useAutoRefresh from '../hooks/useAutoRefresh'
+import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 
 function localDateValue() {
   const now = new Date()
@@ -125,70 +125,10 @@ function NotificationsMenu({ user, role }) {
     }
   }, [loadNotifications])
 
-  useAutoRefresh(loadNotifications)
-
-  useEffect(() => {
-    if (role !== 'parent') return undefined
-
-    const channel = supabase
-      .channel(`parent-enrollment-notifications:${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'enrollments',
-          filter: `parent_id=eq.${user.id}`,
-        },
-        () => loadNotifications(),
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [loadNotifications, role, user.id])
-
-  useEffect(() => {
-    if (role !== 'parent') return undefined
-
-    const channel = supabase
-      .channel(`parent-attendance-notifications:${user.id}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'attendance_records' },
-        () => loadNotifications(),
-      )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'attendance_records' },
-        () => loadNotifications(),
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [loadNotifications, role, user.id])
-
-  useEffect(() => {
-    if (role !== 'parent' && role !== 'teacher' && role !== 'teacher_aide') return undefined
-
-    const channel = supabase
-      .channel(`calendar-event-notifications:${role}:${user.id}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'calendar_events' },
-        (payload) => {
-          if (payload.new?.event_date === localDateValue()) loadNotifications()
-        },
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [loadNotifications, role, user.id])
+  useRealtimeRefresh(loadNotifications, {
+    channelName: `notifications-${role}-${user.id}`,
+    tables: ['enrollments', 'attendance_records', 'announcements', 'calendar_events'],
+  })
 
   useEffect(() => {
     if (!open) return undefined

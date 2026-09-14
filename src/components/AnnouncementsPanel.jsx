@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import LoadingSpinner from './LoadingSpinner'
+import useAutoRefresh from '../hooks/useAutoRefresh'
 
 const TITLE_LIMIT = 100
 const BODY_LIMIT = 500
@@ -14,28 +15,26 @@ function AnnouncementsPanel({ canManage = false }) {
   const [deletingId, setDeletingId] = useState(null)
   const [message, setMessage] = useState('')
 
-  useEffect(() => {
-    let active = true
+  const loadAnnouncements = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('announcements')
+      .select('id, title, body, published_at')
+      .order('published_at', { ascending: false })
 
-    async function loadAnnouncements() {
-      const { data, error } = await supabase
-        .from('announcements')
-        .select('id, title, body, published_at')
-        .order('published_at', { ascending: false })
-
-      if (!active) return
-
-      if (error) {
-        setMessage('Announcements are unavailable until the Supabase migration is applied.')
-      } else {
-        setAnnouncements(data || [])
-      }
-      setLoading(false)
+    if (error) {
+      setMessage('Announcements are unavailable until the Supabase migration is applied.')
+    } else {
+      setAnnouncements(data || [])
     }
-
-    loadAnnouncements()
-    return () => { active = false }
+    setLoading(false)
   }, [])
+
+  useEffect(() => {
+    const loadTimer = window.setTimeout(loadAnnouncements, 0)
+    return () => window.clearTimeout(loadTimer)
+  }, [loadAnnouncements])
+
+  useAutoRefresh(loadAnnouncements)
 
   async function publishAnnouncement(event) {
     event.preventDefault()
@@ -95,7 +94,6 @@ function AnnouncementsPanel({ canManage = false }) {
       <header className="announcements-header">
         <div>
           <h2>Announcements</h2>
-          <p>{canManage ? 'Share important updates with parents and staff.' : 'Important updates from BCDC.'}</p>
         </div>
         <span>{announcements.length} posted</span>
       </header>
@@ -112,7 +110,7 @@ function AnnouncementsPanel({ canManage = false }) {
             <textarea value={body} onChange={(event) => setBody(event.target.value)} maxLength={BODY_LIMIT} rows="5" placeholder="Write the announcement clearly and briefly." required />
             <small>{body.length}/{BODY_LIMIT}</small>
           </label>
-          <button type="submit" disabled={saving || !title.trim() || !body.trim()}>{saving ? 'Publishing...' : 'Publish Announcement'}</button>
+          <button type="submit" disabled={saving || !title.trim() || !body.trim()}>{saving ? <LoadingSpinner label="Publishing..." inline /> : 'Publish Announcement'}</button>
         </form>
       )}
 

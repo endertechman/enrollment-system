@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import takeAuthAttempt, { startAuthCooldown } from '../lib/authRateLimit'
 import AppHeader from './AppHeader'
 import AuthToast from './AuthToast'
+import LoadingSpinner from './LoadingSpinner'
 
 function Register() {
   const navigate = useNavigate()
@@ -207,7 +208,7 @@ function Register() {
                   disabled={submitting}
                   onClick={registeredEmail ? () => navigate('/login') : undefined}
                 >
-                  {submitting ? 'Creating Account...' : registeredEmail ? 'Done' : 'Register'}
+                  {submitting ? <LoadingSpinner label="Creating account..." inline /> : registeredEmail ? 'Done' : 'Register'}
                 </button>
               </div>
             </form>
@@ -220,7 +221,7 @@ function Register() {
                 onClick={sendAnotherConfirmation}
                 disabled={resendingConfirmation || confirmationCooldown > 0}
               >
-                {resendingConfirmation ? 'Sending...' : confirmationCooldown > 0 ? `Resend email verification in ${confirmationCooldown}s` : 'Resend email verification now'}
+                {resendingConfirmation ? <LoadingSpinner label="Sending..." inline /> : confirmationCooldown > 0 ? `Resend email verification in ${confirmationCooldown}s` : 'Resend email verification now'}
               </button>
             )}
           </div>

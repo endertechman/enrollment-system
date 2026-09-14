@@ -1,21 +1,33 @@
 .teacher-dashboard-page { --dash-ink:var(--color-text); --dash-muted:var(--color-muted); --dash-line:color-mix(in srgb, var(--color-muted) 7%, var(--color-surface)); height:100dvh; display:flex; flex-direction:column; overflow:hidden; background:radial-gradient(circle at 5% 5%,color-mix(in srgb, var(--color-accent) 20%, transparent),transparent 30%),radial-gradient(circle at 95% 8%,color-mix(in srgb, var(--color-primary) 18%, transparent),transparent 32%),var(--color-bg); }
-.teacher-dashboard-scroll { flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; }
-.teacher-dashboard-content { width:min(1120px,calc(100% - 40px)); margin:auto; padding:38px 0 64px; }
+.teacher-dashboard-scroll { flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; scrollbar-gutter:stable; }
+.teacher-dashboard-content { width:min(1360px,calc(100% - 40px)); margin:auto; padding:38px 0 64px; }
 .teacher-profile-area { padding:4px 0; }
 .teacher-profile-area h1 { margin:0; color: #302a32; font-size:clamp(24px,3vw,30px); font-weight:680; line-height:1.2; letter-spacing:-.025em; }
 .teacher-profile-area p { margin:6px 0 0; color: #6f6871; font-size:13px; }
 .staff-dashboard-layout { display:grid; grid-template-columns:190px minmax(0,1fr); gap:18px; align-items:start; margin-top:22px; }
-.teacher-tabs { position:sticky; top:18px; display:flex; flex-direction:column; gap:5px; padding:7px; border: 1px solid rgba(255, 255, 255, 0.78); border-radius:16px; background: rgba(255, 255, 255, 0.68); box-shadow: 0 12px 30px rgba(116, 87, 105, 0.08); scrollbar-width:none; cursor:default; }
+.staff-dashboard-layout > :not(.teacher-tabs) { width:100%; min-width:0; }
+.teacher-tabs { position:sticky; top:18px; display:flex; flex-direction:column; gap:8px; padding:7px; border: 1px solid rgba(255, 255, 255, 0.78); border-radius:16px; background: rgba(255, 255, 255, 0.68); box-shadow: 0 12px 30px rgba(116, 87, 105, 0.08); scrollbar-width:none; cursor:default; }
 .teacher-tabs::-webkit-scrollbar { display:none; }
-.teacher-tab { width:100%; min-height:42px; padding:10px 12px; border: 1px solid transparent; border-radius:11px; background: transparent; color: #5b6673; font:inherit; font-size:13px; font-weight:650; text-align:left; cursor:pointer; transition:background-color .2s ease,color .2s ease; }
+.teacher-tab-group { display:grid; gap:3px; padding:5px; border-radius:12px; background:rgba(255,255,255,.52); }
+.teacher-tab-group-title { display:block; padding:4px 8px 3px; color:#8a7d85; font-size:9.5px; font-weight:780; letter-spacing:.065em; line-height:1.2; text-transform:uppercase; }
+.teacher-tab { width:100%; min-height:39px; padding:9px 10px; border: 1px solid transparent; border-radius:9px; background: transparent; color: #5b6673; font:inherit; font-size:12.5px; font-weight:650; text-align:left; cursor:pointer; transition:background-color .2s ease,color .2s ease; }
 .teacher-tab:not(:disabled):hover { background: #f2f8f8; color: #397d82; }
 .teacher-tab.active { background: #dff8fa; color: #138891; }
 .teacher-tab:disabled { opacity:.46; cursor:default; }
 .pending-approvals-panel { min-width:0; padding:clamp(20px,3vw,28px); border: 1px solid rgba(255, 255, 255, 0.78); border-radius:20px; background: rgba(255, 255, 255, 0.64); box-shadow: 0 18px 45px rgba(116, 87, 105, 0.1); }
-.pending-approvals-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-bottom:18px; border-bottom:1px solid color-mix(in srgb, var(--color-muted) 7%, var(--color-surface)); }
+.pending-approvals-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:12px 14px; border:0; border-radius:14px; background:rgba(255,255,255,.7); }
 .pending-approvals-header>div { min-width:0; }
-.pending-approvals-header h2 { margin:0; color: #302a32; font-size:20px; }
+.pending-approvals-header h2 { margin:0; color: #302a32; font-size:18px; }
 .waiting-badge { flex-shrink:0; padding:6px 11px; border-radius:99px; background: #ffe1ed; color: #c14c72; font-size:11px; font-weight:750; }
+.pending-approvals-header .enrollment-window-badge { min-height:29px; padding:6px 11px; font-size:11px; font-weight:750; }
+.requests-header-actions { display:flex; align-items:center; gap:7px; }
+.requests-refresh { display:grid; place-items:center; width:30px; height:30px; padding:0; border:0; border-radius:50%; background:transparent; color:#514752; cursor:pointer; transition:background-color .2s ease,color .2s ease; }
+.requests-refresh .app-icon { width:15px; height:15px; }
+.requests-refresh.is-loading .app-icon { animation:requests-refresh-spin .8s linear infinite; }
+@keyframes requests-refresh-spin { to { transform:rotate(360deg); } }
+.requests-refresh:hover:not(:disabled) { background:#f7cddd; color:#a92e56; }
+.requests-refresh:focus-visible { outline:3px solid rgba(239,146,179,.24); outline-offset:1px; }
+.requests-refresh:disabled { opacity:.5; cursor:wait; }
 .teacher-dashboard-message { margin:16px 0 0; padding:11px 13px; border:1px solid color-mix(in srgb, var(--color-muted) 22%, var(--color-surface)); border-radius:11px; background:color-mix(in srgb, var(--color-muted) 7%, var(--color-surface)); color: #a83e60; font-size:13px; font-weight:600; }
 .approval-list { display:grid; gap:10px; margin-top:18px; }
 .approval-row { display:flex; align-items:center; justify-content:space-between; gap:22px; padding:17px 18px; border: 1px solid rgba(223, 218, 226, 0.8); border-radius:15px; background: rgba(255, 255, 255, 0.92); }
@@ -54,7 +66,7 @@
 .enrollment-window-actions .button-secondary:hover:not(:disabled) { border-color:color-mix(in srgb, var(--color-muted) 22%, var(--color-surface)); background:var(--color-surface); color:var(--color-text); }
 .enrollment-window-actions .button-secondary:disabled { opacity:.55; cursor:not-allowed; }
 .enrollment-window-note { margin:16px 0 0; color:var(--color-muted); font-size:12.5px; line-height:1.55; }
-@media(max-width:760px) { .teacher-dashboard-content{width:calc(100% - 28px);padding:28px 0 46px}.staff-dashboard-layout{grid-template-columns:1fr;gap:14px}.teacher-tabs{position:static;flex-direction:row;overflow-x:auto;overflow-y:hidden;white-space:nowrap}.teacher-tab{width:auto;min-width:126px;flex-shrink:0;text-align:center} }
+@media(max-width:760px) { .teacher-dashboard-content{width:calc(100% - 28px);padding:28px 0 46px}.staff-dashboard-layout{grid-template-columns:1fr;gap:14px}.teacher-tabs{position:static;flex-direction:row;overflow-x:auto;overflow-y:hidden;white-space:nowrap}.teacher-tab-group{display:flex;flex:0 0 auto;align-items:center;gap:3px}.teacher-tab-group-title{padding:0 7px}.teacher-tab{width:auto;min-width:132px;flex-shrink:0;text-align:center} }
 @media(max-width:620px) { .pending-approvals-header{align-items:flex-start;flex-direction:column}.approval-row{align-items:stretch;flex-direction:column;gap:14px}.approval-row .review-actions{width:100%}.review-actions button{flex:1} }
 @media(max-width:430px) { .teacher-dashboard-content{width:calc(100% - 24px)}.pending-approvals-panel{border-radius:17px}.enrollment-window-fields,.enrollment-window-summary dl{grid-template-columns:1fr}.enrollment-window-summary>button{width:100%}.enrollment-window-actions{display:grid;grid-template-columns:1fr 1fr}.enrollment-window-actions button{min-width:0;width:100%} }
 .rejected-toolbar { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-top:18px; padding:11px 13px; border-radius:12px; background:#faf8f9; }
@@ -86,7 +98,6 @@
 .student-status-filters button.active { border-color:#8de1e5; background:#dff8fa; color:#138891; }
 .student-record-row .enrollment-status { flex:0 0 auto; }
 
-.attendance-header p { margin:5px 0 0; color:var(--color-muted); font-size:12.5px; line-height:1.5; }
 .attendance-toolbar { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-top:18px; padding:13px 15px; border-radius:13px; background:rgba(255,255,255,.72); }
 .attendance-toolbar label { color:var(--color-text); font-size:13px; font-weight:700; }
 .attendance-toolbar input { min-height:40px; padding:7px 11px; border:1px solid #ded7dd; border-radius:10px; background:#fff; color:var(--color-text); font:inherit; font-size:13px; outline:none; }
@@ -118,8 +129,6 @@
 }
 
 /* Compact student directory and integrated rejected-record controls */
-.student-records-panel { padding:20px; }
-.student-records-panel .pending-approvals-header { padding-bottom:13px; }
 .student-records-panel .student-status-filters { margin-top:13px; }
 .student-records-panel .approval-list { gap:6px; margin-top:12px; }
 .student-record-row {
@@ -153,7 +162,6 @@
 }
 
 @media(max-width:430px) {
-  .student-records-panel { padding:16px; }
   .student-record-row.rejected-row:has(.rejected-select) { grid-template-columns:auto minmax(0,1fr); }
   .student-record-row.rejected-row:has(.rejected-select) .student-row-actions { grid-column:2; flex-direction:row; justify-content:flex-start; }
 }

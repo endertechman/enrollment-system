@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import AppHeader from '../components/AppHeader'
@@ -7,6 +7,7 @@ import AttendanceRoster from '../components/AttendanceRoster'
 import AnnouncementsPanel from '../components/AnnouncementsPanel'
 import CalendarPanel from '../components/CalendarPanel'
 import HealthGrowthPanel from '../components/HealthGrowthPanel'
+import useAutoRefresh from '../hooks/useAutoRefresh'
 
 function TeacherAideDashboard() {
   const navigate = useNavigate()
@@ -15,7 +16,10 @@ function TeacherAideDashboard() {
   const [aideName, setAideName] = useState('Teacher Aide')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState('students')
+  const [activeTab, setActiveTab] = useState(() => {
+    const requestedTab = new URLSearchParams(window.location.search).get('tab')
+    return ['students', 'health-growth', 'attendance', 'announcements', 'calendar'].includes(requestedTab) ? requestedTab : 'students'
+  })
   const [attendanceDate, setAttendanceDate] = useState(() => {
     const now = new Date()
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
@@ -23,11 +27,18 @@ function TeacherAideDashboard() {
   })
 
   useEffect(() => {
-    loadDashboard()
+    function openNotificationTab(event) {
+      if (event.detail?.dashboard === 'teacher-aide' && ['students', 'health-growth', 'attendance', 'announcements', 'calendar'].includes(event.detail.tab)) {
+        setActiveTab(event.detail.tab)
+      }
+    }
+
+    window.addEventListener('bcdc:notification-navigation', openNotificationTab)
+    return () => window.removeEventListener('bcdc:notification-navigation', openNotificationTab)
   }, [])
 
-  async function loadDashboard() {
-    setLoading(true)
+  const loadDashboard = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true)
 
     const {
       data: { user },
@@ -81,7 +92,7 @@ function TeacherAideDashboard() {
     }
 
     setLoading(false)
-  }
+  }, [navigate])
 
   function getChildName(enrollment) {
     return [
@@ -131,6 +142,13 @@ function TeacherAideDashboard() {
 
     return bmi.toFixed(1)
   }
+
+  useEffect(() => {
+    const loadTimer = window.setTimeout(() => loadDashboard(), 0)
+    return () => window.clearTimeout(loadTimer)
+  }, [loadDashboard])
+
+  useAutoRefresh(() => loadDashboard({ silent: true }))
 
   function formatSex(sex) {
     if (!sex) return 'Not specified'

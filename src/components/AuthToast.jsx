@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
-function AuthToast({ message, onDismiss }) {
+function AuthToast({ message, onDismiss, duration = 8000 }) {
   const dismissRef = useRef(onDismiss)
   const manualDismissTimer = useRef(null)
   const [isLeaving, setIsLeaving] = useState(false)
@@ -15,19 +15,19 @@ function AuthToast({ message, onDismiss }) {
       return () => window.clearTimeout(resetTimer)
     }
 
-    const fadeTimer = window.setTimeout(() => setIsLeaving(true), 7700)
-    const dismissTimer = window.setTimeout(() => dismissRef.current(), 8000)
+    const fadeTimer = window.setTimeout(() => setIsLeaving(true), Math.max(0, duration - 300))
+    const dismissTimer = window.setTimeout(() => dismissRef.current(), duration)
 
     return () => {
       window.clearTimeout(fadeTimer)
       window.clearTimeout(dismissTimer)
       window.clearTimeout(manualDismissTimer.current)
     }
-  }, [message])
+  }, [duration, message])
 
   if (!message) return null
 
-  const isSuccess = /successful|confirmed|has been sent|has been requested|password updated/i.test(message)
+  const isSuccess = /successful|approved|confirmed|has been sent|has been requested|password updated/i.test(message)
 
   function handleDismiss() {
     setIsLeaving(true)

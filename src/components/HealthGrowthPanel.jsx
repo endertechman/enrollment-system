@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import LoadingSpinner from './LoadingSpinner'
+import useAutoRefresh from '../hooks/useAutoRefresh'
 
 function localDateValue() {
   const now = new Date()
@@ -22,7 +23,7 @@ function calculateBmi(heightCm, weightKg) {
 }
 
 function HealthGrowthPanel({ enrollments, canManage = false }) {
-  const students = enrollments.filter((item) => item.status === 'approved')
+  const students = useMemo(() => enrollments.filter((item) => item.status === 'approved'), [enrollments])
   const [selectedEnrollmentId, setSelectedEnrollmentId] = useState(null)
   const [records, setRecords] = useState([])
   const [measuredOn, setMeasuredOn] = useState(localDateValue)
@@ -32,42 +33,46 @@ function HealthGrowthPanel({ enrollments, canManage = false }) {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
 
-  const activeEnrollmentId = students.some((item) => item.id === selectedEnrollmentId)
-    ? selectedEnrollmentId
-    : students[0]?.id || null
+  const activeEnrollmentId = useMemo(
+    () => students.some((item) => item.id === selectedEnrollmentId)
+      ? selectedEnrollmentId
+      : students[0]?.id || null,
+    [selectedEnrollmentId, students],
+  )
   const activeStudent = students.find((item) => item.id === activeEnrollmentId)
 
-  useEffect(() => {
-    let active = true
-
-    async function loadRecords() {
-      if (!activeEnrollmentId) {
-        setRecords([])
-        setLoading(false)
-        return
-      }
-
-      setLoading(true)
-      setMessage('')
-      const { data, error } = await supabase
-        .from('growth_records')
-        .select('id, enrollment_id, measured_on, height_cm, weight_kg, updated_at')
-        .eq('enrollment_id', activeEnrollmentId)
-        .order('measured_on', { ascending: false })
-
-      if (!active) return
-      if (error) {
-        setRecords([])
-        setMessage('Health and growth records are unavailable until the Supabase migration is applied.')
-      } else {
-        setRecords(data || [])
-      }
+  const loadRecords = useCallback(async ({ silent = false } = {}) => {
+    if (!activeEnrollmentId) {
+      setRecords([])
       setLoading(false)
+      return
     }
 
-    loadRecords()
-    return () => { active = false }
+    if (!silent) {
+      setLoading(true)
+      setMessage('')
+    }
+    const { data, error } = await supabase
+      .from('growth_records')
+      .select('id, enrollment_id, measured_on, height_cm, weight_kg, updated_at')
+      .eq('enrollment_id', activeEnrollmentId)
+      .order('measured_on', { ascending: false })
+
+    if (error) {
+      setRecords([])
+      setMessage('Health and growth records are unavailable until the Supabase migration is applied.')
+    } else {
+      setRecords(data || [])
+    }
+    setLoading(false)
   }, [activeEnrollmentId])
+
+  useEffect(() => {
+    const loadTimer = window.setTimeout(loadRecords, 0)
+    return () => window.clearTimeout(loadTimer)
+  }, [loadRecords])
+
+  useAutoRefresh(() => loadRecords({ silent: true }), { enabled: Boolean(activeEnrollmentId) })
 
   function selectStudent(id) {
     setSelectedEnrollmentId(id)
@@ -132,7 +137,7 @@ function HealthGrowthPanel({ enrollments, canManage = false }) {
   return (
     <section className="growth-panel">
       <header className="growth-header">
-        <div><h2>Health &amp; Growth</h2><p>{canManage ? 'Record height and weight to monitor each student’s BMI.' : 'View recorded growth measurements and calculated BMI.'}</p></div>
+        <div><h2>Health &amp; Growth</h2></div>
       </header>
 
       {students.length === 0 ? <p className="growth-empty">No accepted students are available yet.</p> : <>
@@ -148,7 +153,7 @@ function HealthGrowthPanel({ enrollments, canManage = false }) {
           <label>Height<div className="growth-unit-input"><input type="number" min="30" max="200" step="0.1" value={heightCm} onChange={(event) => setHeightCm(event.target.value)} placeholder="0.0" required /><span>cm</span></div></label>
           <label>Weight<div className="growth-unit-input"><input type="number" min="1" max="150" step="0.1" value={weightKg} onChange={(event) => setWeightKg(event.target.value)} placeholder="0.0" required /><span>kg</span></div></label>
           <div className="growth-bmi-preview"><span>Calculated BMI</span><strong>{calculateBmi(heightCm, weightKg)}</strong></div>
-          <button type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save Measurement'}</button>
+          <button type="submit" disabled={saving}>{saving ? <LoadingSpinner label="Saving..." inline /> : 'Save Measurement'}</button>
         </form>}
 
         {message && <p className="growth-message">{message}</p>}

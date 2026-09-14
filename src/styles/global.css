@@ -91,6 +91,24 @@ button {
 
 .app-loading-compact { min-height: 72px; }
 
+.app-loading-inline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 0;
+  color: inherit;
+}
+
+.app-loading-inline .lds-spinner {
+  --spinner-size: 18px;
+  flex: 0 0 auto;
+}
+
+.app-loading-label {
+  line-height: 1;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;

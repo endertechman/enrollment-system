@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import LoadingSpinner from './LoadingSpinner'
+import useAutoRefresh from '../hooks/useAutoRefresh'
 
 const TITLE_LIMIT = 100
 const DESCRIPTION_LIMIT = 500
@@ -30,35 +31,36 @@ function CalendarPanel({ canManage = false }) {
 
   const monthKey = `${visibleMonth.getFullYear()}-${String(visibleMonth.getMonth() + 1).padStart(2, '0')}`
 
-  useEffect(() => {
-    let active = true
-
-    async function loadEvents() {
+  const loadEvents = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) {
       setLoading(true)
       setMessage('')
-      const firstDay = `${monthKey}-01`
-      const lastDay = toDateValue(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 0))
-      const { data, error } = await supabase
-        .from('calendar_events')
-        .select('id, title, description, event_date, created_at')
-        .gte('event_date', firstDay)
-        .lte('event_date', lastDay)
-        .order('event_date', { ascending: true })
-        .order('created_at', { ascending: true })
-
-      if (!active) return
-      if (error) {
-        setEvents([])
-        setMessage('Calendar events are unavailable until the Supabase migration is applied.')
-      } else {
-        setEvents(data || [])
-      }
-      setLoading(false)
     }
+    const firstDay = `${monthKey}-01`
+    const lastDay = toDateValue(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 0))
+    const { data, error } = await supabase
+      .from('calendar_events')
+      .select('id, title, description, event_date, created_at')
+      .gte('event_date', firstDay)
+      .lte('event_date', lastDay)
+      .order('event_date', { ascending: true })
+      .order('created_at', { ascending: true })
 
-    loadEvents()
-    return () => { active = false }
+    if (error) {
+      setEvents([])
+      setMessage('Calendar events are unavailable until the Supabase migration is applied.')
+    } else {
+      setEvents(data || [])
+    }
+    setLoading(false)
   }, [monthKey, visibleMonth])
+
+  useEffect(() => {
+    const loadTimer = window.setTimeout(loadEvents, 0)
+    return () => window.clearTimeout(loadTimer)
+  }, [loadEvents])
+
+  useAutoRefresh(() => loadEvents({ silent: true }))
 
   function changeMonth(amount) {
     const nextMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + amount, 1)
@@ -138,7 +140,7 @@ function CalendarPanel({ canManage = false }) {
   return (
     <section className="calendar-panel">
       <header className="calendar-header">
-        <div><h2>Calendar</h2><p>{canManage ? 'Select a date and add a school event.' : 'View upcoming BCDC events.'}</p></div>
+        <div><h2>Calendar</h2></div>
       </header>
 
       <div className="calendar-layout">
@@ -172,7 +174,7 @@ function CalendarPanel({ canManage = false }) {
             <form className="calendar-event-form" onSubmit={createEvent}>
               <label>Event title<input value={title} onChange={(event) => setTitle(event.target.value)} maxLength={TITLE_LIMIT} placeholder="School event" required /><small>{title.length}/{TITLE_LIMIT}</small></label>
               <label>Details <span>(optional)</span><textarea value={description} onChange={(event) => setDescription(event.target.value)} maxLength={DESCRIPTION_LIMIT} rows="3" placeholder="Add helpful details." /><small>{description.length}/{DESCRIPTION_LIMIT}</small></label>
-              <button type="submit" disabled={saving || !title.trim()}>{saving ? 'Adding...' : 'Add Event'}</button>
+              <button type="submit" disabled={saving || !title.trim()}>{saving ? <LoadingSpinner label="Adding..." inline /> : 'Add Event'}</button>
             </form>
           )}
 

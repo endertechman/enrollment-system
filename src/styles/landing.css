@@ -396,7 +396,7 @@
   mask: var(--icon-url) center / contain no-repeat;
 }
 
-.app-icon-menu { --icon-url: url('/icons/menu.svg'); }
+.app-icon-menu { --icon-url: url('/icons/more-vertical-alt.svg'); }
 .app-icon-home { --icon-url: url('/icons/home.svg'); }
 .app-icon-log-in { --icon-url: url('/icons/log-in.svg'); }
 .app-icon-log-out { --icon-url: url('/icons/log-out.svg'); }
@@ -409,6 +409,7 @@
 .app-icon-trash { --icon-url: url('/icons/trash.svg'); }
 .app-icon-redo { --icon-url: url('/icons/redo.svg'); }
 .app-icon-close { --icon-url: url('/icons/close-o.svg'); }
+.app-icon-options { --icon-url: url('/icons/options.svg'); }
 
 
 .nav-home-icon {

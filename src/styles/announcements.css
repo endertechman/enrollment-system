@@ -1,7 +1,6 @@
 .announcements-panel { min-width:0; padding:clamp(20px,3vw,28px); border:1px solid rgba(255,255,255,.78); border-radius:20px; background:rgba(255,255,255,.68); box-shadow:0 18px 45px rgba(116,87,105,.1); }
-.announcements-header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding-bottom:18px; border-bottom:1px solid color-mix(in srgb,var(--color-muted) 7%,var(--color-surface)); }
-.announcements-header h2 { margin:0; color:var(--color-text); font-size:20px; }
-.announcements-header p { margin:5px 0 0; color:var(--color-muted); font-size:12.5px; line-height:1.5; }
+.announcements-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:12px 14px; border:0; border-radius:14px; background:rgba(255,255,255,.7); }
+.announcements-header h2 { margin:0; color:var(--color-text); font-size:18px; }
 .announcements-header>span { flex:0 0 auto; padding:6px 11px; border-radius:999px; background:#ffe1ed; color:#c14c72; font-size:11px; font-weight:750; }
 .announcement-form { display:grid; gap:14px; margin-top:18px; padding:17px; border-radius:15px; background:rgba(255,255,255,.82); }
 .announcement-form label { position:relative; display:grid; gap:7px; color:var(--color-text); font-size:12.5px; font-weight:700; }

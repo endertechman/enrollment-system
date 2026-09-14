@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import AppHeader from './AppHeader'
 import LoadingSpinner from './LoadingSpinner'
 import { getEnrollmentWindow, isEnrollmentOpen } from '../lib/enrollmentWindow'
+import useAutoRefresh from '../hooks/useAutoRefresh'
 
 function EnrollmentForm() {
   const navigate = useNavigate()
@@ -34,18 +35,14 @@ function EnrollmentForm() {
   const [submitting, setSubmitting] = useState(false)
   const [currentStep, setCurrentStep] = useState(1)
 
-  useEffect(() => {
-    initializeForm()
-  }, [])
-
-  async function getEnrollmentCount(parentId) {
+  const getEnrollmentCount = useCallback(async (parentId) => {
     return supabase
       .from('enrollments')
       .select('id', { count: 'exact', head: true })
       .eq('parent_id', parentId)
-  }
+  }, [])
 
-  async function initializeForm() {
+  const initializeForm = useCallback(async () => {
     const {
       data: { user },
     } = await supabase.auth.getUser()
@@ -89,7 +86,17 @@ function EnrollmentForm() {
     setParentEmail(user.email || '')
 
     setLoading(false)
-  }
+  }, [getEnrollmentCount, navigate])
+
+  useEffect(() => {
+    const initializationTimer = window.setTimeout(() => {
+      initializeForm()
+    }, 0)
+
+    return () => window.clearTimeout(initializationTimer)
+  }, [initializeForm])
+
+  useAutoRefresh(initializeForm)
 
   function calculateAge() {
     if (!birthDate) return ''
@@ -526,7 +533,7 @@ function EnrollmentForm() {
 
             <div className="enrollment-step-actions">
               {currentStep > 1 && <button type="button" className="enrollment-previous" onClick={() => setCurrentStep((step) => step - 1)}>Previous</button>}
-              {currentStep < 3 ? <button type="button" className="enrollment-next" onClick={goToNextStep}>Next</button> : <button type="submit" className="enrollment-submit" disabled={submitting}>{submitting ? 'Submitting...' : 'Submit Enrollment'}</button>}
+              {currentStep < 3 ? <button type="button" className="enrollment-next" onClick={goToNextStep}>Next</button> : <button type="submit" className="enrollment-submit" disabled={submitting}>{submitting ? <LoadingSpinner label="Submitting..." inline /> : 'Submit Enrollment'}</button>}
             </div>
           </form>
         </main>

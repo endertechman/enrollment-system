@@ -12,14 +12,16 @@
 .notifications-dropdown header .notifications-refresh:hover { background:#f7cddd; color:#a92e56; }
 .notifications-dropdown header .notifications-refresh:focus-visible { outline:3px solid rgba(239,146,179,.24); outline-offset:1px; }
 .notification-list { max-height:440px; overflow-y:auto; }
-.notification-list article { display:grid; grid-template-columns:9px minmax(0,1fr); gap:11px; padding:13px 16px; border-bottom:1px solid #f0eaee; background:transparent; }
-.notification-list article:last-child { border-bottom:0; }
-.notification-list article.unread { background:#fff2f7; }
+.notification-item { display:grid; grid-template-columns:9px minmax(0,1fr); gap:11px; width:100%; padding:13px 16px; border:0; border-bottom:1px solid #f0eaee; border-radius:0; background:transparent; color:inherit; font:inherit; text-align:left; cursor:pointer; transition:background-color .2s ease; }
+.notification-item:last-child { border-bottom:0; }
+.notification-item.unread { background:#fff2f7; }
+.notification-item:hover { background:#fbe9f1; }
+.notification-item:focus-visible { position:relative; z-index:1; outline:3px solid rgba(239,146,179,.28); outline-offset:-3px; }
 .notification-type { width:8px; height:8px; margin-top:4px; border-radius:50%; background:#9b929a; }
 .notification-type.status,.notification-type.attendance { background:#35c8d0; }
 .notification-type.announcement,.notification-type.application { background:#ef92b3; }
 .notification-type.event { background:#8a65a8; }
-.notification-list article>div { min-width:0; }
+.notification-item>div { min-width:0; }
 .notification-list strong { display:block; color:#3a343b; font-size:12px; line-height:1.35; overflow-wrap:anywhere; }
 .notification-list p { margin:3px 0 0; color:#6f6871; font-size:10.5px; line-height:1.4; }
 .notification-list time { display:block; margin-top:5px; color:#999098; font-size:9.5px; }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import AppHeader from '../components/AppHeader'
@@ -6,6 +6,7 @@ import LoadingSpinner from '../components/LoadingSpinner'
 import AnnouncementsPanel from '../components/AnnouncementsPanel'
 import CalendarPanel from '../components/CalendarPanel'
 import HealthGrowthPanel from '../components/HealthGrowthPanel'
+import useAutoRefresh from '../hooks/useAutoRefresh'
 
 function ParentDashboard() {
   const navigate = useNavigate()
@@ -15,16 +16,28 @@ function ParentDashboard() {
   const [enrollments, setEnrollments] = useState([])
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState('overview')
+  const [activeTab, setActiveTab] = useState(() => {
+    const requestedTab = searchParams.get('tab')
+    return ['overview', 'information', 'health-growth', 'announcements', 'calendar'].includes(requestedTab) ? requestedTab : 'overview'
+  })
   const [selectedEnrollmentId, setSelectedEnrollmentId] = useState(null)
 
   useEffect(() => {
-    loadDashboard()
+    function openNotificationTab(event) {
+      if (event.detail?.dashboard !== 'parent') return
+      if (['overview', 'information', 'health-growth', 'announcements', 'calendar'].includes(event.detail.tab)) setActiveTab(event.detail.tab)
+      if (event.detail.childId) setSelectedEnrollmentId(event.detail.childId)
+    }
+
+    window.addEventListener('bcdc:notification-navigation', openNotificationTab)
+    return () => window.removeEventListener('bcdc:notification-navigation', openNotificationTab)
   }, [])
 
-  async function loadDashboard() {
-    setLoading(true)
-    setMessage('')
+  const loadDashboard = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) {
+      setLoading(true)
+      setMessage('')
+    }
 
     const {
       data: { user },
@@ -87,7 +100,14 @@ function ParentDashboard() {
     }
 
     setLoading(false)
-  }
+  }, [navigate, searchParams])
+
+  useEffect(() => {
+    const loadTimer = window.setTimeout(() => loadDashboard(), 0)
+    return () => window.clearTimeout(loadTimer)
+  }, [loadDashboard])
+
+  useAutoRefresh(() => loadDashboard({ silent: true }))
 
   function formatDate(date) {
     if (!date) return '—'

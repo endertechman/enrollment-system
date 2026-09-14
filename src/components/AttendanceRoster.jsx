@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import LoadingSpinner from './LoadingSpinner'
+import useAutoRefresh from '../hooks/useAutoRefresh'
 
 function getLocalDateValue() {
   const now = new Date()
@@ -30,33 +31,33 @@ function AttendanceRoster({ enrollments, loading, attendanceDate, onDateChange, 
   const [savingId, setSavingId] = useState(null)
   const [message, setMessage] = useState('')
 
-  useEffect(() => {
-    let active = true
-
-    async function loadAttendance() {
+  const loadAttendance = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) {
       setRecordsLoading(true)
       setMessage('')
-
-      const { data, error } = await supabase
-        .from('attendance_records')
-        .select('enrollment_id, status')
-        .eq('attendance_date', attendanceDate)
-
-      if (!active) return
-
-      if (error) {
-        setRecords({})
-        setMessage('Attendance is unavailable until its Supabase migration is applied.')
-      } else {
-        setRecords(Object.fromEntries((data || []).map((record) => [record.enrollment_id, record.status])))
-      }
-
-      setRecordsLoading(false)
     }
 
-    loadAttendance()
-    return () => { active = false }
+    const { data, error } = await supabase
+      .from('attendance_records')
+      .select('enrollment_id, status')
+      .eq('attendance_date', attendanceDate)
+
+    if (error) {
+      setRecords({})
+      setMessage('Attendance is unavailable until its Supabase migration is applied.')
+    } else {
+      setRecords(Object.fromEntries((data || []).map((record) => [record.enrollment_id, record.status])))
+    }
+
+    setRecordsLoading(false)
   }, [attendanceDate])
+
+  useEffect(() => {
+    const loadTimer = window.setTimeout(loadAttendance, 0)
+    return () => window.clearTimeout(loadTimer)
+  }, [loadAttendance])
+
+  useAutoRefresh(() => loadAttendance({ silent: true }))
 
   async function markAttendance(enrollmentId, status) {
     if (!canEdit || savingId) return
@@ -93,10 +94,7 @@ function AttendanceRoster({ enrollments, loading, attendanceDate, onDateChange, 
   return (
     <section className="pending-approvals-panel attendance-panel">
       <div className="pending-approvals-header attendance-header">
-        <div>
-          <h2>Attendance</h2>
-          <p>{canEdit ? 'Record attendance for accepted students.' : 'View recorded attendance for accepted students.'}</p>
-        </div>
+        <div><h2>Attendance</h2></div>
         <span className="waiting-badge">{students.length} students</span>
       </div>
 

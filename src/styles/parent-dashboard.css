@@ -9,7 +9,7 @@
   background: radial-gradient(circle at 5% 5%, color-mix(in srgb, var(--color-accent) 20%, transparent), transparent 30%), radial-gradient(circle at 95% 8%, color-mix(in srgb, var(--color-primary) 18%, transparent), transparent 32%), var(--color-bg);
 }
 .parent-dashboard-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; }
-.parent-dashboard-content { width: min(1040px, calc(100% - 40px)); margin: auto; padding: 38px 0 64px; display: grid; gap: 20px; }
+.parent-dashboard-content { width: min(1280px, calc(100% - 40px)); margin: auto; padding: 38px 0 64px; display: grid; gap: 20px; }
 .parent-profile-area { padding: 4px 0; }
 .parent-profile-area h1 { margin: 0; color: #302a32; font-size: clamp(24px,3vw,30px); font-weight: 680; line-height: 1.2; letter-spacing: -.025em; }
 .parent-profile-area p { margin: 6px 0 0; color: #6f6871; font-size: 13px; }

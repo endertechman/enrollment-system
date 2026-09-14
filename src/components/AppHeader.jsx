@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import RoleManagerDialog from './RoleManagerDialog'
 import NotificationsMenu from './NotificationsMenu'
+import AccountSettingsDialog from './AccountSettingsDialog'
+import useAutoRefresh from '../hooks/useAutoRefresh'
 
 function AppHeader({ loggedOutAction = 'home' }) {
   const navigate = useNavigate()
@@ -12,6 +14,7 @@ function AppHeader({ loggedOutAction = 'home' }) {
   const [role, setRole] = useState(null)
   const [loading, setLoading] = useState(true)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [roleManagerOpen, setRoleManagerOpen] = useState(false)
 
   const loadAccount = useCallback(async () => {
@@ -26,6 +29,7 @@ function AppHeader({ loggedOutAction = 'home' }) {
       setFullName('')
       setRole(null)
       setMenuOpen(false)
+      setSettingsOpen(false)
       setRoleManagerOpen(false)
     }
 
@@ -40,6 +44,8 @@ function AppHeader({ loggedOutAction = 'home' }) {
       subscription.unsubscribe()
     }
   }, [loadAccount])
+
+  useAutoRefresh(loadAccount)
 
   useEffect(() => {
     if (!menuOpen) return undefined
@@ -81,6 +87,7 @@ function AppHeader({ loggedOutAction = 'home' }) {
                 <div className="account-menu-dropdown">
                   <div className="account-menu-name"><span>Signed in as</span><strong>{fullName}</strong></div>
                   <button type="button" onClick={() => { setMenuOpen(false); navigate('/') }}><span className="header-icon-slot"><i className="app-icon app-icon-home" aria-hidden="true" /></span><span>Home</span></button>
+                  <button type="button" onClick={() => { setMenuOpen(false); setSettingsOpen(true) }}><span className="header-icon-slot"><i className="app-icon app-icon-options" aria-hidden="true" /></span><span>Settings</span></button>
                   {role === 'teacher' && <button type="button" onClick={() => { setMenuOpen(false); setRoleManagerOpen(true) }}><span className="header-icon-slot"><i className="app-icon app-icon-user-add" aria-hidden="true" /></span><span>Manage Roles</span></button>}
                   <button type="button" className="account-menu-logout" onClick={handleLogout}><span className="header-icon-slot"><i className="app-icon app-icon-log-out" aria-hidden="true" /></span><span>Log out</span></button>
                 </div>
@@ -96,6 +103,7 @@ function AppHeader({ loggedOutAction = 'home' }) {
         </div>
       </div>
     </nav>
+    {user && settingsOpen && <AccountSettingsDialog user={user} fullName={fullName} role={role} onClose={() => setSettingsOpen(false)} />}
     {role === 'teacher' && roleManagerOpen && <RoleManagerDialog onClose={() => setRoleManagerOpen(false)} />}
     </>
   )

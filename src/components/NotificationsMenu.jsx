@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import LoadingSpinner from './LoadingSpinner'
+import useAutoRefresh from '../hooks/useAutoRefresh'
 
 function localDateValue() {
   const now = new Date()
@@ -13,13 +15,14 @@ function getChildName(enrollment) {
 }
 
 function NotificationsMenu({ user, role }) {
+  const navigate = useNavigate()
   const menuRef = useRef(null)
   const storageKey = `bcdc-notifications-seen:${user.id}`
   const [open, setOpen] = useState(false)
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [lastSeen, setLastSeen] = useState(() => Number(window.localStorage.getItem(storageKey)) || 0)
-  const [eligible, setEligible] = useState(role !== 'parent')
+  const [eligible, setEligible] = useState(role === 'parent' || role === 'teacher' || role === 'teacher_aide')
 
   const loadNotifications = useCallback(async () => {
     const today = localDateValue()
@@ -36,22 +39,28 @@ function NotificationsMenu({ user, role }) {
       ? supabase.from('enrollments').select('id, child_first_name, child_last_name, status, submitted_at, reviewed_at').eq('parent_id', user.id).order('submitted_at', { ascending: false })
       : supabase.from('enrollments').select('id, child_first_name, child_last_name, status, submitted_at, reviewed_at').order('submitted_at', { ascending: false }).limit(100)
 
-    const enrollmentResult = await enrollmentQuery
+    const [enrollmentResult, pendingResult] = await Promise.all([
+      enrollmentQuery,
+      staffRole
+        ? supabase
+          .from('enrollments')
+          .select('submitted_at', { count: 'exact' })
+          .eq('status', 'pending')
+          .order('submitted_at', { ascending: false })
+          .limit(1)
+        : Promise.resolve({ data: [], count: 0 }),
+    ])
     const enrollments = enrollmentResult.data || []
     const approvedEnrollments = enrollments.filter((enrollment) => enrollment.status === 'approved')
-    const canReceiveNotifications = staffRole || approvedEnrollments.length > 0
+    const canReceiveSchoolUpdates = staffRole || approvedEnrollments.length > 0
 
-    setEligible(canReceiveNotifications)
-
-    if (enrollmentResult.error || !canReceiveNotifications) {
-      setItems([])
-      setLoading(false)
-      return
-    }
+    setEligible(true)
 
     const attendanceEnrollmentIds = approvedEnrollments.map((enrollment) => enrollment.id)
     const [announcementResult, eventResult, attendanceResult] = await Promise.all([
-      supabase.from('announcements').select('id, title, published_at').order('published_at', { ascending: false }).limit(12),
+      canReceiveSchoolUpdates
+        ? supabase.from('announcements').select('id, title, published_at').order('published_at', { ascending: false }).limit(12)
+        : Promise.resolve({ data: [] }),
       supabase.from('calendar_events').select('id, title, event_date, created_at').eq('event_date', today).order('created_at', { ascending: false }),
       attendanceEnrollmentIds.length
         ? supabase.from('attendance_records').select('id, enrollment_id, status, attendance_date, updated_at').in('enrollment_id', attendanceEnrollmentIds).order('updated_at', { ascending: false }).limit(20)
@@ -71,22 +80,36 @@ function NotificationsMenu({ user, role }) {
 
     for (const record of attendanceResult.data || []) {
       const student = enrollmentMap.get(record.enrollment_id)
-      nextItems.push({ id: `attendance-${record.id}`, type: 'attendance', title: `${getChildName(student)}: ${record.status}`, detail: `Attendance for ${new Date(`${record.attendance_date}T00:00:00`).toLocaleDateString('en-PH', { dateStyle: 'medium' })}`, timestamp: record.updated_at })
+      nextItems.push({ id: `attendance-${record.id}`, type: 'attendance', enrollmentId: record.enrollment_id, title: `${getChildName(student)}: ${record.status}`, detail: `Attendance for ${new Date(`${record.attendance_date}T00:00:00`).toLocaleDateString('en-PH', { dateStyle: 'medium' })}`, timestamp: record.updated_at })
     }
 
     for (const enrollment of enrollments) {
       if (role === 'parent') {
         if (enrollment.reviewed_at) {
           const status = enrollment.status === 'approved' ? 'accepted' : enrollment.status
-          nextItems.push({ id: `status-${enrollment.id}-${enrollment.reviewed_at}`, type: 'status', title: `${getChildName(enrollment)}: ${status}`, detail: 'Enrollment status updated', timestamp: enrollment.reviewed_at })
+          nextItems.push({ id: `status-${enrollment.id}-${enrollment.reviewed_at}`, type: 'status', enrollmentId: enrollment.id, title: `${getChildName(enrollment)}: ${status}`, detail: 'Enrollment status updated', timestamp: enrollment.reviewed_at })
         } else if (enrollment.status === 'pending') {
-          nextItems.push({ id: `submitted-${enrollment.id}`, type: 'status', title: `${getChildName(enrollment)}: pending`, detail: 'Enrollment application received', timestamp: enrollment.submitted_at })
+          nextItems.push({ id: `submitted-${enrollment.id}`, type: 'status', enrollmentId: enrollment.id, title: `${getChildName(enrollment)}: pending`, detail: 'Enrollment application received', timestamp: enrollment.submitted_at })
         }
-      } else if (enrollment.status === 'pending') {
-        nextItems.push({ id: `application-${enrollment.id}`, type: 'application', title: `New application: ${getChildName(enrollment)}`, detail: 'Waiting for teacher review', timestamp: enrollment.submitted_at })
-      } else if (enrollment.reviewed_at) {
+      } else if (enrollment.status !== 'pending' && enrollment.reviewed_at) {
         const status = enrollment.status === 'approved' ? 'accepted' : enrollment.status
-        nextItems.push({ id: `staff-status-${enrollment.id}-${enrollment.reviewed_at}`, type: 'status', title: `${getChildName(enrollment)}: ${status}`, detail: 'Enrollment status updated', timestamp: enrollment.reviewed_at })
+        nextItems.push({ id: `staff-status-${enrollment.id}-${enrollment.reviewed_at}`, type: 'status', enrollmentId: enrollment.id, title: `${getChildName(enrollment)}: ${status}`, detail: 'Enrollment status updated', timestamp: enrollment.reviewed_at })
+      }
+    }
+
+    if (staffRole) {
+      const pendingEnrollments = enrollments.filter((enrollment) => enrollment.status === 'pending')
+      const pendingCount = pendingResult.error ? pendingEnrollments.length : (pendingResult.count || 0)
+      const latestPendingAt = pendingResult.data?.[0]?.submitted_at || pendingEnrollments[0]?.submitted_at
+
+      if (pendingCount > 0 && latestPendingAt) {
+        nextItems.push({
+          id: `pending-requests-${latestPendingAt}`,
+          type: 'application',
+          title: pendingCount === 1 ? 'New enrollment request' : 'New enrollment requests',
+          detail: `${pendingCount} ${pendingCount === 1 ? 'student is' : 'students are'} still pending review.`,
+          timestamp: latestPendingAt,
+        })
       }
     }
 
@@ -97,12 +120,75 @@ function NotificationsMenu({ user, role }) {
 
   useEffect(() => {
     const initialLoad = window.setTimeout(loadNotifications, 0)
-    const refreshTimer = window.setInterval(loadNotifications, 60000)
     return () => {
       window.clearTimeout(initialLoad)
-      window.clearInterval(refreshTimer)
     }
   }, [loadNotifications])
+
+  useAutoRefresh(loadNotifications)
+
+  useEffect(() => {
+    if (role !== 'parent') return undefined
+
+    const channel = supabase
+      .channel(`parent-enrollment-notifications:${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'enrollments',
+          filter: `parent_id=eq.${user.id}`,
+        },
+        () => loadNotifications(),
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [loadNotifications, role, user.id])
+
+  useEffect(() => {
+    if (role !== 'parent') return undefined
+
+    const channel = supabase
+      .channel(`parent-attendance-notifications:${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'attendance_records' },
+        () => loadNotifications(),
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'attendance_records' },
+        () => loadNotifications(),
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [loadNotifications, role, user.id])
+
+  useEffect(() => {
+    if (role !== 'parent' && role !== 'teacher' && role !== 'teacher_aide') return undefined
+
+    const channel = supabase
+      .channel(`calendar-event-notifications:${role}:${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'calendar_events' },
+        (payload) => {
+          if (payload.new?.event_date === localDateValue()) loadNotifications()
+        },
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [loadNotifications, role, user.id])
 
   useEffect(() => {
     if (!open) return undefined
@@ -124,6 +210,31 @@ function NotificationsMenu({ user, role }) {
     }
   }
 
+  function openNotification(item) {
+    let dashboard
+    let tab
+
+    if (role === 'parent') {
+      dashboard = 'parent'
+      tab = item.type === 'announcement' ? 'announcements' : item.type === 'event' ? 'calendar' : 'overview'
+    } else if (role === 'teacher') {
+      dashboard = 'teacher'
+      tab = item.type === 'application' ? 'approvals' : item.type === 'attendance' ? 'attendance' : item.type === 'announcement' ? 'announcements' : item.type === 'event' ? 'calendar' : 'students'
+    } else {
+      dashboard = 'teacher-aide'
+      tab = item.type === 'attendance' ? 'attendance' : item.type === 'announcement' ? 'announcements' : item.type === 'event' ? 'calendar' : 'students'
+    }
+
+    const params = new URLSearchParams({ tab })
+    if (item.enrollmentId) params.set('child', item.enrollmentId)
+
+    setOpen(false)
+    navigate(`/${dashboard}?${params.toString()}`)
+    window.dispatchEvent(new CustomEvent('bcdc:notification-navigation', {
+      detail: { dashboard, tab, childId: item.enrollmentId || null },
+    }))
+  }
+
   const unreadCount = items.filter((item) => new Date(item.timestamp).getTime() > lastSeen).length
 
   if (!eligible) return null
@@ -138,10 +249,10 @@ function NotificationsMenu({ user, role }) {
       {open && <section className="notifications-dropdown">
         <header><div><h2>Notifications</h2><p>{role === 'parent' ? 'Updates for your enrolled children' : 'Latest BCDC activity'}</p></div><button type="button" className="notifications-refresh" onClick={loadNotifications} aria-label="Refresh notifications" title="Refresh notifications"><i className="app-icon app-icon-redo" aria-hidden="true" /></button></header>
         {loading ? <div className="notifications-empty"><LoadingSpinner label="Loading notifications..." compact /></div> : items.length === 0 ? <p className="notifications-empty">You’re all caught up.</p> : <div className="notification-list">
-          {items.map((item) => <article key={item.id} className={new Date(item.timestamp).getTime() > lastSeen ? 'unread' : ''}>
+          {items.map((item) => <button type="button" key={item.id} className={`notification-item${new Date(item.timestamp).getTime() > lastSeen ? ' unread' : ''}`} onClick={() => openNotification(item)}>
             <span className={`notification-type ${item.type}`} aria-hidden="true" />
             <div><strong>{item.title}</strong><p>{item.detail}</p><time dateTime={item.timestamp}>{new Date(item.timestamp).toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' })}</time></div>
-          </article>)}
+          </button>)}
         </div>}
       </section>}
     </div>

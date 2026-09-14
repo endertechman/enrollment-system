@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import LoadingSpinner from './LoadingSpinner'
 
 function formatRole(role) {
   if (role === 'teacher_aide') return 'Teacher Aide'
@@ -68,16 +69,16 @@ function RoleManagerDialog({ onClose }) {
   return (
     <div className="role-manager-overlay" role="dialog" aria-modal="true" aria-labelledby="role-manager-title" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
       <section className="role-manager-dialog">
-        <button type="button" className="role-manager-close" onClick={onClose} aria-label="Close role manager">×</button>
+        <button type="button" className="role-manager-close" onClick={onClose} aria-label="Close role manager"><i className="app-icon app-icon-close" aria-hidden="true" /></button>
         <header>
           <span>Teacher tools</span>
           <h2 id="role-manager-title">Manage Account Role</h2>
-          <p>Enter an exact email address. Accounts are never shown as a public list.</p>
+          <p>Search securely using the account&apos;s exact email.</p>
         </header>
 
         <form className="role-manager-search" onSubmit={findAccount}>
           <label htmlFor="role-account-email">Account email</label>
-          <div><input id="role-account-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="parent@example.com" required /><button type="submit" disabled={searching}>{searching ? 'Searching...' : 'Find Account'}</button></div>
+          <div><input id="role-account-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="parent@example.com" required /><button type="submit" disabled={searching}>{searching ? <LoadingSpinner label="Searching..." inline /> : 'Find Account'}</button></div>
         </form>
 
         {message && <p className="role-manager-message">{message}</p>}
@@ -85,10 +86,10 @@ function RoleManagerDialog({ onClose }) {
         {account && <article className="role-manager-result">
           <div className="role-manager-account"><i className="app-icon app-icon-user-list" aria-hidden="true" /><div><span>Account</span><strong>{account.full_name}</strong></div></div>
           <div><span>Current role</span><strong>{formatRole(account.account_role)}</strong></div>
-          {account.account_role === 'teacher' ? <p>Teacher accounts are protected and cannot be changed here.</p> : <div className="role-manager-actions">{availableRoles.map(([role, label]) => <button type="button" key={role} disabled={Boolean(updatingRole)} onClick={() => changeRole(role)}>{updatingRole === role ? 'Updating...' : label}</button>)}</div>}
+          {account.account_role === 'teacher' ? <p>Teacher accounts are protected and cannot be changed here.</p> : <div className="role-manager-actions">{availableRoles.map(([role, label]) => <button type="button" key={role} disabled={Boolean(updatingRole)} onClick={() => changeRole(role)}>{updatingRole === role ? <LoadingSpinner label="Updating..." inline /> : label}</button>)}</div>}
         </article>}
 
-        <p className="role-manager-note">Promoting an account to Teacher is permanent from this tool. Existing teachers cannot be demoted or edited.</p>
+        <p className="role-manager-note">Teacher accounts cannot be changed or demoted here.</p>
       </section>
     </div>
   )

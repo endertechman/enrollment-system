@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import takeAuthAttempt, { getAuthCooldownRemaining } from '../lib/authRateLimit'
 import AppHeader from './AppHeader'
 import AuthToast from './AuthToast'
+import LoadingSpinner from './LoadingSpinner'
 
 function Login() {
   const navigate = useNavigate()
@@ -244,14 +245,14 @@ function Login() {
                 </div>
 
                 <button type="submit" disabled={submitting}>
-                  {submitting ? 'Logging in...' : 'Login'}
+                  {submitting ? <LoadingSpinner label="Logging in..." inline /> : 'Login'}
                 </button>
               </div>
             </form>
 
             <AuthToast message={message} onDismiss={() => setMessage('')} />
-            {showRecoveryHelp && <button type="button" className="login-recovery-link" onClick={requestPasswordReset} disabled={requestingRecovery || recoveryCooldown > 0}>{requestingRecovery ? 'Sending...' : recoveryRequested && recoveryCooldown > 0 ? `Resend password reset in ${recoveryCooldown}s` : recoveryRequested ? 'Resend password reset now' : 'Forgot your password?'}</button>}
-            {showConfirmationRetry && <button type="button" className="login-recovery-link" onClick={sendAnotherConfirmation} disabled={retryingConfirmation || confirmationCooldown > 0}>{retryingConfirmation ? 'Sending...' : confirmationCooldown > 0 ? `Resend email verification in ${confirmationCooldown}s` : 'Resend email verification now'}</button>}
+            {showRecoveryHelp && <button type="button" className="login-recovery-link" onClick={requestPasswordReset} disabled={requestingRecovery || recoveryCooldown > 0}>{requestingRecovery ? <LoadingSpinner label="Sending..." inline /> : recoveryRequested && recoveryCooldown > 0 ? `Resend password reset in ${recoveryCooldown}s` : recoveryRequested ? 'Resend password reset now' : 'Forgot your password?'}</button>}
+            {showConfirmationRetry && <button type="button" className="login-recovery-link" onClick={sendAnotherConfirmation} disabled={retryingConfirmation || confirmationCooldown > 0}>{retryingConfirmation ? <LoadingSpinner label="Sending..." inline /> : confirmationCooldown > 0 ? `Resend email verification in ${confirmationCooldown}s` : 'Resend email verification now'}</button>}
           </div>
         </main>
       </div>

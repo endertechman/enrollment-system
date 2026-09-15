@@ -42,6 +42,20 @@
     max-width: 100%;
   }
 
+  .landing-hero-signed-in .hero-content {
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .landing-hero-signed-in .hero-label,
+  .landing-hero-signed-in .hero-description {
+    margin-inline: auto;
+  }
+
+  .landing-hero-signed-in .hero-actions {
+    justify-content: center;
+  }
+
   .hero-panel {
     width: 100%;
     justify-content: center;
@@ -69,10 +83,15 @@
   .landing-brand {
     max-width: 180px;
 
-    font-size: 15px;
+    font-size: 18px;
 
     white-space: normal;
   }
+
+  .landing-logo { width: 44px; height: 44px; }
+
+  .landing-brand-full { display: none; }
+  .landing-brand-short { display: inline; }
 
   .landing-nav-actions {
     min-width: 0;

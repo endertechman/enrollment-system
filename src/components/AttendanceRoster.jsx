@@ -13,7 +13,6 @@ function getLocalDateValue() {
 function getChildName(enrollment) {
   return [
     enrollment.child_first_name,
-    enrollment.child_middle_name,
     enrollment.child_last_name,
     enrollment.child_suffix,
   ].filter(Boolean).join(' ')

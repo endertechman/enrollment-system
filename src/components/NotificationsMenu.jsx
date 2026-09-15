@@ -85,15 +85,12 @@ function NotificationsMenu({ user, role }) {
 
     for (const enrollment of enrollments) {
       if (role === 'parent') {
-        if (enrollment.reviewed_at) {
+        if (enrollment.reviewed_at && ['approved', 'rejected'].includes(enrollment.status)) {
           const status = enrollment.status === 'approved' ? 'accepted' : enrollment.status
-          nextItems.push({ id: `status-${enrollment.id}-${enrollment.reviewed_at}`, type: 'status', enrollmentId: enrollment.id, title: `${getChildName(enrollment)}: ${status}`, detail: 'Enrollment status updated', timestamp: enrollment.reviewed_at })
+          nextItems.push({ id: `status-${enrollment.id}-${enrollment.reviewed_at}`, type: 'status', enrollmentId: enrollment.id, enrollmentStatus: enrollment.status, title: `${getChildName(enrollment)}: ${status}`, detail: 'Enrollment status updated', timestamp: enrollment.reviewed_at })
         } else if (enrollment.status === 'pending') {
-          nextItems.push({ id: `submitted-${enrollment.id}`, type: 'status', enrollmentId: enrollment.id, title: `${getChildName(enrollment)}: pending`, detail: 'Enrollment application received', timestamp: enrollment.submitted_at })
+          nextItems.push({ id: `submitted-${enrollment.id}`, type: 'status', enrollmentId: enrollment.id, enrollmentStatus: enrollment.status, title: `${getChildName(enrollment)}: pending`, detail: 'Enrollment application received', timestamp: enrollment.submitted_at })
         }
-      } else if (enrollment.status !== 'pending' && enrollment.reviewed_at) {
-        const status = enrollment.status === 'approved' ? 'accepted' : enrollment.status
-        nextItems.push({ id: `staff-status-${enrollment.id}-${enrollment.reviewed_at}`, type: 'status', enrollmentId: enrollment.id, title: `${getChildName(enrollment)}: ${status}`, detail: 'Enrollment status updated', timestamp: enrollment.reviewed_at })
       }
     }
 
@@ -151,6 +148,12 @@ function NotificationsMenu({ user, role }) {
   }
 
   function openNotification(item) {
+    if (role === 'parent' && item.type === 'status' && item.enrollmentStatus !== 'approved') {
+      setOpen(false)
+      navigate('/')
+      return
+    }
+
     let dashboard
     let tab
 
@@ -187,7 +190,7 @@ function NotificationsMenu({ user, role }) {
       </button>
 
       {open && <section className="notifications-dropdown">
-        <header><div><h2>Notifications</h2><p>{role === 'parent' ? 'Updates for your enrolled children' : 'Latest BCDC activity'}</p></div><button type="button" className="notifications-refresh" onClick={loadNotifications} aria-label="Refresh notifications" title="Refresh notifications"><i className="app-icon app-icon-redo" aria-hidden="true" /></button></header>
+        <header><div><h2>Notifications</h2><p>{role === 'parent' ? 'Updates for your enrolled children' : 'Latest BCDC activity'}</p></div></header>
         {loading ? <div className="notifications-empty"><LoadingSpinner label="Loading notifications..." compact /></div> : items.length === 0 ? <p className="notifications-empty">You’re all caught up.</p> : <div className="notification-list">
           {items.map((item) => <button type="button" key={item.id} className={`notification-item${new Date(item.timestamp).getTime() > lastSeen ? ' unread' : ''}`} onClick={() => openNotification(item)}>
             <span className={`notification-type ${item.type}`} aria-hidden="true" />

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import AppHeader from '../components/AppHeader'
@@ -11,11 +11,13 @@ import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 
 function TeacherAideDashboard() {
   const navigate = useNavigate()
+  const scrollRef = useRef(null)
 
   const [enrollments, setEnrollments] = useState([])
   const [aideName, setAideName] = useState('Teacher Aide')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
+  const [studentSearch, setStudentSearch] = useState('')
   const [activeTab, setActiveTab] = useState(() => {
     const requestedTab = new URLSearchParams(window.location.search).get('tab')
     return ['students', 'health-growth', 'attendance', 'announcements', 'calendar'].includes(requestedTab) ? requestedTab : 'students'
@@ -25,6 +27,10 @@ function TeacherAideDashboard() {
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
     return now.toISOString().slice(0, 10)
   })
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 0
+  }, [activeTab])
 
   useEffect(() => {
     function openNotificationTab(event) {
@@ -97,7 +103,6 @@ function TeacherAideDashboard() {
   function getChildName(enrollment) {
     return [
       enrollment.child_first_name,
-      enrollment.child_middle_name,
       enrollment.child_last_name,
       enrollment.child_suffix,
     ]
@@ -158,11 +163,16 @@ function TeacherAideDashboard() {
     return sex.charAt(0).toUpperCase() + sex.slice(1)
   }
 
+  const studentSearchTerm = studentSearch.trim().toLocaleLowerCase()
+  const visibleEnrollments = studentSearchTerm
+    ? enrollments.filter((enrollment) => [getChildName(enrollment), enrollment.parent_full_name, enrollment.reference_code].some((value) => String(value || '').toLocaleLowerCase().includes(studentSearchTerm)))
+    : enrollments
+
   return (
     <div className="teacher-dashboard-page">
       <AppHeader />
 
-      <main className="teacher-dashboard-scroll">
+      <main className="teacher-dashboard-scroll" ref={scrollRef}>
         <div className="teacher-dashboard-content">
           <section className="teacher-profile-area">
             <div>
@@ -176,21 +186,27 @@ function TeacherAideDashboard() {
               className="teacher-tabs"
               aria-label="Teacher aide dashboard sections"
             >
-              <button type="button" className={`teacher-tab${activeTab === 'students' ? ' active' : ''}`} onClick={() => setActiveTab('students')}>
-                Students
-              </button>
-              <button type="button" className={`teacher-tab${activeTab === 'health-growth' ? ' active' : ''}`} onClick={() => setActiveTab('health-growth')}>
-                Health &amp; Growth
-              </button>
-              <button type="button" className={`teacher-tab${activeTab === 'attendance' ? ' active' : ''}`} onClick={() => setActiveTab('attendance')}>
-                Attendance
-              </button>
-              <button type="button" className={`teacher-tab${activeTab === 'announcements' ? ' active' : ''}`} onClick={() => setActiveTab('announcements')}>
-                Announcement
-              </button>
-              <button type="button" className={`teacher-tab${activeTab === 'calendar' ? ' active' : ''}`} onClick={() => setActiveTab('calendar')}>
-                Calendar
-              </button>
+              <div className="teacher-tab-group">
+                <span className="teacher-tab-group-title">Enrollment</span>
+                <button type="button" className={`teacher-tab${activeTab === 'students' ? ' active' : ''}`} aria-pressed={activeTab === 'students'} onClick={() => setActiveTab('students')}>
+                  <i className="app-icon app-icon-user-list" aria-hidden="true" /><span>Students</span>
+                </button>
+              </div>
+              <div className="teacher-tab-group">
+                <span className="teacher-tab-group-title">Center Tools</span>
+                <button type="button" className={`teacher-tab${activeTab === 'health-growth' ? ' active' : ''}`} aria-pressed={activeTab === 'health-growth'} onClick={() => setActiveTab('health-growth')}>
+                  <i className="app-icon app-icon-options" aria-hidden="true" /><span>Health &amp; Growth</span>
+                </button>
+                <button type="button" className={`teacher-tab${activeTab === 'attendance' ? ' active' : ''}`} aria-pressed={activeTab === 'attendance'} onClick={() => setActiveTab('attendance')}>
+                  <i className="app-icon app-icon-pen" aria-hidden="true" /><span>Attendance</span>
+                </button>
+                <button type="button" className={`teacher-tab${activeTab === 'announcements' ? ' active' : ''}`} aria-pressed={activeTab === 'announcements'} onClick={() => setActiveTab('announcements')}>
+                  <i className="app-icon app-icon-bell" aria-hidden="true" /><span>Announcement</span>
+                </button>
+                <button type="button" className={`teacher-tab${activeTab === 'calendar' ? ' active' : ''}`} aria-pressed={activeTab === 'calendar'} onClick={() => setActiveTab('calendar')}>
+                  <i className="app-icon app-icon-calendar" aria-hidden="true" /><span>Calendar</span>
+                </button>
+              </div>
             </nav>
 
             {activeTab === 'health-growth' ? (
@@ -211,14 +227,15 @@ function TeacherAideDashboard() {
             </div>
 
             {message && <p className="teacher-dashboard-message">{message}</p>}
+            <label className="dashboard-search"><span className="visually-hidden">Search student records</span><input type="search" value={studentSearch} onChange={(event) => setStudentSearch(event.target.value)} placeholder="Search student, parent, or reference code" /></label>
 
             {loading ? (
               <div className="teacher-empty-state"><LoadingSpinner label="Loading student records..." compact /></div>
-            ) : enrollments.length === 0 ? (
-              <p className="teacher-empty-state">No enrollment records found.</p>
+            ) : visibleEnrollments.length === 0 ? (
+              <p className="teacher-empty-state">{studentSearchTerm ? 'No students match your search.' : 'No enrollment records found.'}</p>
             ) : (
               <div className="approval-list">
-                {enrollments.map((enrollment) => (
+                {visibleEnrollments.map((enrollment) => (
                   <article
                     className="approval-row aide-record-row"
                     key={enrollment.id}

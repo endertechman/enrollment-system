@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import RoleManagerDialog from './RoleManagerDialog'
 import NotificationsMenu from './NotificationsMenu'
@@ -8,6 +8,7 @@ import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 
 function AppHeader({ loggedOutAction = 'home' }) {
   const navigate = useNavigate()
+  const { pathname } = useLocation()
   const menuRef = useRef(null)
   const [user, setUser] = useState(null)
   const [fullName, setFullName] = useState('')
@@ -69,6 +70,7 @@ function AppHeader({ loggedOutAction = 'home' }) {
   }
 
   const actionIsLogin = loggedOutAction === 'login'
+  const showHomeAction = Boolean(user) && pathname !== '/'
 
   return (
     <>
@@ -76,12 +78,14 @@ function AppHeader({ loggedOutAction = 'home' }) {
       <div className="landing-nav-inner">
         <div className="landing-brand" onClick={() => navigate('/')} role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') navigate('/') }}>
           <img src="/bcdc-logo.png" alt="Binuangan Child Development Center logo" className="landing-logo" />
-          <span>Binuangan Child Development Center</span>
+          <span className="landing-brand-full">Binuangan Child Development Center</span>
+          <span className="landing-brand-short" aria-hidden="true">BCDC</span>
         </div>
 
         <div className="landing-nav-actions">
           {!loading && (user ? (
             <div className="signed-in-header-actions">
+            {showHomeAction && <button type="button" className="nav-home-action" onClick={() => navigate('/')} aria-label="Home" title="Home"><span className="header-icon-slot"><i className="app-icon app-icon-home" aria-hidden="true" /></span></button>}
             {['parent', 'teacher', 'teacher_aide'].includes(role) && <NotificationsMenu user={user} role={role} />}
             <div className="account-menu" ref={menuRef}>
               <button type="button" className="account-menu-toggle" aria-label="Open account menu" aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}>
@@ -90,7 +94,6 @@ function AppHeader({ loggedOutAction = 'home' }) {
               {menuOpen && (
                 <div className="account-menu-dropdown">
                   <div className="account-menu-name"><span>Signed in as</span><strong>{fullName}</strong></div>
-                  <button type="button" onClick={() => { setMenuOpen(false); navigate('/') }}><span className="header-icon-slot"><i className="app-icon app-icon-home" aria-hidden="true" /></span><span>Home</span></button>
                   <button type="button" onClick={() => { setMenuOpen(false); setSettingsOpen(true) }}><span className="header-icon-slot"><i className="app-icon app-icon-options" aria-hidden="true" /></span><span>Settings</span></button>
                   {role === 'teacher' && <button type="button" onClick={() => { setMenuOpen(false); setRoleManagerOpen(true) }}><span className="header-icon-slot"><i className="app-icon app-icon-user-add" aria-hidden="true" /></span><span>Manage Roles</span></button>}
                   <button type="button" className="account-menu-logout" onClick={handleLogout}><span className="header-icon-slot"><i className="app-icon app-icon-log-out" aria-hidden="true" /></span><span>Log out</span></button>

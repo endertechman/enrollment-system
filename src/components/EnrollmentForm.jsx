@@ -79,7 +79,7 @@ function EnrollmentForm() {
     }
 
     if ((count || 0) >= 3) {
-      navigate('/parent?notice=max-children', { replace: true })
+      navigate('/', { replace: true })
       return
     }
 
@@ -211,7 +211,7 @@ function EnrollmentForm() {
     }
 
     if ((count || 0) >= 3) {
-      navigate('/parent?notice=max-children', { replace: true })
+      navigate('/', { replace: true })
       return
     }
 
@@ -256,7 +256,7 @@ function EnrollmentForm() {
     }
 
     window.sessionStorage.setItem('bcdc:enrollment-success', 'Enrollment application submitted successfully.')
-    navigate('/parent', { replace: true })
+    navigate('/', { replace: true })
   }
 
   if (loading) {

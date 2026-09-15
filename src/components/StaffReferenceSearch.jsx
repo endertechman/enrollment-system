@@ -22,7 +22,7 @@ function StaffReferenceSearch() {
     setLoading(true)
     const { data, error } = await supabase
       .from('enrollments')
-      .select('child_first_name, child_middle_name, child_last_name, child_suffix, status, reference_code, submitted_at')
+      .select('child_first_name, child_last_name, child_suffix, status, reference_code, submitted_at')
       .eq('reference_code', cleanedCode)
       .maybeSingle()
     setLoading(false)
@@ -41,7 +41,7 @@ function StaffReferenceSearch() {
   }
 
   const childName = result
-    ? [result.child_first_name, result.child_middle_name, result.child_last_name, result.child_suffix]
+    ? [result.child_first_name, result.child_last_name, result.child_suffix]
         .filter(Boolean)
         .join(' ')
     : ''

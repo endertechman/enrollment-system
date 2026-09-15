@@ -40,6 +40,7 @@
 }
 
 .landing-scroll {
+  z-index: 1;
   flex: 1 1 auto;
   min-height: 0;
 
@@ -57,6 +58,7 @@
 ========================================================= */
 
 .landing-nav {
+  z-index: 20;
   width: 100%;
   height: 76px;
   min-height: 76px;
@@ -109,6 +111,8 @@
 
   white-space: nowrap;
 }
+
+.landing-brand-short { display: none; }
 
 .landing-logo {
   width: 52px;
@@ -321,6 +325,8 @@
 ========================================================= */
 
 .hero-actions {
+  position: relative;
+  z-index: 2;
   margin-top: 36px;
 
   display: flex;
@@ -329,6 +335,8 @@
 
   flex-wrap: wrap;
 }
+
+.hero-actions > button { pointer-events: auto; }
 
 .primary-cta,
 .secondary-cta {
@@ -414,32 +422,33 @@
 .app-icon-eye { --icon-url: url('/icons/eye.svg'); }
 .app-icon-eye-alt { --icon-url: url('/icons/eye-alt.svg'); }
 .app-icon-bell { --icon-url: url('/icons/bell.svg'); }
+.app-icon-calendar { --icon-url: url('/icons/calendar.svg'); }
 .app-icon-user-add { --icon-url: url('/icons/user-add.svg'); }
 .app-icon-user-list { --icon-url: url('/icons/user-list.svg'); }
 .app-icon-trash { --icon-url: url('/icons/trash.svg'); }
-.app-icon-redo { --icon-url: url('/icons/redo.svg'); }
 .app-icon-close { --icon-url: url('/icons/close-o.svg'); }
 .app-icon-options { --icon-url: url('/icons/options.svg'); }
 .app-icon-pen { --icon-url: url('/icons/pen.svg'); }
 .app-icon-mail { --icon-url: url('/icons/mail.svg'); }
 
 
-.nav-home-icon {
+.nav-home-action {
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
   padding: 0;
   border: 0;
-  border-radius: 50%;
+  border-radius: 999px;
   background: transparent;
   color: #514752;
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-.nav-home-icon:hover,
-.nav-home-icon:focus-visible { background: #f7cddd; color: #a92e56; }
+.nav-home-action:hover,
+.nav-home-action:focus-visible { background: #f7cddd; color: #a92e56; }
 
 @keyframes account-menu-in {
   from { opacity: 0; transform: translateY(-5px); }
@@ -942,7 +951,7 @@
 .enrolled-child-header small { color: #807680; font-size: 12px; font-weight: 500; }
 
 .home-child-card-body {
-  padding: 22px;
+  padding: 28px;
 }
 
 .home-switch-child {
@@ -962,29 +971,28 @@
 .home-switch-child:hover,
 .home-switch-child:focus-visible { background: #efbfd2; color: #a92e56; }
 
-.home-selected-child-heading { display: flex; align-items: center; gap: 14px; margin: 0 0 18px; }
+.home-selected-child-heading { display: flex; align-items: center; gap: 16px; margin: 0 0 22px; }
 .home-selected-child-heading .home-child-avatar { margin: 0; flex: 0 0 auto; }
 .home-selected-child-heading h3 { margin: 0 0 6px; }
 .home-child-card .status-message {
   margin: 0;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: #f8f6f8;
+  padding: 0;
+  background: transparent;
   color: #625b63;
+  line-height: 1.6;
 }
 
 .home-child-card .enrollment-details {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 12px;
+  gap: 24px;
+  margin-top: 22px;
 }
 
 .home-child-card .enrollment-details > div {
   min-width: 0;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: #f8f6f8;
+  padding: 0;
+  background: transparent;
 }
 
 .home-child-card .home-child-selector {
@@ -996,7 +1004,7 @@
 @media (max-width: 480px) {
   .enrolled-child-header,
   .home-child-card-body {
-    padding: 17px;
+    padding: 20px;
   }
 
   .home-child-card .enrollment-details {

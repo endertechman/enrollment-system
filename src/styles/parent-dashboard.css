@@ -19,7 +19,7 @@
 .parent-sidebar-tab { width: 100%; min-height: 42px; padding: 10px 12px; border: 1px solid transparent; border-radius: 11px; background: transparent; color: #5b6673; font: inherit; font-size: 13px; font-weight: 650; text-align: left; cursor: pointer; transition: background-color .2s ease,color .2s ease; }
 .parent-sidebar-tab:hover { background: rgba(232, 250, 251, 0.9); color: #178d95; }
 .parent-sidebar-tab.active { background: #dff8fa; color: #138891; }
-.parent-tab-content { min-width: 0; }
+.parent-tab-content { min-width: 0; min-height: clamp(520px, 62vh, 700px); }
 .parent-enrollment-card-list { display: grid; gap: 16px; }
 .parent-dashboard-card { padding: clamp(20px,3vw,28px); border: 1px solid rgba(255, 255, 255, 0.78); border-radius: 20px; background: rgba(255, 255, 255, 0.78); box-shadow: 0 18px 45px rgba(116, 87, 105, 0.1); }
 .parent-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
@@ -35,9 +35,10 @@
 .parent-start-button { margin-top: 20px; padding: 11px 20px; border: none; border-radius: 999px; background: #35c8d0; color: #ffffff; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; transition: background-color .2s ease; }
 .parent-start-button:hover { background: #20b6c0; }
 .parent-enrollment-action-row .parent-start-button { margin-top: 0; }
-@media (max-width:720px) {
+@media (max-width:760px) {
   .parent-dashboard-content { width: calc(100% - 28px); padding: 28px 0 46px; }
   .parent-dashboard-layout { grid-template-columns: 1fr; gap: 14px; }
+  .parent-tab-content { min-height: 460px; }
   .parent-sidebar-tabs { position: static; flex-direction: row; overflow-x: auto; overflow-y: hidden; white-space: nowrap; scrollbar-width: none; }
   .parent-sidebar-tabs::-webkit-scrollbar { display:none; }
   .parent-sidebar-tab { width:auto; min-width:142px; flex-shrink:0; text-align:center; }

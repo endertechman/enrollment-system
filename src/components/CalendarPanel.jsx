@@ -16,7 +16,7 @@ function toDateValue(date) {
   return `${year}-${month}-${day}`
 }
 
-function CalendarPanel({ canManage = false }) {
+function CalendarPanel({ canManage = false, listView = false }) {
   const today = toDateValue(new Date())
   const [visibleMonth, setVisibleMonth] = useState(() => {
     const now = new Date()
@@ -32,6 +32,7 @@ function CalendarPanel({ canManage = false }) {
   const [message, setMessage] = useState('')
   const [notice, setNotice] = useState('')
   const [pendingDelete, setPendingDelete] = useState(null)
+  const [calendarVisible, setCalendarVisible] = useState(!listView)
 
   const monthKey = `${visibleMonth.getFullYear()}-${String(visibleMonth.getMonth() + 1).padStart(2, '0')}`
 
@@ -147,17 +148,19 @@ function CalendarPanel({ canManage = false }) {
     }),
   ]
   const selectedEvents = events.filter((item) => item.event_date === selectedDate)
+  const visibleEvents = listView && !calendarVisible ? events : selectedEvents
 
   return (
-    <section className="calendar-panel">
+    <section className={`calendar-panel${listView ? ' calendar-list-view' : ''}`}>
       <AuthToast message={notice} onDismiss={() => setNotice('')} duration={5000} variant="success" />
       {pendingDelete && <ConfirmDialog title="Delete calendar event?" message={`“${pendingDelete.title}” will be permanently removed from the calendar.`} confirmLabel="Delete" busy={deletingId === pendingDelete.id} onConfirm={deleteEvent} onCancel={() => setPendingDelete(null)} />}
       <header className="calendar-header">
         <div><h2>Calendar</h2></div>
+        {listView && <button type="button" className="calendar-view-toggle" aria-expanded={calendarVisible} onClick={() => setCalendarVisible((visible) => !visible)}>{calendarVisible ? 'Hide calendar' : 'Show calendar'}</button>}
       </header>
 
       <div className="calendar-layout">
-        <div className="calendar-main">
+        {(!listView || calendarVisible) && <div className="calendar-main">
           <div className="calendar-month-controls">
             <button type="button" onClick={() => changeMonth(-1)} aria-label="Previous month">‹</button>
             <h3>{visibleMonth.toLocaleDateString('en-PH', { month: 'long', year: 'numeric' })}</h3>
@@ -175,13 +178,17 @@ function CalendarPanel({ canManage = false }) {
               >{cell.day}</button>
             ) : <span key={cell.key} />)}
           </div>
-        </div>
+        </div>}
 
         <aside className="calendar-day-panel">
-          <div className="calendar-selected-heading">
+          {listView && !calendarVisible ? <div className="calendar-list-month-controls">
+            <button type="button" onClick={() => changeMonth(-1)} aria-label="Previous month">‹</button>
+            <div><span>Events in</span><strong>{visibleMonth.toLocaleDateString('en-PH', { month: 'long', year: 'numeric' })}</strong></div>
+            <button type="button" onClick={() => changeMonth(1)} aria-label="Next month">›</button>
+          </div> : <div className="calendar-selected-heading">
             <div><span>Selected day</span><strong>{new Date(`${selectedDate}T00:00:00`).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' })}</strong></div>
             <input type="date" value={selectedDate} onChange={(event) => chooseDate(event.target.value)} aria-label="Select event date" />
-          </div>
+          </div>}
 
           {canManage && (
             <form className="calendar-event-form" onSubmit={createEvent}>
@@ -192,8 +199,8 @@ function CalendarPanel({ canManage = false }) {
           )}
 
           {message && <p className="calendar-message">{message}</p>}
-          {loading ? <div className="calendar-empty"><LoadingSpinner label="Loading events..." compact /></div> : selectedEvents.length === 0 ? <p className="calendar-empty">No events for this day.</p> : <div className="calendar-event-list">
-            {selectedEvents.map((item) => <article key={item.id}><div><h4>{item.title}</h4>{item.description && <p>{item.description}</p>}</div>{canManage && <button type="button" disabled={deletingId === item.id} onClick={() => setPendingDelete(item)} aria-label={`Delete calendar event: ${item.title}`} title="Delete calendar event"><i className="app-icon app-icon-trash" aria-hidden="true" /></button>}</article>)}
+          {loading ? <div className="calendar-empty"><LoadingSpinner label="Loading events..." compact /></div> : visibleEvents.length === 0 ? <p className="calendar-empty">{listView && !calendarVisible ? 'No events this month.' : 'No events for this day.'}</p> : <div className="calendar-event-list">
+            {visibleEvents.map((item) => <article key={item.id}><div>{listView && !calendarVisible && <time dateTime={item.event_date}>{new Date(`${item.event_date}T00:00:00`).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}</time>}<h4>{item.title}</h4>{item.description && <p>{item.description}</p>}</div>{canManage && <button type="button" disabled={deletingId === item.id} onClick={() => setPendingDelete(item)} aria-label={`Delete calendar event: ${item.title}`} title="Delete calendar event"><i className="app-icon app-icon-trash" aria-hidden="true" /></button>}</article>)}
           </div>}
         </aside>
       </div>

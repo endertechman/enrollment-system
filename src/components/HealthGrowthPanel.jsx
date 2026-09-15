@@ -11,7 +11,7 @@ function localDateValue() {
 }
 
 function childName(student) {
-  return [student.child_first_name, student.child_middle_name, student.child_last_name, student.child_suffix]
+  return [student.child_first_name, student.child_last_name, student.child_suffix]
     .filter(Boolean)
     .join(' ')
 }

@@ -7,10 +7,6 @@
 .notifications-dropdown>header { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; padding:16px; border-bottom:1px solid #eee5eb; }
 .notifications-dropdown h2 { margin:0; color:#302a32; font-size:16px; }
 .notifications-dropdown header p { margin:4px 0 0; color:var(--color-muted); font-size:10.5px; }
-.notifications-dropdown header .notifications-refresh { display:grid; place-items:center; width:32px; height:32px; flex:0 0 32px; padding:0; border:0; border-radius:50%; background:transparent; color:#514752; cursor:pointer; transition:background-color .2s ease,color .2s ease; }
-.notifications-dropdown header .notifications-refresh .app-icon { width:16px; height:16px; }
-.notifications-dropdown header .notifications-refresh:hover { background:#f7cddd; color:#a92e56; }
-.notifications-dropdown header .notifications-refresh:focus-visible { outline:3px solid rgba(239,146,179,.24); outline-offset:1px; }
 .notification-list { max-height:440px; overflow-y:auto; }
 .notification-item { display:grid; grid-template-columns:9px minmax(0,1fr); gap:11px; width:100%; padding:13px 16px; border:0; border-bottom:1px solid #f0eaee; border-radius:0; background:transparent; color:inherit; font:inherit; text-align:left; cursor:pointer; transition:background-color .2s ease; }
 .notification-item:last-child { border-bottom:0; }

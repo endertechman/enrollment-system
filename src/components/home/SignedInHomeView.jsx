@@ -51,7 +51,7 @@ function SignedInHomeView({ role, enrollments, enrollmentWindow }) {
     <div className="landing-page">
       <AppHeader loggedOutAction="login" />
       <div className="landing-scroll">
-        <main className="landing-hero">
+        <main className="landing-hero landing-hero-signed-in">
           <div className="hero-content">
             <p className={`hero-label enrollment-window-${windowStatus}`}>{windowLabel}</p>
             <h1>Every Child is a Beginning of <span>Something Big.</span></h1>

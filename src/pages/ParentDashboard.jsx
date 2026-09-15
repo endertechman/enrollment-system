@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import AppHeader from '../components/AppHeader'
@@ -11,6 +11,7 @@ import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 
 function ParentDashboard() {
   const navigate = useNavigate()
+  const scrollRef = useRef(null)
   const [searchParams] = useSearchParams()
 
   const [parentName, setParentName] = useState('Parent')
@@ -22,11 +23,16 @@ function ParentDashboard() {
     return savedNotice
   })
   const [loading, setLoading] = useState(true)
+  const [dashboardAllowed, setDashboardAllowed] = useState(null)
   const [activeTab, setActiveTab] = useState(() => {
     const requestedTab = searchParams.get('tab')
     return ['overview', 'information', 'health-growth', 'announcements', 'calendar'].includes(requestedTab) ? requestedTab : 'overview'
   })
   const [selectedEnrollmentId, setSelectedEnrollmentId] = useState(null)
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 0
+  }, [activeTab])
 
   useEffect(() => {
     function openNotificationTab(event) {
@@ -81,6 +87,7 @@ function ParentDashboard() {
           reference_code
         `)
         .eq('parent_id', user.id)
+        .eq('status', 'approved')
         .order('submitted_at', { ascending: false }),
     ])
 
@@ -94,6 +101,16 @@ function ParentDashboard() {
       setMessage(enrollmentResult.error.message)
     } else {
       const nextEnrollments = enrollmentResult.data || []
+
+      if (nextEnrollments.length === 0) {
+        setEnrollments([])
+        setDashboardAllowed(false)
+        setLoading(false)
+        navigate('/', { replace: true })
+        return
+      }
+
+      setDashboardAllowed(true)
       setEnrollments(nextEnrollments)
       const requestedChildId = searchParams.get('child')
       setSelectedEnrollmentId((current) =>
@@ -154,18 +171,31 @@ function ParentDashboard() {
     return 'Application is being reviewed.'
   }
 
+  async function copyReferenceCode(code) {
+    try {
+      await navigator.clipboard.writeText(code)
+      setNotice('Reference code copied.')
+    } catch {
+      setMessage('Unable to copy automatically. Please select the reference code instead.')
+    }
+  }
+
   const selectedEnrollment =
     enrollments.find((item) => item.id === selectedEnrollmentId) ||
     enrollments[0] ||
     null
   const hasApprovedSelection = selectedEnrollment?.status === 'approved'
 
+  if (loading || dashboardAllowed !== true) {
+    return <LoadingSpinner label="Checking dashboard access..." fullPage />
+  }
+
   return (
     <div className="parent-dashboard-page">
       <AppHeader />
       <AuthToast message={notice} onDismiss={() => setNotice('')} duration={5000} variant="success" />
 
-      <main className="parent-dashboard-scroll">
+      <main className="parent-dashboard-scroll" ref={scrollRef}>
         <div className="parent-dashboard-content">
           <section className="parent-profile-area">
             <h1>{parentName}</h1>
@@ -184,74 +214,42 @@ function ParentDashboard() {
               className="parent-sidebar-tabs"
               aria-label="Parent dashboard sections"
             >
-              <button
-                type="button"
-                className={`parent-sidebar-tab${
-                  activeTab === 'overview' ? ' active' : ''
-                }`}
-                onClick={() => setActiveTab('overview')}
-              >
-                Enrollment Status
-              </button>
-              <button
-                type="button"
-                className={`parent-sidebar-tab${
-                  activeTab === 'information' ? ' active' : ''
-                }`}
-                onClick={() => setActiveTab('information')}
-              >
-                Child Information
-              </button>
-              {hasApprovedSelection && <button
-                type="button"
-                className={`parent-sidebar-tab${
-                  activeTab === 'health-growth' ? ' active' : ''
-                }`}
-                onClick={() => setActiveTab('health-growth')}
-              >
-                Health &amp; Growth
-              </button>}
-              {hasApprovedSelection && <button
-                type="button"
-                className={`parent-sidebar-tab${
-                  activeTab === 'announcements' ? ' active' : ''
-                }`}
-                onClick={() => setActiveTab('announcements')}
-              >
-                Announcements
-              </button>}
-              {hasApprovedSelection && <button
-                type="button"
-                className={`parent-sidebar-tab${
-                  activeTab === 'calendar' ? ' active' : ''
-                }`}
-                onClick={() => setActiveTab('calendar')}
-              >
-                Calendar
-              </button>}
+              <div className="parent-tab-group">
+                <span className="parent-tab-group-title">Your child</span>
+                <button type="button" className={`parent-sidebar-tab${activeTab === 'overview' ? ' active' : ''}`} aria-pressed={activeTab === 'overview'} onClick={() => setActiveTab('overview')}>
+                  <i className="app-icon app-icon-eye" aria-hidden="true" /><span>Enrollment Status</span>
+                </button>
+                <button type="button" className={`parent-sidebar-tab${activeTab === 'information' ? ' active' : ''}`} aria-pressed={activeTab === 'information'} onClick={() => setActiveTab('information')}>
+                  <i className="app-icon app-icon-user-list" aria-hidden="true" /><span>Child Information</span>
+                </button>
+                {hasApprovedSelection && <button type="button" className={`parent-sidebar-tab${activeTab === 'health-growth' ? ' active' : ''}`} aria-pressed={activeTab === 'health-growth'} onClick={() => setActiveTab('health-growth')}>
+                  <i className="app-icon app-icon-options" aria-hidden="true" /><span>Health &amp; Growth</span>
+                </button>}
+              </div>
+              {hasApprovedSelection && <div className="parent-tab-group">
+                <span className="parent-tab-group-title">Center updates</span>
+                <button type="button" className={`parent-sidebar-tab${activeTab === 'announcements' ? ' active' : ''}`} aria-pressed={activeTab === 'announcements'} onClick={() => setActiveTab('announcements')}>
+                  <i className="app-icon app-icon-bell" aria-hidden="true" /><span>Announcements</span>
+                </button>
+                <button type="button" className={`parent-sidebar-tab${activeTab === 'calendar' ? ' active' : ''}`} aria-pressed={activeTab === 'calendar'} onClick={() => setActiveTab('calendar')}>
+                  <i className="app-icon app-icon-calendar" aria-hidden="true" /><span>Calendar</span>
+                </button>
+              </div>}
             </nav>
 
             <div className="parent-tab-content">
-              {loading ? (
-                <section className="parent-dashboard-card parent-empty-state">
-                  <LoadingSpinner label="Loading your enrollment..." compact />
-                </section>
-              ) : activeTab === 'health-growth' ? (
+              {activeTab === 'health-growth' ? (
                 <HealthGrowthPanel enrollments={selectedEnrollment ? [selectedEnrollment] : []} />
               ) : activeTab === 'calendar' ? (
-                <CalendarPanel />
+                <CalendarPanel listView />
               ) : activeTab === 'announcements' ? (
                 <AnnouncementsPanel />
-              ) : enrollments.length === 0 ? (
-                <section className="parent-dashboard-card parent-empty-state">
-                  <h2>No enrollment application yet.</h2>
-                  <p>
-                    Return to Home to enroll your child when you are ready.
-                  </p>
-                </section>
               ) : activeTab === 'information' ? (
                 <div className="parent-enrollment-card-list">
                     <section className="parent-dashboard-card" key={selectedEnrollment.id}>
+                      <div className="parent-section-heading">
+                        <div><span>Child Information</span><h2>{[selectedEnrollment.child_first_name, selectedEnrollment.child_middle_name, selectedEnrollment.child_last_name, selectedEnrollment.child_suffix].filter(Boolean).join(' ')}</h2></div>
+                      </div>
                       <dl className="parent-information-grid">
                         <div>
                           <dt>Date of Birth</dt>
@@ -292,6 +290,7 @@ function ParentDashboard() {
                 <div className="parent-enrollment-card-list">
                     <section className="parent-dashboard-card" key={selectedEnrollment.id}>
                       <div className="parent-card-heading">
+                        <div><span>Enrollment Status</span><h2>{[selectedEnrollment.child_first_name, selectedEnrollment.child_last_name, selectedEnrollment.child_suffix].filter(Boolean).join(' ')}</h2></div>
                         <span className={`enrollment-status ${selectedEnrollment.status}`}>
                           {selectedEnrollment.status}
                         </span>
@@ -303,18 +302,19 @@ function ParentDashboard() {
 
                       <dl className="parent-overview-grid">
                         <div>
-                          <dt>Application Status</dt>
-                          <dd>{formatSex(selectedEnrollment.status)}</dd>
+                          <dt>Decision</dt>
+                          <dd>Accepted</dd>
                         </div>
                         <div>
                           <dt>Reference Code</dt>
-                          <dd>{selectedEnrollment.reference_code}</dd>
+                          <dd className="parent-reference-value"><span>{selectedEnrollment.reference_code}</span><button type="button" onClick={() => copyReferenceCode(selectedEnrollment.reference_code)} aria-label="Copy reference code">Copy</button></dd>
                         </div>
                         <div>
                           <dt>Submitted</dt>
                           <dd>{formatSubmittedDate(selectedEnrollment.submitted_at)}</dd>
                         </div>
                       </dl>
+                      <button type="button" className="parent-inline-link" onClick={() => setActiveTab('information')}>View child information <span aria-hidden="true">→</span></button>
                     </section>
                 </div>
               )}

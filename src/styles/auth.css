@@ -298,15 +298,25 @@
 
 /* Supabase Messages */
 
-.auth-toast {
+.auth-toast-stack {
   position: fixed;
   top: 82px;
   left: 50%;
   z-index: 1200;
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(380px, calc(100vw - 40px));
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.auth-toast {
+  position: relative;
+  display: flex;
   align-items: flex-start;
   gap: 12px;
-  width: min(380px, calc(100vw - 40px));
+  width: 100%;
   padding: 14px 14px 14px 16px;
   border: 1px solid #eadde0;
   border-left: 4px solid #c45d6c;
@@ -316,7 +326,7 @@
   box-shadow: 0 14px 36px rgba(55, 42, 48, 0.16);
   font-size: 13px;
   line-height: 1.5;
-  transform: translateX(-50%);
+  pointer-events: auto;
   animation: auth-toast-enter 0.2s ease-out;
 }
 
@@ -364,29 +374,29 @@
 @keyframes auth-toast-enter {
   from {
     opacity: 0;
-    transform: translate(-50%, -8px);
+    transform: translateY(-8px);
   }
 
   to {
     opacity: 1;
-    transform: translate(-50%, 0);
+    transform: translateY(0);
   }
 }
 
 @keyframes auth-toast-exit {
   from {
     opacity: 1;
-    transform: translate(-50%, 0);
+    transform: translateY(0);
   }
 
   to {
     opacity: 0;
-    transform: translate(-50%, -8px);
+    transform: translateY(-8px);
   }
 }
 
 @media (max-width: 560px) {
-  .auth-toast {
+  .auth-toast-stack {
     top: 72px;
     width: calc(100vw - 28px);
   }

@@ -430,6 +430,14 @@
 .app-icon-options { --icon-url: url('/icons/options.svg'); }
 .app-icon-pen { --icon-url: url('/icons/pen.svg'); }
 .app-icon-mail { --icon-url: url('/icons/mail.svg'); }
+.app-icon-clipboard { --icon-url: url('/icons/clipboard.svg'); }
+.app-icon-profile { --icon-url: url('/icons/profile.svg'); }
+.app-icon-inbox { --icon-url: url('/icons/inbox.svg'); }
+.app-icon-file-document { --icon-url: url('/icons/file-document.svg'); }
+.app-icon-calendar-due { --icon-url: url('/icons/calendar-due.svg'); }
+.app-icon-calendar-dates { --icon-url: url('/icons/calendar-dates.svg'); }
+.app-icon-heart { --icon-url: url('/icons/heart.svg'); }
+.app-icon-check-o { --icon-url: url('/icons/check-o.svg'); }
 
 
 .nav-home-action {

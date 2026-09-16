@@ -76,14 +76,6 @@ function CalendarPanel({ canManage = false, listView = false }) {
     setSelectedDate(toDateValue(nextMonth))
   }
 
-  function chooseDate(value) {
-    const chosen = new Date(`${value}T00:00:00`)
-    setSelectedDate(value)
-    if (chosen.getFullYear() !== visibleMonth.getFullYear() || chosen.getMonth() !== visibleMonth.getMonth()) {
-      setVisibleMonth(new Date(chosen.getFullYear(), chosen.getMonth(), 1))
-    }
-  }
-
   async function createEvent(event) {
     event.preventDefault()
     const cleanTitle = title.trim()
@@ -155,9 +147,9 @@ function CalendarPanel({ canManage = false, listView = false }) {
       <AuthToast message={notice} onDismiss={() => setNotice('')} duration={5000} variant="success" />
       {pendingDelete && <ConfirmDialog title="Delete calendar event?" message={`“${pendingDelete.title}” will be permanently removed from the calendar.`} confirmLabel="Delete" busy={deletingId === pendingDelete.id} onConfirm={deleteEvent} onCancel={() => setPendingDelete(null)} />}
       <header className="calendar-header">
-        <div><h2>Calendar</h2></div>
-        {listView && <button type="button" className="calendar-view-toggle" aria-expanded={calendarVisible} onClick={() => setCalendarVisible((visible) => !visible)}>{calendarVisible ? 'Hide calendar' : 'Show calendar'}</button>}
+        <h2>Calendar</h2>
       </header>
+      {listView && <div className="calendar-toolbar"><button type="button" className="calendar-view-toggle" aria-expanded={calendarVisible} onClick={() => setCalendarVisible((visible) => !visible)}>{calendarVisible ? 'Hide calendar' : 'Show calendar'}</button></div>}
 
       <div className="calendar-layout">
         {(!listView || calendarVisible) && <div className="calendar-main">
@@ -187,7 +179,6 @@ function CalendarPanel({ canManage = false, listView = false }) {
             <button type="button" onClick={() => changeMonth(1)} aria-label="Next month">›</button>
           </div> : <div className="calendar-selected-heading">
             <div><span>Selected day</span><strong>{new Date(`${selectedDate}T00:00:00`).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' })}</strong></div>
-            <input type="date" value={selectedDate} onChange={(event) => chooseDate(event.target.value)} aria-label="Select event date" />
           </div>}
 
           {canManage && (

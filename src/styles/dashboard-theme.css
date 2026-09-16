@@ -12,6 +12,129 @@
   scrollbar-gutter: stable;
 }
 
+.dashboard-loading-page .dashboard-loading-content {
+  display: grid;
+  width: min(1120px, calc(100% - 48px));
+  margin-inline: auto;
+  padding: 34px 0 64px;
+  gap: 18px;
+}
+
+.dashboard-loading-intro {
+  display: grid;
+  min-height: 132px;
+  grid-template-columns: minmax(0, 1fr) minmax(250px, 300px);
+  align-items: center;
+  gap: 20px;
+  padding: clamp(18px, 2.5vw, 24px);
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: linear-gradient(105deg, var(--color-surface) 18%, var(--color-accent-soft) 70%, var(--color-primary-soft) 100%);
+}
+
+.dashboard-loading-copy,
+.dashboard-loading-summary,
+.dashboard-loading-navigation {
+  display: grid;
+  gap: 12px;
+}
+
+.dashboard-loading-line {
+  display: block;
+  width: 100%;
+  height: 14px;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--color-muted) 14%, var(--color-surface));
+}
+
+.dashboard-loading-label { width: 96px; height: 11px; }
+.dashboard-loading-title { width: min(72%, 420px); height: 36px; border-radius: 10px; }
+.dashboard-loading-description { width: min(88%, 560px); }
+
+.dashboard-loading-summary {
+  min-height: 78px;
+  align-content: center;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 34%, var(--color-surface));
+  border-radius: 6px 14px 14px 14px;
+  background: var(--color-primary-soft);
+}
+
+.dashboard-loading-summary .dashboard-loading-line {
+  background: color-mix(in srgb, var(--color-primary) 24%, var(--color-surface));
+}
+
+.dashboard-loading-layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  align-items: start;
+  gap: 18px;
+}
+
+.dashboard-loading-navigation {
+  padding: 9px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface);
+}
+
+.dashboard-loading-navigation .dashboard-loading-line {
+  height: 44px;
+  border-radius: 9px;
+}
+
+.dashboard-loading-navigation .dashboard-loading-line:first-child {
+  background: var(--color-accent-soft);
+}
+
+.dashboard-loading-panel {
+  display: grid;
+  min-height: clamp(480px, 58vh, 680px);
+  align-content: start;
+  gap: 28px;
+  padding: clamp(20px, 4vw, 34px);
+  border: 1px solid var(--color-border);
+  border-radius: 18px 18px 6px 18px;
+  background: var(--color-surface);
+  box-shadow: 0 16px 32px rgba(87, 66, 82, .07);
+}
+
+.dashboard-loading-panel-title {
+  display: flex;
+  min-height: 58px;
+  align-items: center;
+  padding: 14px 17px;
+  border-radius: 14px;
+  background: linear-gradient(100deg, var(--color-accent-soft), var(--color-primary-soft));
+}
+
+.dashboard-loading-panel-title .dashboard-loading-line { width: 170px; height: 18px; }
+.dashboard-loading-panel .app-loading { min-height: 240px; }
+
+@media (max-width: 980px) {
+  .dashboard-loading-intro { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 900px) {
+  .dashboard-loading-layout { grid-template-columns: minmax(0, 1fr); }
+  .dashboard-loading-navigation { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 700px) {
+  .dashboard-loading-page .dashboard-loading-content {
+    width: calc(100% - 28px);
+    padding: 24px 0 44px;
+    gap: 14px;
+  }
+
+  .dashboard-loading-intro { min-height: 0; padding: 22px; }
+  .dashboard-loading-navigation { grid-template-columns: repeat(6, 132px); overflow: hidden; }
+}
+
+@media (max-width: 460px) {
+  .dashboard-loading-page .dashboard-loading-content { width: calc(100% - 22px); }
+}
+
 .teacher-dashboard-content,
 .parent-dashboard-content {
   padding-top: clamp(22px, 3vw, 36px);
@@ -25,7 +148,7 @@
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, .92);
   border-radius: 22px;
-  background: linear-gradient(105deg, #fff 18%, #fff6fa 70%, #effbfc 100%);
+  background: linear-gradient(105deg, var(--color-surface) 18%, var(--color-accent-soft) 70%, var(--color-primary-soft) 100%);
   box-shadow: 0 14px 34px rgba(87, 66, 82, .07);
 }
 
@@ -38,12 +161,12 @@
   left: 17px;
   width: 4px;
   border-radius: 999px;
-  background: #ef92b3;
+  background: var(--color-accent);
 }
 
 .teacher-profile-area h1,
 .parent-profile-area h1 {
-  color: #353039;
+  color: var(--color-text);
   font-size: clamp(23px, 2.8vw, 29px);
   font-weight: 730;
   overflow-wrap: anywhere;
@@ -52,7 +175,7 @@
 .teacher-profile-area p,
 .parent-profile-area p {
   margin-top: 5px;
-  color: #77717a;
+  color: var(--color-muted);
 }
 
 .staff-dashboard-layout,
@@ -64,21 +187,21 @@
 .teacher-tabs,
 .parent-sidebar-tabs {
   padding: 9px;
-  border: 1px solid #f0e9ee;
+  border: 1px solid var(--color-border);
   border-radius: 18px;
-  background: #fff;
+  background: var(--color-surface);
   box-shadow: 0 12px 32px rgba(87, 66, 82, .07);
 }
 
 .teacher-tabs,
 .parent-sidebar-tabs { gap: 9px; }
 .teacher-tab-group,
-.parent-tab-group { display: grid; gap: 3px; padding: 5px; border-radius: 13px; background: #faf8fa; }
+.parent-tab-group { display: grid; gap: 3px; padding: 5px; border-radius: 13px; background: var(--color-surface-soft); }
 .teacher-tab-group-title,
 .parent-tab-group-title {
   display: block;
   padding: 5px 10px 4px;
-  color: #91838d;
+  color: var(--color-muted);
   font-size: 10px;
   font-weight: 760;
   letter-spacing: .065em;
@@ -100,22 +223,22 @@
 .parent-sidebar-tab > span { min-width: 0; }
 .teacher-tab.active,
 .parent-sidebar-tab.active {
-  background: #fff0f6;
-  color: #ad3d63;
-  box-shadow: inset 3px 0 0 #ef92b3;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-ink);
+  box-shadow: inset 3px 0 0 var(--color-accent);
 }
 .teacher-tab:focus-visible,
 .parent-sidebar-tab:focus-visible { outline: 3px solid rgba(239, 146, 179, .35); outline-offset: 1px; }
 
 .teacher-tab,
 .parent-sidebar-tab {
-  color: #605a63;
+  color: var(--color-muted);
 }
 
 .teacher-tab:not(:disabled):hover,
 .parent-sidebar-tab:hover {
-  background: #fff0f6;
-  color: #a92e56;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-ink);
 }
 
 .pending-approvals-panel,
@@ -123,9 +246,9 @@
 .announcements-panel,
 .calendar-panel,
 .growth-panel {
-  border: 1px solid #eee9ed;
+  border: 1px solid var(--color-border);
   border-radius: 22px;
-  background: #fff;
+  background: var(--color-surface);
   box-shadow: 0 16px 38px rgba(87, 66, 82, .075);
 }
 
@@ -136,14 +259,14 @@
   min-height: 58px;
   padding: 14px 17px;
   border-radius: 14px;
-  background: linear-gradient(100deg, #fff3f8, #f7fcfd);
+  background: linear-gradient(100deg, var(--color-accent-soft), var(--color-primary-soft));
 }
 
 .pending-approvals-header h2,
 .announcements-header h2,
 .calendar-header h2,
 .growth-header h2 {
-  color: #353039;
+  color: var(--color-text);
   font-size: 18px;
   letter-spacing: -.015em;
 }
@@ -152,24 +275,24 @@
 .announcement-card,
 .attendance-row,
 .calendar-event-list article {
-  border-color: #eee8ec;
-  background: #fff;
+  border-color: var(--color-border);
+  background: var(--color-surface);
   box-shadow: none;
 }
 
 .teacher-empty-state,
 .calendar-empty,
 .growth-empty {
-  background: #fbf9fb;
+  background: var(--color-surface-soft);
 }
 
 .records-table-shell {
-  background: #fff;
-  box-shadow: inset 0 0 0 1px #eee8ec;
+  background: var(--color-surface);
+  box-shadow: inset 0 0 0 1px var(--color-border);
 }
 
 .records-table th {
-  background: #faf6f9;
+  background: var(--color-surface-soft);
 }
 
 .dashboard-search { display: block; margin-top: 15px; }
@@ -178,17 +301,17 @@
   width: 100%;
   min-height: 42px;
   padding: 9px 13px;
-  border: 1px solid #e6dfe4;
+  border: 1px solid var(--color-border);
   border-radius: 11px;
-  background: #fff;
-  color: #353039;
+  background: var(--color-surface);
+  color: var(--color-text);
   font: inherit;
   font-size: 12.5px;
   outline: none;
   transition: border-color .2s ease, box-shadow .2s ease;
 }
-.dashboard-search input::placeholder { color: #969099; }
-.dashboard-search input:focus { border-color: #8de1e5; box-shadow: 0 0 0 3px rgba(53, 200, 208, .13); }
+.dashboard-search input::placeholder { color: var(--color-muted); }
+.dashboard-search input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent); }
 
 .parent-overview-grid div,
 .parent-information-grid div,
@@ -197,17 +320,17 @@
 .growth-student-picker,
 .growth-form,
 .announcement-form {
-  background: #fbf9fb;
+  background: var(--color-surface-soft);
 }
 
 .parent-section-heading {
   padding: 14px 17px;
   border-radius: 14px;
-  background: linear-gradient(100deg, #fff3f8, #f7fcfd);
+  background: linear-gradient(100deg, var(--color-accent-soft), var(--color-primary-soft));
 }
 
 .parent-section-heading span {
-  color: #9a7180;
+  color: var(--color-accent-ink);
   font-size: 10px;
   font-weight: 750;
   letter-spacing: .055em;
@@ -216,7 +339,7 @@
 
 .parent-section-heading h2 {
   margin: 4px 0 0;
-  color: #353039;
+  color: var(--color-text);
   font-size: 18px;
   overflow-wrap: anywhere;
 }
@@ -225,14 +348,14 @@
   min-height: 58px;
   padding: 14px 17px;
   border-radius: 14px;
-  background: linear-gradient(100deg, #fff3f8, #f7fcfd);
+  background: linear-gradient(100deg, var(--color-accent-soft), var(--color-primary-soft));
 }
 
 .parent-card-heading h2 { font-size: 18px; }
 
 .parent-card-heading > div { min-width: 0; }
 .parent-card-heading > div > span {
-  color: #9a7180;
+  color: var(--color-accent-ink);
   font-size: 10px;
   font-weight: 750;
   letter-spacing: .055em;
@@ -245,8 +368,8 @@
 .parent-inline-link {
   border: 0;
   border-radius: 9px;
-  background: #fff;
-  color: #117d85;
+  background: var(--color-surface);
+  color: var(--color-primary-ink);
   font: inherit;
   font-size: 12px;
   font-weight: 700;
@@ -256,8 +379,275 @@
 .parent-reference-value button { flex: 0 0 auto; padding: 7px 10px; }
 .parent-inline-link { margin-top: 20px; padding: 8px 10px; }
 .parent-reference-value button:hover,
-.parent-inline-link:hover { background: #e8f8f9; color: #0e6970; }
+.parent-inline-link:hover { background: var(--color-primary-soft); color: var(--color-primary-ink); }
 .parent-inline-link span { margin-left: 4px; }
+
+/* Shared dashboard rhythm: one scale for panels, controls, and readable type. */
+.teacher-dashboard-page,
+.parent-dashboard-page {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.pending-approvals-panel,
+.announcements-panel,
+.calendar-panel,
+.growth-panel,
+.student-report-panel {
+  padding: var(--dashboard-panel-padding);
+  border-radius: 18px;
+}
+
+.pending-approvals-header,
+.announcements-header,
+.calendar-header,
+.growth-header,
+.student-report-header,
+.parent-card-heading,
+.parent-section-heading {
+  min-height: 56px;
+  padding: 13px 16px;
+  border-radius: 13px;
+}
+
+.pending-approvals-header h2,
+.announcements-header h2,
+.calendar-header h2,
+.growth-header h2,
+.student-report-header h2,
+.parent-card-heading h2,
+.parent-section-heading h2 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 720;
+  letter-spacing: -.012em;
+  line-height: 1.25;
+}
+
+.dashboard-panel-meta,
+.announcements-header-actions {
+  margin-top: var(--dashboard-content-gap);
+}
+
+.dashboard-search,
+.announcement-list,
+.calendar-layout,
+.growth-student-picker,
+.student-report-picker {
+  margin-top: var(--dashboard-content-gap);
+}
+
+.dashboard-search input,
+.announcement-form input,
+.growth-form input,
+.student-report-search input,
+.calendar-event-form input {
+  min-height: 42px;
+  border-color: var(--color-border);
+  border-radius: var(--dashboard-control-radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 13px;
+}
+
+.announcement-form textarea,
+.calendar-event-form textarea {
+  border-color: var(--color-border);
+  border-radius: var(--dashboard-control-radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 13px;
+}
+
+.approve-button,
+.reject-button,
+.announcement-compose-toggle,
+.announcement-form button,
+.calendar-view-toggle,
+.calendar-event-form button,
+.growth-form > button,
+.growth-record-list button,
+.student-report-search-control > button,
+.enrollment-window-actions .button-secondary {
+  min-height: var(--dashboard-control-height);
+  padding: 0 14px;
+  border-radius: var(--dashboard-control-radius);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.approve-button {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.approve-button:hover:not(:disabled) {
+  border-color: var(--color-primary-hover);
+  background: var(--color-primary-hover);
+}
+
+.records-table .approve-button,
+.records-table .reject-button {
+  min-height: var(--dashboard-filter-height);
+  padding: 0 12px;
+  border-radius: 9px;
+  font-size: 12px;
+}
+
+.reject-button {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-surface));
+  background: var(--color-accent-soft);
+  color: var(--color-accent-ink);
+}
+
+.announcement-compose-toggle,
+.announcement-form button,
+.calendar-event-form button,
+.growth-form > button {
+  background: var(--color-accent);
+  color: var(--color-surface);
+}
+
+.announcement-compose-toggle:hover,
+.announcement-form button:hover:not(:disabled),
+.calendar-event-form button:hover:not(:disabled),
+.growth-form > button:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+}
+
+.calendar-view-toggle,
+.growth-record-list button,
+.student-report-search-control > button,
+.enrollment-window-actions .button-secondary {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.calendar-view-toggle:hover,
+.growth-record-list button:hover,
+.student-report-search-control > button:hover,
+.enrollment-window-actions .button-secondary:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-ink);
+}
+
+.student-status-filters button,
+.growth-classification-filters button {
+  min-height: var(--dashboard-filter-height);
+  padding: 0 12px;
+  border-color: var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-muted);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.student-status-filters button:hover,
+.student-status-filters button.active,
+.growth-classification-filters button:hover,
+.growth-classification-filters button.active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-ink);
+}
+
+.bulk-delete-button,
+.delete-record-button,
+.announcement-card-heading button,
+.calendar-event-list button {
+  width: var(--dashboard-icon-button-size);
+  height: var(--dashboard-icon-button-size);
+  min-height: var(--dashboard-icon-button-size);
+  flex-basis: var(--dashboard-icon-button-size);
+  color: var(--color-accent-ink);
+}
+
+.bulk-delete-button:hover:not(:disabled),
+.delete-record-button:hover:not(:disabled),
+.announcement-card-heading button:hover:not(:disabled),
+.calendar-event-list button:hover:not(:disabled) {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-ink);
+}
+
+.waiting-badge,
+.announcements-header-actions > span,
+.enrollment-status,
+.enrollment-window-badge {
+  font-size: 11px;
+  font-weight: 720;
+  line-height: 1.2;
+}
+
+.waiting-badge,
+.announcements-header-actions > span {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-ink);
+}
+
+.approve-button:focus-visible,
+.reject-button:focus-visible,
+.announcement-compose-toggle:focus-visible,
+.announcement-form button:focus-visible,
+.calendar-view-toggle:focus-visible,
+.calendar-event-form button:focus-visible,
+.growth-form > button:focus-visible,
+.growth-record-list button:focus-visible,
+.student-report-search-control > button:focus-visible,
+.student-status-filters button:focus-visible,
+.growth-classification-filters button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 38%, transparent);
+  outline-offset: 2px;
+}
+
+.teacher-dashboard-page .enrollment-status.pending,
+.parent-dashboard-page .enrollment-status.pending {
+  background: var(--color-surface-soft);
+  color: var(--color-muted);
+}
+
+.teacher-dashboard-page .enrollment-status.approved,
+.parent-dashboard-page .enrollment-status.approved {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-ink);
+}
+
+.teacher-dashboard-page .enrollment-status.rejected,
+.parent-dashboard-page .enrollment-status.rejected {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-ink);
+}
+
+.student-row-actions .delete-record-button,
+.compact-rejected-toolbar .bulk-delete-button {
+  width: var(--dashboard-icon-button-size);
+  height: var(--dashboard-icon-button-size);
+  min-height: var(--dashboard-icon-button-size);
+  flex-basis: var(--dashboard-icon-button-size);
+}
+
+.announcement-card h3,
+.calendar-event-list h4,
+.growth-record-heading h3,
+.student-report-identity h3 {
+  color: var(--color-text);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.announcement-card > p,
+.calendar-event-list p,
+.growth-formula,
+.enrollment-window-note,
+.student-report-health-note {
+  color: var(--color-muted);
+  line-height: 1.6;
+}
 
 @media (max-width: 760px) {
   .teacher-profile-area,
@@ -275,7 +665,7 @@
   .teacher-tab,
   .parent-sidebar-tab { flex: 0 0 auto; width: auto; min-width: 166px; justify-content: center; text-align: center; }
   .teacher-tab.active,
-  .parent-sidebar-tab.active { box-shadow: inset 0 -3px 0 #ef92b3; }
+  .parent-sidebar-tab.active { box-shadow: inset 0 -3px 0 var(--color-accent); }
 }
 
 @media (max-width: 430px) {

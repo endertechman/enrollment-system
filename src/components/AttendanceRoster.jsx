@@ -102,8 +102,8 @@ function AttendanceRoster({ enrollments, loading, attendanceDate, onDateChange, 
       <AuthToast message={notice} onDismiss={() => setNotice('')} duration={5000} variant="success" />
       <div className="pending-approvals-header attendance-header">
         <div><h2>Attendance</h2></div>
-        <span className="waiting-badge">{students.length} students</span>
       </div>
+      <div className="dashboard-panel-meta"><span className="waiting-badge">{students.length} students</span></div>
 
       <div className="attendance-toolbar">
         <label htmlFor="attendance-date">School day</label>

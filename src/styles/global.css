@@ -10,7 +10,23 @@
   --color-text: #353039;
   --color-muted: #77717a;
   --color-primary: #35c8d0;
+  --color-primary-hover: #20b6c0;
+  --color-primary-ink: #117d85;
+  --color-primary-soft: #e8f8f9;
+  --color-on-primary: #ffffff;
   --color-accent: #ef92b3;
+  --color-accent-hover: #e781a6;
+  --color-accent-ink: #ad3d63;
+  --color-accent-soft: #fff0f6;
+  --color-on-accent: #ffffff;
+  --color-border: #eadfe5;
+  --color-surface-soft: #fbf9fb;
+  --dashboard-control-height: 40px;
+  --dashboard-filter-height: 36px;
+  --dashboard-icon-button-size: 34px;
+  --dashboard-control-radius: 10px;
+  --dashboard-panel-padding: clamp(18px, 2.5vw, 24px);
+  --dashboard-content-gap: 16px;
 }
 
 * {
@@ -186,6 +202,6 @@ button {
   text-transform: capitalize;
 }
 
-.enrollment-window-badge.open { background: color-mix(in srgb, var(--color-primary) 16%, var(--color-surface)); color: var(--color-primary); }
-.enrollment-window-badge.scheduled { background: color-mix(in srgb, var(--color-accent) 16%, var(--color-surface)); color: var(--color-accent); }
-.enrollment-window-badge.closed { background: color-mix(in srgb, var(--color-accent) 16%, var(--color-surface)); color: var(--color-accent); }
+.enrollment-window-badge.open { background: var(--color-primary-soft); color: var(--color-primary-ink); }
+.enrollment-window-badge.scheduled { background: var(--color-accent-soft); color: var(--color-accent-ink); }
+.enrollment-window-badge.closed { background: var(--color-surface-soft); color: var(--color-muted); }

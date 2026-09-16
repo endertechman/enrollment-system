@@ -165,7 +165,7 @@ function NotificationsMenu({ user, role }) {
       tab = item.type === 'application' ? 'approvals' : item.type === 'attendance' ? 'attendance' : item.type === 'announcement' ? 'announcements' : item.type === 'event' ? 'calendar' : 'students'
     } else {
       dashboard = 'teacher-aide'
-      tab = item.type === 'attendance' ? 'attendance' : item.type === 'announcement' ? 'announcements' : item.type === 'event' ? 'calendar' : 'students'
+      tab = item.type === 'application' ? 'approvals' : item.type === 'attendance' ? 'attendance' : item.type === 'announcement' ? 'announcements' : item.type === 'event' ? 'calendar' : 'students'
     }
 
     const params = new URLSearchParams({ tab })

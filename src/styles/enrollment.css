@@ -146,11 +146,12 @@
 }
 
 .bmi-preview {
-  display: flex;
-  align-items: center;
+  display: grid;
+  align-content: center;
+  gap: 3px;
   width: 100%;
-  height: 48px;
-  padding: 0 14px;
+  min-height: 48px;
+  padding: 7px 14px;
   border: 1px solid #ded7dd;
   border-radius: 12px;
   background: #f6f3f5;
@@ -158,6 +159,11 @@
   font-size: 15px;
   font-weight: 500;
 }
+.bmi-preview strong { color:#4b454c; font-size:15px; }
+.bmi-preview small { color:#5d765f; font-size:10px; font-weight:700; line-height:1.3; }
+.bmi-preview small[data-tone="warning"] { color:#a56b22; }
+.bmi-preview small[data-tone="alert"] { color:#b84469; }
+.bmi-preview small[data-tone="unavailable"] { color:#777078; }
 
 .enrollment-grid select {
   padding-right: 42px;

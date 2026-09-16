@@ -5,6 +5,7 @@ import AppHeader from './AppHeader'
 import LoadingSpinner from './LoadingSpinner'
 import { getEnrollmentWindow, isEnrollmentOpen } from '../lib/enrollmentWindow'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
+import { classifyChildBmi } from '../lib/bmiClassification'
 
 function EnrollmentForm() {
   const navigate = useNavigate()
@@ -145,6 +146,12 @@ function EnrollmentForm() {
     const heightMeters = heightCm / 100
     return (weight / (heightMeters * heightMeters)).toFixed(1)
   }
+
+  const liveBmi = calculateBmi()
+  const liveBmiClassification = liveBmi === '—' ? null : classifyChildBmi({
+    bmi: liveBmi,
+    sex,
+  })
 
   function formatPhilippinePlace(place) {
     const cleanedPlace = place.trim()
@@ -524,7 +531,10 @@ function EnrollmentForm() {
 
                 <div>
                   <label>Calculated BMI</label>
-                  <div className="bmi-preview" aria-live="polite">{calculateBmi()}</div>
+                  <div className="bmi-preview" aria-live="polite">
+                    <strong>{liveBmi}</strong>
+                    {liveBmi !== '—' && <small data-tone={liveBmiClassification?.tone || 'unavailable'}>{liveBmiClassification?.label || 'Classification unavailable'}</small>}
+                  </div>
                 </div>
               </div>
             </section>}

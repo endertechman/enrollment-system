@@ -8,6 +8,7 @@ import HealthGrowthPanel from '../components/HealthGrowthPanel'
 import StudentReportPanel from '../components/StudentReportPanel'
 import AuthToast from '../components/AuthToast'
 import DashboardLoadingShell from '../components/DashboardLoadingShell'
+import { getEnrollmentWindow } from '../lib/enrollmentWindow'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 
 function ParentDashboard() {
@@ -66,6 +67,7 @@ function ParentDashboard() {
       return
     }
 
+    const windowResult = await getEnrollmentWindow()
     const [profileResult, enrollmentResult] = await Promise.all([
       supabase
         .from('profiles')
@@ -94,6 +96,7 @@ function ParentDashboard() {
         `)
         .eq('parent_id', user.id)
         .eq('status', 'approved')
+        .eq('batch_id', windowResult.data?.current_batch_id)
         .order('submitted_at', { ascending: false }),
     ])
 
@@ -144,7 +147,7 @@ function ParentDashboard() {
 
   useRealtimeRefresh(() => loadDashboard({ silent: true }), {
     channelName: 'parent-dashboard',
-    tables: ['profiles', 'enrollments'],
+    tables: ['profiles', 'enrollments', 'enrollment_settings', 'enrollment_batches'],
   })
 
   function formatDate(date) {
@@ -170,6 +173,11 @@ function ParentDashboard() {
   function formatValue(value) {
     if (value === null || value === undefined || value === '') return 'Not provided'
     return String(value)
+  }
+
+  function formatPlaceOfBirth(value) {
+    if (value === null || value === undefined || value === '') return 'Not provided'
+    return String(value).replace(/,\s*Philippines\s*$/i, '').trim()
   }
 
   function formatSex(sex) {
@@ -317,7 +325,7 @@ function ParentDashboard() {
                   <i className="app-icon app-icon-bell" aria-hidden="true" /><span>Announcements</span>
                 </button>
                 <button type="button" className={`parent-sidebar-tab${activeTab === 'calendar' ? ' active' : ''}`} aria-pressed={activeTab === 'calendar'} onClick={() => setActiveTab('calendar')}>
-                  <i className="app-icon app-icon-calendar-dates" aria-hidden="true" /><span>Calendar</span>
+                  <i className="app-icon app-icon-calendar-dates" aria-hidden="true" /><span>School Calendar</span>
                 </button>
               </div>}
             </nav>
@@ -349,7 +357,7 @@ function ParentDashboard() {
                         </div>
                         <div>
                           <dt>Place of Birth</dt>
-                          <dd>{formatValue(selectedEnrollment.place_of_birth)}</dd>
+                          <dd>{formatPlaceOfBirth(selectedEnrollment.place_of_birth)}</dd>
                         </div>
                         <div>
                           <dt>Registered</dt>

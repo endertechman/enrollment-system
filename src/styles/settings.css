@@ -1,26 +1,38 @@
 .settings-overlay { position:fixed; inset:0; z-index:210; display:grid; place-items:center; padding:18px; background:rgba(42,37,43,.38); backdrop-filter:blur(5px); animation:role-manager-fade .18s ease; }
-.settings-dialog { position:relative; width:min(480px,100%); max-height:calc(100dvh - 36px); overflow-y:auto; padding:22px; border:1px solid rgba(255,255,255,.82); border-radius:18px; background:#fff9fc; box-shadow:0 24px 60px rgba(63,43,56,.22); }
-.settings-close { position:absolute; top:12px; right:12px; display:grid; place-items:center; width:var(--dashboard-icon-button-size); height:var(--dashboard-icon-button-size); padding:0; border:0; border-radius:50%; background:transparent; color:var(--color-muted); cursor:pointer; transition:background-color .2s ease,color .2s ease; }
+.settings-dialog { position:relative; display:flex; width:min(460px,100%); max-height:calc(100dvh - 36px); flex-direction:column; overflow:hidden; border:1px solid rgba(255,255,255,.82); border-radius:18px; background:#fff9fc; box-shadow:0 24px 60px rgba(63,43,56,.22); }
+.settings-close { position:absolute; top:12px; right:12px; display:grid; place-items:center; width:44px; height:44px; padding:0; border:0; border-radius:50%; background:transparent; color:var(--color-muted); cursor:pointer; transition:background-color .2s ease,color .2s ease; }
 .settings-close:hover { background:#f8e8ef; color:#a92e56; }
+.settings-close:focus-visible,.settings-password-form>button:focus-visible { outline:3px solid var(--color-primary-ink); outline-offset:2px; }
 .settings-close .app-icon { width:18px; height:18px; }
-.settings-dialog>header { padding-right:42px; }
-.settings-dialog>header>span { color:#138891; font-size:10.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
-.settings-dialog h2 { margin:4px 0 0; color:#302a32; font-size:20px; }
-.settings-account-info { display:grid; grid-template-columns:1fr 1.4fr .7fr; gap:7px; margin:16px 0 0; }
-.settings-account-info>div { min-width:0; padding:10px 11px; border-radius:10px; background:#fff; }
-.settings-account-info dt { color:var(--color-muted); font-size:9.5px; font-weight:750; letter-spacing:.04em; text-transform:uppercase; }
-.settings-account-info dd { margin:5px 0 0; color:var(--color-text); font-size:12.5px; font-weight:650; overflow-wrap:anywhere; }
-.settings-password-form { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:11px; padding:13px; border-radius:13px; background:rgba(255,255,255,.72); }
-.settings-section-heading,.settings-current-password { grid-column:1/-1; }
-.settings-section-heading { padding:0 0 2px; }
-.settings-section-heading h3 { margin:0; color:#302a32; font-size:15px; }
-.settings-password-form>label:not(.settings-show-passwords) { display:grid; gap:6px; color:var(--color-text); font-size:11.5px; font-weight:700; }
-.settings-password-form input[type="password"],.settings-password-form input[type="text"] { width:100%; min-height:var(--dashboard-control-height); padding:0 12px; border:1px solid var(--color-border); border-radius:var(--dashboard-control-radius); background:var(--color-surface); color:var(--color-text); font:inherit; font-size:13px; outline:none; transition:border-color .2s ease,box-shadow .2s ease; }
-.settings-password-form input[type="password"]:focus,.settings-password-form input[type="text"]:focus { border-color:#8de1e5; box-shadow:0 0 0 3px rgba(53,200,208,.13); }
-.settings-show-passwords { display:inline-flex; align-items:center; gap:8px; width:fit-content; color:var(--color-muted); font-size:11.5px; cursor:pointer; }
-.settings-show-passwords input { width:15px; height:15px; accent-color:#35c8d0; }
-.settings-password-form>button { justify-self:end; min-height:var(--dashboard-control-height); padding:0 14px; border:0; border-radius:var(--dashboard-control-radius); background:var(--color-accent); color:var(--color-surface); font:inherit; font-size:13px; font-weight:700; cursor:pointer; transition:background-color .2s ease; }
-.settings-password-form>button:hover:not(:disabled) { background:#e781a6; }
-.settings-password-form>button:disabled { opacity:.55; cursor:wait; }
+.settings-header { position:relative; flex:0 0 auto; padding:22px 64px 0 22px; background:#fff9fc; }
+.settings-header>span { color:#138891; font-size:10.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+.settings-header h2 { margin:4px 0 0; color:#302a32; font-size:20px; }
+.settings-body { min-height:0; overflow-y:auto; padding:0 22px 22px; scrollbar-gutter:stable; overscroll-behavior:contain; }
+.settings-profile { display:grid; grid-template-columns:42px minmax(0,1fr) auto; align-items:center; gap:5px 12px; margin-top:17px; padding:13px 14px; border:1px solid var(--color-border); border-radius:13px; background:var(--color-surface-soft); }
+.settings-profile-icon { display:grid; grid-row:1/3; width:42px; height:42px; place-items:center; border-radius:12px; background:var(--color-primary-soft); color:var(--color-primary-ink); }
+.settings-profile-icon .app-icon { width:20px; height:20px; }
+.settings-profile-copy { min-width:0; }
+.settings-profile-copy h3 { margin:0; color:var(--color-text); font-size:14.5px; font-weight:700; line-height:1.35; overflow-wrap:anywhere; }
+.settings-profile-copy p { margin:3px 0 0; color:var(--color-muted); font-size:12px; line-height:1.4; overflow-wrap:anywhere; }
+.settings-profile dl { align-self:center; margin:0; }
+.settings-profile dl div { display:grid; justify-items:end; gap:3px; }
+.settings-profile dt { color:var(--color-muted); font-size:10px; font-weight:650; line-height:1.3; }
+.settings-profile dd { margin:0; color:var(--color-primary-ink); font-size:12px; font-weight:750; line-height:1.3; }
+.settings-profile-note { grid-column:2/-1; margin:2px 0 0; color:var(--color-muted); font-size:11px; line-height:1.4; }
+.settings-password-form { display:grid; gap:12px; margin-top:16px; }
+.settings-section-heading { padding:0 0 1px; }
+.settings-section-heading h3 { margin:0; color:var(--color-text); font-size:15px; font-weight:700; line-height:1.35; }
+.settings-password-form>label { display:grid; gap:6px; color:var(--color-text); font-size:12px; font-weight:700; line-height:1.3; }
+.settings-password-field { position:relative; }
+.settings-password-form input { width:100%; min-height:var(--dashboard-control-height); padding:0 48px 0 12px; border:1px solid var(--color-border); border-radius:var(--dashboard-control-radius); background:var(--color-surface); color:var(--color-text); font:inherit; font-size:13px; outline:none; transition:border-color .2s ease,box-shadow .2s ease; }
+.settings-password-form input::placeholder { color:var(--color-muted); opacity:1; }
+.settings-password-form input:focus { border-color:#8de1e5; box-shadow:0 0 0 3px rgba(53,200,208,.13); }
+.settings-password-toggle { position:absolute; top:50%; right:5px; display:grid; width:36px; height:36px; padding:0; place-items:center; border:0; border-radius:50%; background:transparent; color:var(--color-muted); cursor:pointer; transform:translateY(-50%); transition:background-color .2s ease,color .2s ease; }
+.settings-password-toggle:hover { background:#e8f8f9; color:#138891; }
+.settings-password-toggle:focus-visible { outline:3px solid rgba(53,200,208,.2); outline-offset:1px; }
+.settings-password-toggle .app-icon { width:19px; height:19px; }
+.settings-password-form>.settings-submit { justify-self:end; min-height:var(--dashboard-control-height); padding:0 14px; border:0; border-radius:var(--dashboard-control-radius); background:var(--color-primary); color:var(--color-on-primary); font:inherit; font-size:13px; font-weight:700; cursor:pointer; transition:background-color .2s ease; }
+.settings-password-form>.settings-submit:hover:not(:disabled) { background:#20b6c0; }
+.settings-submit:disabled { cursor:wait; opacity:.58; }
 @media(prefers-reduced-motion:reduce) { .settings-overlay{animation:none} }
-@media(max-width:560px) { .settings-overlay{padding:12px}.settings-dialog{padding:20px 17px;border-radius:16px}.settings-account-info,.settings-password-form{grid-template-columns:1fr}.settings-section-heading,.settings-current-password{grid-column:1}.settings-password-form{padding:12px}.settings-password-form>button{width:100%} }
+@media(max-width:560px) { .settings-overlay{padding:12px}.settings-dialog{border-radius:16px}.settings-header{padding:20px 60px 0 17px}.settings-body{padding:0 17px 20px}.settings-profile{grid-template-columns:42px minmax(0,1fr);margin-top:15px}.settings-profile dl{grid-column:2}.settings-profile dl div{justify-items:start}.settings-profile-note{grid-column:1/-1;margin-top:7px}.settings-password-form{gap:11px;margin-top:12px}.settings-password-form>.settings-submit{width:100%} }

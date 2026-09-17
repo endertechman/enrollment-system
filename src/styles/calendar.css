@@ -52,7 +52,7 @@
 .calendar-event-list button:disabled { opacity:.55; cursor:wait; }
 .calendar-empty { margin:14px 0 0; padding:28px 12px; border-radius:11px; background:#f9f8f9; color:var(--color-muted); font-size:11.5px; text-align:center; }
 .calendar-list-view .calendar-layout { grid-template-columns:1fr; }
-.calendar-list-view .calendar-main { width:min(520px,100%); margin-inline:auto; padding:14px; }
+.calendar-list-view .calendar-main { width:100%; margin-inline:0; padding:16px; }
 .calendar-list-view .calendar-day-panel { padding:18px; }
 @media(max-width:900px) { .calendar-layout{grid-template-columns:1fr}.calendar-day-panel{padding:15px} }
 @media(max-width:440px) { .calendar-panel{padding:17px}.calendar-main{padding:12px}.calendar-grid button{border-radius:8px;font-size:11px}.calendar-event-form button{width:100%} }

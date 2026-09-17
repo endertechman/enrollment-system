@@ -14,13 +14,12 @@ function subscribeToToasts(listener) {
 }
 
 function registerToast(id, dismiss) {
-  const existingIndex = toastEntries.findIndex((entry) => entry.id === id)
-  if (existingIndex >= 0) toastEntries.splice(existingIndex, 1)
-  toastEntries.push({ id, dismiss })
-
-  const evicted = toastEntries.length > 2 ? toastEntries.shift() : null
+  const previous = toastEntries[0]
+  toastEntries.splice(0, toastEntries.length, { id, dismiss })
   emitToastChange()
-  if (evicted) window.setTimeout(() => evicted.dismiss(), 0)
+  if (previous && previous.id !== id) {
+    window.setTimeout(() => previous.dismiss(), 0)
+  }
 }
 
 function unregisterToast(id) {
@@ -68,7 +67,7 @@ function AuthToast({ message, onDismiss, duration = 8000, variant = 'auto' }) {
     const enterTimer = window.setTimeout(() => setIsLeaving(false), 0)
     registerToast(currentToastId, () => dismissRef.current())
 
-    const fadeTimer = window.setTimeout(() => setIsLeaving(true), Math.max(0, duration - 300))
+    const fadeTimer = window.setTimeout(() => setIsLeaving(true), Math.max(0, duration - 180))
     const dismissTimer = window.setTimeout(() => dismissRef.current(), duration)
 
     return () => {
@@ -87,11 +86,11 @@ function AuthToast({ message, onDismiss, duration = 8000, variant = 'auto' }) {
   function handleDismiss() {
     setIsLeaving(true)
     window.clearTimeout(manualDismissTimer.current)
-    manualDismissTimer.current = window.setTimeout(() => dismissRef.current(), 300)
+    manualDismissTimer.current = window.setTimeout(() => dismissRef.current(), 180)
   }
 
   return createPortal(
-    <div className={`auth-toast ${isSuccess ? 'auth-toast-success' : 'auth-toast-error'} ${isLeaving ? 'auth-toast-leaving' : ''}`} role="alert">
+    <div key={message} className={`auth-toast ${isSuccess ? 'auth-toast-success' : 'auth-toast-error'} ${isLeaving ? 'auth-toast-leaving' : ''}`} role="alert">
       <span>{message}</span>
       <button type="button" onClick={handleDismiss} aria-label="Dismiss message">
         <i className="app-icon app-icon-close" aria-hidden="true" />

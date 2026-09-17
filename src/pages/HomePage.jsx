@@ -47,6 +47,7 @@ function HomePage() {
         .from('enrollments')
         .select('id, child_first_name, child_last_name, status, reference_code, submitted_at')
         .eq('parent_id', currentUser.id)
+        .eq('batch_id', enrollmentWindow?.current_batch_id)
         .order('submitted_at', { ascending: false })
       enrollments = data || []
     }
@@ -72,7 +73,7 @@ function HomePage() {
 
   useRealtimeRefresh(() => loadHome({ silent: true }), {
     channelName: 'home',
-    tables: ['profiles', 'enrollments', 'enrollment_settings'],
+    tables: ['profiles', 'enrollments', 'enrollment_settings', 'enrollment_batches'],
   })
 
   if (homeState.status === 'loading') {

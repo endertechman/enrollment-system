@@ -21,7 +21,7 @@ function getChildName(enrollment) {
 const attendanceOptions = [
   ['present', 'Present'],
   ['absent', 'Absent'],
-  ['late', 'Late'],
+  ['excused', 'Excused'],
 ]
 
 function AttendanceRoster({ enrollments, loading, attendanceDate, onDateChange, canEdit = false }) {
@@ -47,7 +47,10 @@ function AttendanceRoster({ enrollments, loading, attendanceDate, onDateChange, 
       setRecords({})
       setMessage('Attendance is unavailable until its Supabase migration is applied.')
     } else {
-      setRecords(Object.fromEntries((data || []).map((record) => [record.enrollment_id, record.status])))
+      setRecords(Object.fromEntries((data || []).map((record) => [
+        record.enrollment_id,
+        record.status === 'late' ? 'excused' : record.status,
+      ])))
     }
 
     setRecordsLoading(false)
@@ -102,8 +105,8 @@ function AttendanceRoster({ enrollments, loading, attendanceDate, onDateChange, 
       <AuthToast message={notice} onDismiss={() => setNotice('')} duration={5000} variant="success" />
       <div className="pending-approvals-header attendance-header">
         <div><h2>Attendance</h2></div>
+        <span className="waiting-badge">{students.length} students</span>
       </div>
-      <div className="dashboard-panel-meta"><span className="waiting-badge">{students.length} students</span></div>
 
       <div className="attendance-toolbar">
         <label htmlFor="attendance-date">School day</label>
@@ -122,35 +125,33 @@ function AttendanceRoster({ enrollments, loading, attendanceDate, onDateChange, 
       ) : students.length === 0 ? (
         <p className="teacher-empty-state">No accepted students are available for attendance yet.</p>
       ) : (
-        <div className="attendance-list">
-          {students.map((student) => (
-            <article className="attendance-row" key={student.id}>
-              <div>
-                <h3>{getChildName(student)}</h3>
-                <p>{student.reference_code || 'No reference code'}</p>
-              </div>
-              {canEdit ? (
-                <div className="attendance-options" aria-label={`Attendance for ${getChildName(student)}`}>
-                  {attendanceOptions.map(([value, label]) => (
-                    <button
-                      type="button"
-                      key={value}
-                      data-status={value}
-                      className={records[student.id] === value ? 'active' : ''}
-                      disabled={savingId === student.id}
-                      onClick={() => markAttendance(student.id, value)}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <span className={`attendance-value ${records[student.id] || 'unrecorded'}`}>
-                  {records[student.id] ? records[student.id][0].toUpperCase() + records[student.id].slice(1) : 'Not recorded'}
-                </span>
-              )}
-            </article>
-          ))}
+        <div className="records-table-shell attendance-table-shell">
+          <table className="records-table attendance-table">
+            <caption className="visually-hidden">Attendance roster for {attendanceDate}</caption>
+            <thead><tr><th scope="col">Student</th><th scope="col">Reference</th><th scope="col">Attendance Status</th></tr></thead>
+            <tbody>{students.map((student) => {
+              const currentStatus = records[student.id] || ''
+              return <tr key={student.id}>
+                <td data-label="Student"><strong className="records-student-name">{getChildName(student)}</strong></td>
+                <td data-label="Reference">{student.reference_code || 'Not available'}</td>
+                <td data-label="Attendance Status">
+                  {canEdit ? <select
+                    className="attendance-status-select"
+                    data-status={currentStatus || 'unrecorded'}
+                    aria-label={`Attendance status for ${getChildName(student)}`}
+                    value={currentStatus}
+                    disabled={savingId === student.id}
+                    onChange={(event) => markAttendance(student.id, event.target.value)}
+                  >
+                    <option value="" disabled>Choose status</option>
+                    {attendanceOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                  </select> : <span className={`attendance-value ${currentStatus || 'unrecorded'}`}>
+                    {currentStatus ? currentStatus[0].toUpperCase() + currentStatus.slice(1) : 'Not recorded'}
+                  </span>}
+                </td>
+              </tr>
+            })}</tbody>
+          </table>
         </div>
       )}
 

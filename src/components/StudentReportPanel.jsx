@@ -39,6 +39,11 @@ function formatValue(value) {
   return value === null || value === undefined || value === '' ? '—' : String(value)
 }
 
+function formatPlaceOfBirth(value) {
+  if (value === null || value === undefined || value === '') return '—'
+  return String(value).replace(/,\s*Philippines\s*$/i, '').trim()
+}
+
 function StudentReportPanel({ enrollments, allowStudentSelection = false, parentName = '', onBack = null }) {
   const students = useMemo(
     () => enrollments.filter((item) => item.status === 'approved'),
@@ -122,12 +127,13 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, parent
   })
 
   const attendanceCounts = attendance.reduce((counts, record) => {
-    if (record.status in counts) counts[record.status] += 1
+    const status = record.status === 'late' ? 'excused' : record.status
+    if (status in counts) counts[status] += 1
     return counts
-  }, { present: 0, absent: 0, late: 0 })
-  const attendedDays = attendanceCounts.present + attendanceCounts.late
-  const attendanceRate = attendance.length > 0
-    ? `${Math.round((attendedDays / attendance.length) * 100)}%`
+  }, { present: 0, absent: 0, excused: 0 })
+  const countedAttendanceDays = attendanceCounts.present + attendanceCounts.absent
+  const attendanceRate = countedAttendanceDays > 0
+    ? `${Math.round((attendanceCounts.present / countedAttendanceDays) * 100)}%`
     : '—'
   const latestGrowth = growthRecords[0] || null
   const reportHeight = latestGrowth?.height_cm ?? student?.height_cm
@@ -136,6 +142,8 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, parent
   const reportClassification = reportBmi === '—' ? null : classifyChildBmi({
     bmi: reportBmi,
     sex: student?.sex,
+    birthDate: student?.birth_date,
+    measuredAt: latestGrowth?.measured_on ?? student?.submitted_at ?? new Date(),
   })
 
   return (
@@ -246,7 +254,7 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, parent
                   <div><dt>Date of Birth</dt><dd>{formatDate(student?.birth_date)}</dd></div>
                   <div><dt>Sex</dt><dd>{student?.sex ? `${student.sex.charAt(0).toUpperCase()}${student.sex.slice(1)}` : '—'}</dd></div>
                   <div><dt>Parent / Guardian</dt><dd>{student?.parent_full_name || parentName || '—'}</dd></div>
-                  <div><dt>Place of Birth</dt><dd>{formatValue(student?.place_of_birth)}</dd></div>
+                  <div><dt>Place of Birth</dt><dd>{formatPlaceOfBirth(student?.place_of_birth)}</dd></div>
                   <div><dt>Registered</dt><dd>{typeof student?.is_registered === 'boolean' ? (student.is_registered ? 'Yes' : 'No') : '—'}</dd></div>
                   <div><dt>Mother Tongue</dt><dd>{formatValue(student?.mother_tongue)}</dd></div>
                   <div><dt>Other Dialect</dt><dd>{formatValue(student?.other_dialect)}</dd></div>
@@ -274,7 +282,7 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, parent
                 </div>
                 <dl className="student-report-metrics attendance">
                   <div><dt>Present</dt><dd>{attendanceCounts.present}</dd></div>
-                  <div><dt>Late</dt><dd>{attendanceCounts.late}</dd></div>
+                  <div><dt>Excused</dt><dd>{attendanceCounts.excused}</dd></div>
                   <div><dt>Absent</dt><dd>{attendanceCounts.absent}</dd></div>
                   <div><dt>Attendance Rate</dt><dd>{attendanceRate}</dd></div>
                 </dl>

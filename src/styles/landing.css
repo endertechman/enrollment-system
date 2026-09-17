@@ -436,6 +436,7 @@
 .app-icon-file-document { --icon-url: url('/icons/file-document.svg'); }
 .app-icon-calendar-due { --icon-url: url('/icons/calendar-due.svg'); }
 .app-icon-calendar-dates { --icon-url: url('/icons/calendar-dates.svg'); }
+.app-icon-clock { --icon-url: url('/icons/clock.svg'); }
 .app-icon-heart { --icon-url: url('/icons/heart.svg'); }
 .app-icon-check-o { --icon-url: url('/icons/check-o.svg'); }
 

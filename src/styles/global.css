@@ -66,6 +66,18 @@ body {
   color: #1f2937;
 }
 
+body:has(.teacher-dashboard-page),
+body:has(.parent-dashboard-page) {
+  height: 100dvh;
+  overflow: hidden;
+}
+
+#root:has(.teacher-dashboard-page),
+#root:has(.parent-dashboard-page) {
+  height: 100dvh;
+  overflow: hidden;
+}
+
 button,
 input,
 select,

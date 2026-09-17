@@ -10,10 +10,32 @@
 .student-report-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   min-height: 58px;
   padding: 14px 17px;
   border-radius: 14px;
   background: linear-gradient(100deg, var(--color-accent-soft), var(--color-primary-soft));
+}
+
+.student-report-back {
+  min-height: var(--dashboard-control-height);
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--dashboard-control-radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+}
+
+.student-report-back:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-ink);
 }
 
 .student-report-header h2 {
@@ -216,6 +238,8 @@
 
 @media (max-width: 520px) {
   .student-report-panel { border-radius: 17px; }
+  .student-report-header { align-items: stretch; flex-direction: column; }
+  .student-report-back { width: 100%; }
   .student-report-picker { grid-template-columns: 1fr; }
   .student-report-identity { grid-template-columns: auto minmax(0, 1fr); }
   .student-report-identity .enrollment-status { grid-column: 2; justify-self: start; }

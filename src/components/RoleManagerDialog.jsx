@@ -74,27 +74,29 @@ function RoleManagerDialog({ onClose }) {
       <AuthToast message={notice} onDismiss={() => setNotice('')} duration={5000} variant="success" />
       {pendingRole && account && <ConfirmDialog title="Change account role?" message={`${account.full_name} will become ${formatRole(pendingRole)}.`} confirmLabel="Change Role" tone="primary" iconClass="app-icon-user-add" busy={Boolean(updatingRole)} onConfirm={changeRole} onCancel={() => setPendingRole('')} />}
       <section className="role-manager-dialog">
-        <button type="button" className="role-manager-close" onClick={onClose} aria-label="Close role manager"><i className="app-icon app-icon-close" aria-hidden="true" /></button>
-        <header>
+        <header className="role-manager-header">
+          <button type="button" className="role-manager-close" onClick={onClose} aria-label="Close role manager"><i className="app-icon app-icon-close" aria-hidden="true" /></button>
           <span>Teacher tools</span>
           <h2 id="role-manager-title">Manage Account Role</h2>
           <p>Search securely using the account&apos;s exact email.</p>
         </header>
 
-        <form className="role-manager-search" onSubmit={findAccount}>
-          <label htmlFor="role-account-email">Account email</label>
-          <div><input id="role-account-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="parent@example.com" required /><button type="submit" disabled={searching}>{searching ? <LoadingSpinner label="Searching..." inline /> : 'Find Account'}</button></div>
-        </form>
+        <div className="role-manager-body">
+          <form className="role-manager-search" onSubmit={findAccount}>
+            <label htmlFor="role-account-email">Account email</label>
+            <div><input id="role-account-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="parent@example.com" required /><button type="submit" disabled={searching}>{searching ? <LoadingSpinner label="Searching..." inline /> : 'Find Account'}</button></div>
+          </form>
 
-        {message && <p className="role-manager-message">{message}</p>}
+          {message && <p className="role-manager-message">{message}</p>}
 
-        {account && <article className="role-manager-result">
-          <div className="role-manager-account"><i className="app-icon app-icon-user-list" aria-hidden="true" /><div><span>Account</span><strong>{account.full_name}</strong></div></div>
-          <div><span>Current role</span><strong>{formatRole(account.account_role)}</strong></div>
-          {account.account_role === 'teacher' ? <p>Teacher accounts are protected and cannot be changed here.</p> : <div className="role-manager-actions">{availableRoles.map(([role, label]) => <button type="button" key={role} disabled={Boolean(updatingRole)} onClick={() => setPendingRole(role)}>{updatingRole === role ? <LoadingSpinner label="Updating..." inline /> : label}</button>)}</div>}
-        </article>}
+          {account && <article className="role-manager-result">
+            <div className="role-manager-account"><i className="app-icon app-icon-user-list" aria-hidden="true" /><div><span>Account</span><strong>{account.full_name}</strong></div></div>
+            <div><span>Current role</span><strong>{formatRole(account.account_role)}</strong></div>
+            {account.account_role === 'teacher' ? <p>Teacher accounts are protected and cannot be changed here.</p> : <div className="role-manager-actions">{availableRoles.map(([role, label]) => <button type="button" key={role} disabled={Boolean(updatingRole)} onClick={() => setPendingRole(role)}>{updatingRole === role ? <LoadingSpinner label="Updating..." inline /> : label}</button>)}</div>}
+          </article>}
 
-        <p className="role-manager-note">Teacher accounts cannot be changed or demoted here.</p>
+          <p className="role-manager-note">Teacher accounts cannot be changed or demoted here.</p>
+        </div>
       </section>
     </div>
   )

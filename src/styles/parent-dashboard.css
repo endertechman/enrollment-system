@@ -8,6 +8,7 @@
   --parent-aqua: var(--color-primary-ink);
   --parent-aqua-soft: var(--color-primary-soft);
   display: flex;
+  height: 100dvh;
   min-height: 100dvh;
   flex-direction: column;
   overflow: hidden;
@@ -22,8 +23,10 @@
   flex: 1;
   min-height: 0;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: scroll;
+  overscroll-behavior-y: contain;
   scrollbar-gutter: stable;
+  overflow-anchor: none;
 }
 
 .parent-dashboard-content {

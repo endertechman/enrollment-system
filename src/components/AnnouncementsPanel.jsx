@@ -107,11 +107,11 @@ function AnnouncementsPanel({ canManage = false }) {
       {pendingDelete && <ConfirmDialog title="Delete announcement?" message={`“${pendingDelete.title}” will be permanently removed.`} confirmLabel="Delete" busy={deletingId === pendingDelete.id} onConfirm={deleteAnnouncement} onCancel={() => setPendingDelete(null)} />}
       <header className="announcements-header">
         <h2>Announcements</h2>
+        <span className="dashboard-header-detail">{announcements.length} posted</span>
       </header>
-      <div className="announcements-header-actions">
-        <span>{announcements.length} posted</span>
-        {canManage && <button type="button" className="announcement-compose-toggle" aria-expanded={composerOpen} onClick={() => setComposerOpen((open) => !open)}><i className="app-icon app-icon-pen" aria-hidden="true" /><span>{composerOpen ? 'Close' : 'Add announcement'}</span></button>}
-      </div>
+      {canManage && <div className="announcements-header-actions">
+        <button type="button" className="announcement-compose-toggle" aria-expanded={composerOpen} onClick={() => setComposerOpen((open) => !open)}><img className="announcement-compose-icon" src="/icons/pen.svg" alt="" aria-hidden="true" /><span>{composerOpen ? 'Close' : 'Add announcement'}</span></button>
+      </div>}
 
       {canManage && composerOpen && (
         <form className="announcement-form" onSubmit={publishAnnouncement}>

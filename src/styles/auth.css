@@ -303,9 +303,6 @@
   top: 82px;
   left: 50%;
   z-index: 1200;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
   width: min(380px, calc(100vw - 40px));
   transform: translateX(-50%);
   pointer-events: none;
@@ -327,7 +324,7 @@
   font-size: 13px;
   line-height: 1.5;
   pointer-events: auto;
-  animation: auth-toast-enter 0.2s ease-out;
+  animation: auth-toast-enter 0.16s ease-out;
 }
 
 .auth-toast-success {
@@ -338,7 +335,7 @@
 
 .auth-toast-leaving {
   pointer-events: none;
-  animation: auth-toast-exit 0.3s ease-in forwards;
+  animation: auth-toast-exit 0.18s ease-in forwards;
 }
 
 .auth-toast > span {
@@ -374,24 +371,20 @@
 @keyframes auth-toast-enter {
   from {
     opacity: 0;
-    transform: translateY(-8px);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
 @keyframes auth-toast-exit {
   from {
     opacity: 1;
-    transform: translateY(0);
   }
 
   to {
     opacity: 0;
-    transform: translateY(-8px);
   }
 }
 

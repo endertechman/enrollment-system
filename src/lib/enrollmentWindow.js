@@ -3,7 +3,7 @@ import { supabase } from './supabase'
 export async function getEnrollmentWindow() {
   return supabase
     .from('enrollment_settings')
-    .select('opens_at, closes_at, updated_at')
+    .select('opens_at, closes_at, updated_at, current_batch_id')
     .eq('id', true)
     .single()
 }
@@ -28,4 +28,11 @@ export function getEnrollmentWindowStatus(schedule) {
   if (now < new Date(schedule.opens_at).getTime()) return 'scheduled'
   if (now > new Date(schedule.closes_at).getTime()) return 'closed'
   return 'open'
+}
+
+export function getEnrollmentWindowStatusLabel(schedule) {
+  const status = getEnrollmentWindowStatus(schedule)
+  if (status === 'open') return 'Active schedule (open)'
+  if (status === 'scheduled') return 'Upcoming schedule'
+  return 'Schedule closed'
 }

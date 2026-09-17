@@ -11,7 +11,8 @@ import CalendarPanel from '../components/CalendarPanel'
 import HealthGrowthPanel from '../components/HealthGrowthPanel'
 import StudentReportPanel from '../components/StudentReportPanel'
 import DashboardLoadingShell from '../components/DashboardLoadingShell'
-import { getEnrollmentWindow, getEnrollmentWindowStatus, toDateTimeLocalValue } from '../lib/enrollmentWindow'
+import EnrollmentBatchControls from '../components/EnrollmentBatchControls'
+import { getEnrollmentWindow, getEnrollmentWindowStatus, getEnrollmentWindowStatusLabel, toDateTimeLocalValue } from '../lib/enrollmentWindow'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 
 function TeacherDashboard() {
@@ -42,6 +43,9 @@ function TeacherDashboard() {
   const [studentSearch, setStudentSearch] = useState('')
   const [requestSearch, setRequestSearch] = useState('')
   const [pendingRejectedDelete, setPendingRejectedDelete] = useState([])
+  const [batches, setBatches] = useState([])
+  const [currentBatchId, setCurrentBatchId] = useState('')
+  const [selectedBatchId, setSelectedBatchId] = useState('')
   const [attendanceDate, setAttendanceDate] = useState(() => {
     const now = new Date()
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
@@ -71,20 +75,37 @@ function TeacherDashboard() {
       return
     }
 
-    const [profileResult, enrollmentResult, parentNamesResult, windowResult] =
+    const [profileResult, parentNamesResult, windowResult, batchesResult] =
       await Promise.all([
       supabase
         .from('profiles')
         .select('full_name')
         .eq('id', user.id)
         .single(),
-      supabase
-        .from('enrollments')
-        .select('id, parent_id, child_first_name, child_middle_name, child_last_name, child_suffix, birth_date, sex, place_of_birth, is_registered, mother_tongue, other_dialect, height_cm, weight_kg, status, reference_code, submitted_at, reviewed_at, reviewed_by')
-        .order('submitted_at', { ascending: false }),
       supabase.rpc('get_staff_parent_names'),
       getEnrollmentWindow(),
+      supabase
+        .from('enrollment_batches')
+        .select('id, batch_number, created_at, archived_at')
+        .order('batch_number', { ascending: false }),
     ])
+
+    const availableBatches = batchesResult.data || []
+    const activeBatchId = windowResult.data?.current_batch_id || ''
+    const viewedBatchId = availableBatches.some((batch) => batch.id === selectedBatchId)
+      ? selectedBatchId
+      : activeBatchId
+    setBatches(availableBatches)
+    setCurrentBatchId(activeBatchId)
+    if (viewedBatchId !== selectedBatchId) setSelectedBatchId(viewedBatchId)
+
+    const enrollmentResult = viewedBatchId
+      ? await supabase
+        .from('enrollments')
+        .select('id, batch_id, parent_id, child_first_name, child_middle_name, child_last_name, child_suffix, birth_date, sex, place_of_birth, is_registered, mother_tongue, other_dialect, height_cm, weight_kg, status, reference_code, submitted_at, reviewed_at, reviewed_by')
+        .eq('batch_id', viewedBatchId)
+        .order('submitted_at', { ascending: false })
+      : { data: [], error: null }
 
     if (profileResult.error) {
       setMessage(profileResult.error.message)
@@ -115,6 +136,10 @@ function TeacherDashboard() {
       console.error('Unable to load parent names:', parentNamesResult.error)
     }
 
+    if (batchesResult.error) {
+      setMessage('Enrollment batches are unavailable until the batch migration is applied.')
+    }
+
     if (windowResult.error) {
       setMessage('The enrollment schedule is unavailable until its migration is applied.')
     } else {
@@ -125,7 +150,7 @@ function TeacherDashboard() {
     }
 
     setLoading(false)
-  }, [navigate])
+  }, [navigate, selectedBatchId])
 
   useEffect(() => {
     const initialLoad = window.setTimeout(loadDashboard, 0)
@@ -134,7 +159,7 @@ function TeacherDashboard() {
 
   useRealtimeRefresh(() => loadDashboard({ silent: true }), {
     channelName: 'teacher-dashboard',
-    tables: ['profiles', 'enrollments', 'enrollment_settings'],
+    tables: ['profiles', 'enrollments', 'enrollment_settings', 'enrollment_batches'],
   })
 
   async function updateStatus(id, status) {
@@ -282,12 +307,13 @@ function TeacherDashboard() {
     setter(`${nextDate ?? currentDate}T${nextTime ?? currentTime}`)
   }
 
-  function formatScheduleDate(value) {
-    if (!value) return 'Not scheduled'
-    return new Date(value).toLocaleString('en-PH', {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    })
+  function formatScheduleParts(value) {
+    if (!value) return { date: 'Not scheduled', time: 'Set a date and time' }
+    const date = new Date(value)
+    return {
+      date: date.toLocaleDateString('en-PH', { dateStyle: 'long', timeZone: 'Asia/Manila' }),
+      time: `${date.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' })} PHT`,
+    }
   }
 
   function cancelWindowEdit() {
@@ -341,6 +367,9 @@ function TeacherDashboard() {
     : enrollments
   const rejectedStudentRecords = studentDirectoryRecords.filter((enrollment) => enrollment.status === 'rejected')
   const visibleRejectedStudentRecords = visibleStudentRecords.filter((enrollment) => enrollment.status === 'rejected')
+  const schedule = { opens_at: opensAt, closes_at: closesAt }
+  const openingSchedule = formatScheduleParts(savedOpensAt)
+  const closingSchedule = formatScheduleParts(savedClosesAt)
 
   if (loading) {
     return <DashboardLoadingShell label="Loading teacher dashboard..." />
@@ -395,7 +424,7 @@ function TeacherDashboard() {
                   <i className="app-icon app-icon-bell" aria-hidden="true" /><span>Announcements</span>
                 </button>
                 <button type="button" className={`teacher-tab${activeTab === 'calendar' ? ' active' : ''}`} aria-pressed={activeTab === 'calendar'} onClick={() => setActiveTab('calendar')}>
-                  <i className="app-icon app-icon-calendar-dates" aria-hidden="true" /><span>Calendar</span>
+                  <i className="app-icon app-icon-calendar-dates" aria-hidden="true" /><span>School Calendar</span>
                 </button>
               </div>
             </nav>
@@ -405,7 +434,7 @@ function TeacherDashboard() {
             ) : activeTab === 'student-report' ? (
               <StudentReportPanel enrollments={studentRecords.filter((enrollment) => enrollment.id === reportEnrollmentId)} onBack={() => { setReportEnrollmentId(null); setActiveTab('students') }} />
             ) : activeTab === 'calendar' ? (
-              <CalendarPanel canManage />
+              <CalendarPanel canManage listView />
             ) : activeTab === 'announcements' ? (
               <AnnouncementsPanel canManage />
             ) : activeTab === 'attendance' ? (
@@ -430,7 +459,7 @@ function TeacherDashboard() {
                     <caption className="visually-hidden">Student enrollment records</caption>
                     <thead><tr>
                       {studentFilter === 'rejected' && <th className="records-select-column" scope="col"><span className="visually-hidden">Select</span></th>}
-                      <th scope="col">Student</th><th scope="col">Age</th><th scope="col">Sex</th><th scope="col">Parent</th><th scope="col">BMI</th><th scope="col">Status</th>
+                      <th scope="col">Student</th><th scope="col">Age</th><th scope="col">Sex</th><th scope="col">Parent</th><th scope="col">BMI</th><th scope="col">Status</th><th scope="col">Student Report</th><th scope="col" className="records-actions-column"><span className="visually-hidden">Actions</span></th>
                     </tr></thead>
                     <tbody>{visibleStudentRecords.map((enrollment) => <tr key={enrollment.id}>
                       {studentFilter === 'rejected' && <td className="records-select-column" data-label="Select"><label className="rejected-select"><input type="checkbox" checked={selectedRejectedIds.includes(enrollment.id)} onChange={() => toggleRejectedSelection(enrollment.id)} /><span className="visually-hidden">Select {getChildName(enrollment)}</span></label></td>}
@@ -439,7 +468,9 @@ function TeacherDashboard() {
                       <td data-label="Sex">{formatSex(enrollment.sex)}</td>
                       <td data-label="Parent">{enrollment.parent_full_name || 'Not provided'}</td>
                       <td data-label="BMI">{calculateBmi(enrollment.height_cm, enrollment.weight_kg)}</td>
-                      <td data-label="Status"><div className="student-row-actions"><span className={`enrollment-status ${enrollment.status}`}>{enrollment.status === 'approved' ? 'accepted' : enrollment.status}</span>{enrollment.status === 'approved' && <button type="button" className="student-report-button" onClick={() => { setReportEnrollmentId(enrollment.id); setActiveTab('student-report') }}><i className="app-icon app-icon-file-document" aria-hidden="true" /><span>Report</span></button>}{enrollment.status === 'rejected' && <button type="button" className="delete-record-button" disabled={deletingRejected} onClick={() => setPendingRejectedDelete([enrollment.id])} aria-label={`Delete rejected record for ${getChildName(enrollment)}`} title="Delete rejected record"><i className="app-icon app-icon-trash" aria-hidden="true" /></button>}</div></td>
+                      <td data-label="Status"><span className={`enrollment-status ${enrollment.status}`}>{enrollment.status === 'approved' ? 'accepted' : enrollment.status}</span></td>
+                      <td className="records-report-cell" data-label="Student Report">{enrollment.status === 'approved' ? <button type="button" className="student-report-link" onClick={() => { setReportEnrollmentId(enrollment.id); setActiveTab('student-report') }}>View report</button> : <span aria-hidden="true">—</span>}</td>
+                      <td className="records-actions-column" data-label="Actions">{enrollment.status === 'rejected' && <button type="button" className="delete-record-button" disabled={deletingRejected} onClick={() => setPendingRejectedDelete([enrollment.id])} aria-label={`Delete rejected record for ${getChildName(enrollment)}`} title="Delete rejected record"><i className="app-icon app-icon-trash" aria-hidden="true" /></button>}</td>
                     </tr>)}</tbody>
                   </table>
                 </div>}
@@ -448,16 +479,15 @@ function TeacherDashboard() {
               <section className="pending-approvals-panel enrollment-window-panel">
                 <div className="pending-approvals-header">
                   <div><h2>Enrollment Schedule</h2></div>
-                  <span className={`enrollment-window-badge ${getEnrollmentWindowStatus({ opens_at: opensAt, closes_at: closesAt })}`}>
-                    {getEnrollmentWindowStatus({ opens_at: opensAt, closes_at: closesAt })}
+                  <span className={`enrollment-window-badge ${getEnrollmentWindowStatus(schedule)}`}>
+                    {getEnrollmentWindowStatusLabel(schedule)}
                   </span>
                 </div>
                 {!editingWindow ? <div className="enrollment-window-summary">
-                  <dl>
-                    <div><dt>Opens</dt><dd>{formatScheduleDate(savedOpensAt)}</dd></div>
-                    <div><dt>Closes</dt><dd>{formatScheduleDate(savedClosesAt)}</dd></div>
+                  <dl className="schedule-visual-grid">
+                    <div className="schedule-visual-card"><span className="schedule-icon"><i className="app-icon app-icon-clock" aria-hidden="true" /></span><div><dt>Enrollment opens</dt><dd><strong>{openingSchedule.date}</strong><span>{openingSchedule.time}</span></dd></div></div>
+                    <div className="schedule-visual-card"><span className="schedule-icon"><i className="app-icon app-icon-clock" aria-hidden="true" /></span><div><dt>Enrollment closes</dt><dd><strong>{closingSchedule.date}</strong><span>{closingSchedule.time}</span></dd></div></div>
                   </dl>
-                  <button type="button" className="approve-button" onClick={() => { setMessage(''); setEditingWindow(true) }}>Update Schedule</button>
                 </div> : <form className="enrollment-window-form" onSubmit={saveEnrollmentWindow}>
                   <div className="enrollment-window-range">
                     <fieldset className="enrollment-window-group">
@@ -477,6 +507,17 @@ function TeacherDashboard() {
                   </div>
                   <div className="enrollment-window-actions"><button type="button" className="button-secondary" onClick={cancelWindowEdit} disabled={savingWindow}>Cancel</button><button type="submit" className="approve-button" disabled={savingWindow}>{savingWindow ? <LoadingSpinner label="Saving..." inline /> : 'Save Schedule'}</button></div>
                 </form>}
+                <EnrollmentBatchControls
+                  batches={batches}
+                  currentBatchId={currentBatchId}
+                  selectedBatchId={selectedBatchId}
+                  scheduleEditing={editingWindow}
+                  onUpdateSchedule={() => { setMessage(''); setEditingWindow(true) }}
+                  onSelect={setSelectedBatchId}
+                  onChanged={setSelectedBatchId}
+                  onNotice={setReviewNotice}
+                  onError={setMessage}
+                />
                 {message && <p className="teacher-dashboard-message" role="status">{message}</p>}
                 <p className="enrollment-window-note">Dates are inclusive and follow Philippine time. New enrollment submissions are blocked outside this range.</p>
               </section>

@@ -24,12 +24,14 @@ function calculateBmi(heightCm, weightKg) {
   return (weight / ((height / 100) ** 2)).toFixed(1)
 }
 
-function bmiClassification(student, heightCm, weightKg) {
+function bmiClassification(student, heightCm, weightKg, measuredAt = new Date()) {
   const bmi = calculateBmi(heightCm, weightKg)
   if (bmi === '—' || !student) return null
   return classifyChildBmi({
     bmi,
     sex: student.sex,
+    birthDate: student.birth_date,
+    measuredAt,
   })
 }
 
@@ -62,6 +64,7 @@ function HealthGrowthPanel({ enrollments, canManage = false }) {
       student,
       latest?.height_cm ?? student.height_cm,
       latest?.weight_kg ?? student.weight_kg,
+      latest?.measured_on ?? student.submitted_at ?? new Date(),
     )
     return { student, classification }
   }), [latestMeasurements, students])
@@ -213,13 +216,14 @@ function HealthGrowthPanel({ enrollments, canManage = false }) {
   }
 
   const previewBmi = calculateBmi(heightCm, weightKg)
-  const previewClassification = bmiClassification(activeStudent, heightCm, weightKg)
+  const previewClassification = bmiClassification(activeStudent, heightCm, weightKg, measuredOn)
 
   return (
     <section className="growth-panel">
       <AuthToast message={notice} onDismiss={() => setNotice('')} duration={5000} variant="success" />
       <header className="growth-header">
         <div><h2>Health &amp; Growth</h2></div>
+        <span className="dashboard-header-detail">{students.length} students</span>
       </header>
       <p className="growth-formula"><strong>BMI formula:</strong> weight (kg) ÷ [height (m)]²</p>
 
@@ -320,7 +324,7 @@ function HealthGrowthPanel({ enrollments, canManage = false }) {
         <div className="growth-record-heading"><h3>{activeStudent ? `${childName(activeStudent)}’s records` : 'Growth records'}</h3><span>{records.length} entries</span></div>
         {loading ? <div className="growth-empty"><LoadingSpinner label="Loading growth records..." compact /></div> : records.length === 0 ? <p className="growth-empty">No growth measurements have been recorded.</p> : <div className="growth-record-list">
           {records.map((record) => {
-            const classification = bmiClassification(activeStudent, record.height_cm, record.weight_kg)
+            const classification = bmiClassification(activeStudent, record.height_cm, record.weight_kg, record.measured_on)
             return <article key={record.id}>
               <div><span>Measured</span><strong>{new Date(`${record.measured_on}T00:00:00`).toLocaleDateString('en-PH', { dateStyle: 'medium' })}</strong></div>
               <div><span>Height</span><strong>{Number(record.height_cm).toFixed(1)} cm</strong></div>

@@ -5,7 +5,6 @@ import AppHeader from './AppHeader'
 import LoadingSpinner from './LoadingSpinner'
 import { getEnrollmentWindow, isEnrollmentOpen } from '../lib/enrollmentWindow'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
-import { classifyChildBmi } from '../lib/bmiClassification'
 
 function EnrollmentForm() {
   const navigate = useNavigate()
@@ -36,11 +35,12 @@ function EnrollmentForm() {
   const [submitting, setSubmitting] = useState(false)
   const [currentStep, setCurrentStep] = useState(1)
 
-  const getEnrollmentCount = useCallback(async (parentId) => {
+  const getEnrollmentCount = useCallback(async (parentId, batchId) => {
     return supabase
       .from('enrollments')
       .select('id', { count: 'exact', head: true })
       .eq('parent_id', parentId)
+      .eq('batch_id', batchId)
   }, [])
 
   const initializeForm = useCallback(async () => {
@@ -53,10 +53,7 @@ function EnrollmentForm() {
       return
     }
 
-    const [windowResult, enrollmentResult] = await Promise.all([
-      getEnrollmentWindow(),
-      getEnrollmentCount(user.id),
-    ])
+    const windowResult = await getEnrollmentWindow()
 
     if (windowResult.error) {
       setMessage('Unable to verify the enrollment schedule right now.')
@@ -71,6 +68,7 @@ function EnrollmentForm() {
     }
 
     setEnrollmentOpen(true)
+    const enrollmentResult = await getEnrollmentCount(user.id, windowResult.data.current_batch_id)
     const { count, error } = enrollmentResult
 
     if (error) {
@@ -99,7 +97,7 @@ function EnrollmentForm() {
 
   useRealtimeRefresh(initializeForm, {
     channelName: 'enrollment-form',
-    tables: ['enrollment_settings', 'enrollments'],
+    tables: ['enrollment_settings', 'enrollment_batches', 'enrollments'],
   })
 
   function calculateAge() {
@@ -148,17 +146,6 @@ function EnrollmentForm() {
   }
 
   const liveBmi = calculateBmi()
-  const liveBmiClassification = liveBmi === '—' ? null : classifyChildBmi({
-    bmi: liveBmi,
-    sex,
-  })
-
-  function formatPhilippinePlace(place) {
-    const cleanedPlace = place.trim()
-    return /philippines$/i.test(cleanedPlace)
-      ? cleanedPlace
-      : `${cleanedPlace}, Philippines`
-  }
 
   function goToNextStep() {
     const currentSection = formRef.current?.querySelector(
@@ -209,7 +196,7 @@ function EnrollmentForm() {
       return
     }
 
-    const { count, error: countError } = await getEnrollmentCount(user.id)
+    const { count, error: countError } = await getEnrollmentCount(user.id, windowResult.data.current_batch_id)
 
     if (countError) {
       setMessage('Unable to verify your enrollments right now.')
@@ -236,7 +223,7 @@ function EnrollmentForm() {
 
         birth_date: birthDate,
         sex,
-        place_of_birth: formatPhilippinePlace(placeOfBirth),
+        place_of_birth: placeOfBirth.trim(),
         birth_order: Number(birthOrder),
         is_registered: isRegistered === 'yes',
         mother_tongue: motherTongue.trim(),
@@ -430,9 +417,9 @@ function EnrollmentForm() {
                   <input
                     type="text"
                     value={placeOfBirth}
-                    onChange={(e) => setPlaceOfBirth(e.target.value)}
+                    onChange={(e) => setPlaceOfBirth(e.target.value.replace(/,\s*Philippines\s*$/i, ''))}
                     maxLength={100}
-                    placeholder="City/Municipality, Province, Philippines"
+                    placeholder="City/Municipality, Province"
                     required
                   />
                 </div>
@@ -533,7 +520,6 @@ function EnrollmentForm() {
                   <label>Calculated BMI</label>
                   <div className="bmi-preview" aria-live="polite">
                     <strong>{liveBmi}</strong>
-                    {liveBmi !== '—' && <small data-tone={liveBmiClassification?.tone || 'unavailable'}>{liveBmiClassification?.label || 'Classification unavailable'}</small>}
                   </div>
                 </div>
               </div>

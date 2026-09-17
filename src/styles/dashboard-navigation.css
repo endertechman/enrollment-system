@@ -1,0 +1,137 @@
+/* Teacher navigation mirrors the Parent dashboard spacing. */
+.teacher-dashboard-page .teacher-tabs {
+  gap: 10px;
+  padding: 9px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface);
+  box-shadow: none;
+}
+
+.teacher-dashboard-page .teacher-tab-group {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.teacher-dashboard-page .aide-tab-group-center {
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border);
+}
+
+.teacher-dashboard-page .teacher-tab-group-title {
+  padding: 0 7px;
+  color: var(--color-muted);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.teacher-dashboard-page .teacher-tab {
+  display: inline-flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 9px 11px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: .8rem;
+  font-weight: 680;
+  line-height: 1.2;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+}
+
+.parent-sidebar-tab:hover,
+.teacher-dashboard-page .teacher-tab:not(:disabled):hover {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-ink);
+}
+
+.parent-sidebar-tab.active,
+.teacher-dashboard-page .teacher-tab.active {
+  border-color: transparent;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-ink);
+  box-shadow: inset 3px 0 0 var(--color-accent);
+}
+
+.parent-sidebar-tab:focus-visible,
+.teacher-dashboard-page .teacher-tab:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 55%, transparent);
+  outline-offset: 3px;
+}
+
+@media (max-width: 900px) {
+  .teacher-dashboard-page .teacher-tabs {
+    position: static;
+    display: grid;
+  }
+
+  .teacher-dashboard-page .teacher-tab-group {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .teacher-dashboard-page .teacher-tab { width: auto; }
+
+  .teacher-dashboard-page .aide-tab-group-center {
+    padding-top: 9px;
+    padding-left: 0;
+    border-top: 1px solid var(--color-border);
+    border-left: 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .teacher-dashboard-page .teacher-tabs {
+    display: flex;
+    width: 100%;
+    gap: 6px;
+    padding: 7px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+  }
+
+  .teacher-dashboard-page .teacher-tab-group-title { display: none; }
+
+  .teacher-dashboard-page .teacher-tab-group {
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+  }
+
+  .teacher-dashboard-page .aide-tab-group-center {
+    padding-top: 0;
+    padding-left: 6px;
+    border-top: 0;
+    border-left: 1px solid var(--color-border);
+  }
+
+  .teacher-dashboard-page .teacher-tab {
+    width: auto;
+    flex: 0 0 auto;
+    justify-content: flex-start;
+    padding-inline: 12px;
+    text-align: left;
+  }
+
+  .parent-sidebar-tab.active,
+  .teacher-dashboard-page .teacher-tab.active {
+    box-shadow: inset 0 -3px 0 var(--color-accent);
+  }
+}

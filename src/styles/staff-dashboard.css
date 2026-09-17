@@ -1,5 +1,5 @@
 .teacher-dashboard-page { --dash-ink:var(--color-text); --dash-muted:var(--color-muted); --dash-line:color-mix(in srgb, var(--color-muted) 7%, var(--color-surface)); height:100dvh; display:flex; flex-direction:column; overflow:hidden; background:radial-gradient(circle at 5% 5%,color-mix(in srgb, var(--color-accent) 20%, transparent),transparent 30%),radial-gradient(circle at 95% 8%,color-mix(in srgb, var(--color-primary) 18%, transparent),transparent 32%),var(--color-bg); }
-.teacher-dashboard-scroll { flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; scrollbar-gutter:stable; }
+.teacher-dashboard-scroll { flex:1; min-height:0; overflow-y:scroll; overflow-x:hidden; overscroll-behavior-y:contain; scrollbar-gutter:stable; overflow-anchor:none; }
 .teacher-dashboard-content { width:min(1360px,calc(100% - 40px)); margin:auto; padding:38px 0 64px; }
 .teacher-profile-area { padding:4px 0; }
 .teacher-profile-area h1 { margin:0; color:var(--color-text); font-size:clamp(24px,3vw,30px); font-weight:680; line-height:1.2; letter-spacing:-.025em; }
@@ -19,7 +19,7 @@
 .pending-approvals-header>div { min-width:0; }
 .pending-approvals-header h2 { margin:0; color:var(--color-text); font-size:18px; }
 .waiting-badge { flex-shrink:0; padding:6px 11px; border-radius:99px; background:var(--color-accent-soft); color:var(--color-accent-ink); font-size:11px; font-weight:750; }
-.pending-approvals-header .enrollment-window-badge { min-height:29px; padding:6px 11px; font-size:11px; font-weight:750; }
+.pending-approvals-header .enrollment-window-badge { min-height:29px; padding:6px 11px; font-size:10px; font-weight:780; letter-spacing:.035em; text-transform:uppercase; white-space:nowrap; }
 .requests-header-actions { display:flex; align-items:center; gap:7px; }
 .teacher-dashboard-message { margin:16px 0 0; padding:11px 13px; border:1px solid color-mix(in srgb, var(--color-accent) 30%, var(--color-surface)); border-radius:11px; background:var(--color-accent-soft); color:var(--color-accent-ink); font-size:13px; font-weight:600; }
 .approval-list { display:grid; gap:10px; margin-top:18px; }
@@ -42,10 +42,16 @@
 .enrollment-window-form { display:grid; gap:16px; margin-top:20px; }
 .enrollment-window-summary { display:grid; gap:16px; margin-top:20px; }
 .enrollment-window-summary dl { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:0; }
-.enrollment-window-summary dl div { min-width:0; padding:15px; border-radius:14px; background:var(--color-surface); }
+.enrollment-window-summary dl > div { min-width:0; padding:15px; border-radius:14px; background:var(--color-surface); }
 .enrollment-window-summary dt { color:var(--color-muted); font-size:11px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; }
 .enrollment-window-summary dd { margin:7px 0 0; color:var(--color-text); font-size:14px; font-weight:650; overflow-wrap:anywhere; }
-.enrollment-window-summary>button { justify-self:end; }
+.schedule-visual-grid .schedule-visual-card { display:flex; align-items:center; gap:13px; padding:17px; border:1px solid var(--color-border); background:linear-gradient(135deg,var(--color-surface),var(--color-surface-soft)); }
+.schedule-visual-card > div { min-width:0; }
+.schedule-icon { display:grid; width:42px; height:42px; flex:0 0 42px; place-items:center; border-radius:12px; background:var(--color-primary-soft); color:var(--color-primary-ink); }
+.schedule-icon .app-icon { width:20px; height:20px; flex-basis:20px; }
+.schedule-visual-card dd { display:grid; gap:3px; }
+.schedule-visual-card dd strong { color:var(--color-text); font-size:14px; font-weight:720; line-height:1.35; }
+.schedule-visual-card dd span { color:var(--color-primary-ink); font-size:12px; font-weight:720; }
 .enrollment-window-range { display:grid; gap:10px; }
 .enrollment-window-group { min-width:0; margin:0; padding:14px 15px 15px; border:0; border-radius:14px; background:var(--color-surface); }
 .enrollment-window-group legend { padding:0 4px; color:var(--color-text); font-size:13px; font-weight:700; }
@@ -95,30 +101,30 @@
 .attendance-toolbar label { color:var(--color-text); font-size:13px; font-weight:700; }
 .attendance-toolbar input { min-height:40px; padding:7px 11px; border:1px solid var(--color-border); border-radius:10px; background:var(--color-surface); color:var(--color-text); font:inherit; font-size:13px; outline:none; }
 .attendance-toolbar input:focus { border-color:var(--color-primary); box-shadow:0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent); }
-.attendance-list { display:grid; gap:9px; margin-top:16px; }
-.attendance-row { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:15px 17px; border:1px solid var(--color-border); border-radius:14px; background:var(--color-surface); }
-.attendance-row h3 { margin:0; color:var(--color-text); font-size:15px; overflow-wrap:anywhere; }
-.attendance-row p { margin:5px 0 0; color:var(--color-muted); font-size:12px; }
-.attendance-options { display:flex; flex:0 0 auto; gap:6px; }
-.attendance-options button { min-height:34px; padding:7px 11px; border:1px solid var(--color-border); border-radius:999px; background:var(--color-surface); color:var(--color-muted); font:inherit; font-size:11px; font-weight:700; cursor:pointer; transition:background-color .2s ease,border-color .2s ease,color .2s ease; }
-.attendance-options button:hover:not(:disabled) { background:var(--color-surface-soft); color:var(--color-text); }
-.attendance-options button[data-status="present"].active { border-color:var(--color-primary); background:var(--color-primary-soft); color:var(--color-primary-ink); }
-.attendance-options button[data-status="absent"].active { border-color:var(--color-accent); background:var(--color-accent-soft); color:var(--color-accent-ink); }
-.attendance-options button[data-status="late"].active { border-color:var(--color-border); background:var(--color-surface-soft); color:var(--color-text); }
-.attendance-options button:disabled { opacity:.58; cursor:wait; }
+.attendance-table-shell { margin-top:14px; }
+.attendance-table { min-width:560px; }
+.attendance-table th:last-child,
+.attendance-table td:last-child { width:180px; }
+.attendance-status-select { width:100%; min-width:132px; min-height:34px; padding:6px 34px 6px 10px; border:1px solid var(--color-border); border-radius:9px; background-color:var(--color-surface); color:var(--color-text); font:inherit; font-size:11.5px; font-weight:700; outline:none; cursor:pointer; transition:border-color .2s ease,background-color .2s ease,color .2s ease,box-shadow .2s ease; }
+.attendance-status-select:hover:not(:disabled) { border-color:var(--color-primary); }
+.attendance-status-select:focus { border-color:var(--color-primary); box-shadow:0 0 0 3px color-mix(in srgb,var(--color-primary) 18%,transparent); }
+.attendance-status-select[data-status="present"] { border-color:color-mix(in srgb,var(--color-primary) 44%,var(--color-border)); background:var(--color-primary-soft); color:var(--color-primary-ink); }
+.attendance-status-select[data-status="absent"] { border-color:color-mix(in srgb,var(--color-accent) 48%,var(--color-border)); background:var(--color-accent-soft); color:var(--color-accent-ink); }
+.attendance-status-select[data-status="excused"] { background:var(--color-surface-soft); color:var(--color-text); }
+.attendance-status-select:disabled { opacity:.6; cursor:wait; }
 .attendance-value { flex:0 0 auto; padding:6px 10px; border-radius:999px; font-size:11px; font-weight:700; }
 .attendance-value.present { background:var(--color-primary-soft); color:var(--color-primary-ink); }
 .attendance-value.absent { background:var(--color-accent-soft); color:var(--color-accent-ink); }
-.attendance-value.late,
+.attendance-value.excused,
 .attendance-value.unrecorded { background:var(--color-surface-soft); color:var(--color-muted); }
 .attendance-note { margin:16px 0 0; color:var(--color-muted); font-size:12px; line-height:1.55; }
 
 @media(max-width:520px) {
-  .attendance-toolbar,.attendance-row { align-items:stretch; flex-direction:column; }
+  .attendance-toolbar { align-items:stretch; flex-direction:column; }
   .attendance-toolbar input { width:100%; }
-  .attendance-options { width:100%; }
-  .attendance-options button { flex:1; }
-  .attendance-value { align-self:flex-start; }
+  .attendance-table { min-width:0; }
+  .attendance-table th:last-child,.attendance-table td:last-child { width:100%; }
+  .attendance-status-select { width:min(100%,220px); }
 }
 
 /* Compact student directory and integrated rejected-record controls */
@@ -234,8 +240,89 @@
 }
 
 .records-table .enrollment-status {
+  display: inline-flex;
+  min-width: 68px;
+  align-items: center;
+  justify-content: center;
   padding: 5px 8px;
   font-size: 9.5px;
+  text-align: center;
+}
+
+.records-table td[data-label="Status"],
+.records-report-cell { white-space: nowrap; }
+
+.records-actions-column { width: 44px; text-align: center !important; }
+.records-actions-column .delete-record-button { margin-inline: auto; }
+
+/* Enrollment batch history and lifecycle controls */
+.enrollment-batch-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 18px;
+  margin: 16px 17px 0;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 13px;
+  background: var(--color-surface-soft);
+}
+
+.enrollment-batch-copy { display: grid; gap: 3px; min-width: 0; }
+.enrollment-batch-eyebrow { color: var(--color-accent-ink); font-size: 10.5px; font-weight: 750; }
+.enrollment-batch-copy strong { color: var(--color-text); font-size: 14px; }
+.enrollment-batch-copy small { color: var(--color-muted); font-size: 11px; line-height: 1.45; }
+.enrollment-batch-actions { display: grid; align-items: end; justify-items: end; gap: 10px; }
+.enrollment-batch-actions label { display: grid; gap: 5px; color: var(--color-muted); font-size: 10.5px; font-weight: 700; }
+.enrollment-batch-actions select {
+  min-width: 170px;
+  min-height: var(--dashboard-control-height);
+  padding: 8px 32px 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.enrollment-batch-actions select:hover:not(:disabled),
+.enrollment-batch-actions select:focus { border-color: var(--color-primary); }
+.enrollment-batch-actions select:focus { outline: 0; box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent); }
+.batch-delete-button {
+  min-height: var(--dashboard-control-height);
+  padding: 8px 12px;
+  border: 1px solid color-mix(in srgb, #b94159 35%, var(--color-border));
+  border-radius: 9px;
+  background: var(--color-surface);
+  color: #a43149;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+}
+.batch-delete-button:hover:not(:disabled) { border-color: #b94159; background: #fff0f3; color: #8c2036; }
+.batch-delete-button:disabled { opacity: .6; cursor: wait; }
+.enrollment-batch-buttons { display:flex; align-items:center; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
+.enrollment-batch-buttons .approve-button,
+.enrollment-batch-buttons .button-secondary,
+.enrollment-batch-buttons .batch-delete-button { min-width:132px; min-height:var(--dashboard-control-height); padding:8px 13px; border-radius:9px; font:inherit; font-size:11px; font-weight:720; }
+.enrollment-batch-buttons .button-secondary { border:1px solid var(--color-border); background:var(--color-surface); color:var(--color-text); cursor:pointer; transition:background-color .2s ease,border-color .2s ease,color .2s ease; }
+.enrollment-batch-buttons .button-secondary:hover:not(:disabled) { border-color:color-mix(in srgb,var(--color-accent) 28%,var(--color-border)); background:var(--color-accent-soft); color:var(--color-accent-ink); }
+.enrollment-batch-buttons .button-secondary:disabled { opacity:.6; cursor:not-allowed; }
+
+@media (max-width: 760px) {
+  .enrollment-batch-controls { grid-template-columns: 1fr; align-items: stretch; margin-inline: 14px; }
+  .enrollment-batch-actions { justify-items:stretch; }
+  .enrollment-batch-buttons { display:grid; grid-template-columns:1fr 1fr; }
+  .enrollment-batch-actions select,
+  .enrollment-batch-actions label,
+  .enrollment-batch-actions button { width: 100%; min-width: 0; }
+  .enrollment-batch-buttons .batch-delete-button { grid-column:1 / -1; }
+}
+
+@media (max-width: 430px) {
+  .enrollment-batch-buttons { grid-template-columns:1fr; }
+  .enrollment-batch-buttons .batch-delete-button { grid-column:auto; }
 }
 
 .records-select-column {
@@ -321,6 +408,14 @@
   .records-table .records-select-column::before {
     content: none;
   }
+
+  .records-table .records-actions-column {
+    display: grid;
+    width: 100%;
+    text-align: left !important;
+  }
+
+  .records-actions-column .delete-record-button { margin-inline: 0; }
 
   .records-table .review-actions,
   .records-table .student-row-actions {

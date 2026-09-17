@@ -6,7 +6,8 @@
 .announcement-compose-toggle { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:34px; padding:7px 12px; border:0; border-radius:999px; background:#ef92b3; color:#fff; font:inherit; font-size:11.5px; font-weight:750; cursor:pointer; transition:background-color .2s ease; }
 .announcement-compose-toggle:hover { background:#e781a6; }
 .announcement-compose-toggle:focus-visible { outline:3px solid rgba(239,146,179,.25); outline-offset:2px; }
-.announcement-compose-toggle .app-icon { width:14px; height:14px; flex:0 0 14px; }
+.announcement-compose-icon { display:block; width:16px; height:16px; flex:0 0 16px; filter:brightness(0) invert(1); transition:opacity .2s ease; }
+.announcement-compose-toggle:hover .announcement-compose-icon { opacity:.88; }
 .announcement-form { display:grid; gap:14px; margin-top:18px; padding:17px; border-radius:15px; background:rgba(255,255,255,.82); }
 .announcement-form label { position:relative; display:grid; gap:7px; color:var(--color-text); font-size:12.5px; font-weight:700; }
 .announcement-form input,.announcement-form textarea { width:100%; padding:11px 13px; border:1px solid #ded7dd; border-radius:11px; background:#fff; color:var(--color-text); font:inherit; font-size:13.5px; line-height:1.5; outline:none; resize:vertical; transition:border-color .2s ease,box-shadow .2s ease; }
@@ -29,4 +30,4 @@
 .announcement-card-heading button:focus-visible { outline:3px solid rgba(217,75,112,.2); outline-offset:1px; }
 .announcement-card-heading button:disabled { opacity:.55; cursor:wait; }
 .announcement-empty { margin:18px 0 0; padding:48px 20px; border-radius:15px; background:rgba(255,255,255,.5); color:var(--color-muted); text-align:center; }
-@media(max-width:520px) { .announcements-header{align-items:flex-start;flex-direction:column}.announcements-header-actions{width:100%;justify-content:space-between}.announcement-form{padding:14px}.announcement-form button{width:100%}.announcement-card-heading{gap:12px}.announcement-card-heading button{align-self:flex-start} }
+@media(max-width:520px) { .announcements-header-actions{width:100%;justify-content:flex-end}.announcement-form{padding:14px}.announcement-form button{width:100%}.announcement-card-heading{gap:12px}.announcement-card-heading button{align-self:flex-start} }

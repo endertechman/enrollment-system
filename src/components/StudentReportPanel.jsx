@@ -136,8 +136,8 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, parent
     ? `${Math.round((attendanceCounts.present / countedAttendanceDays) * 100)}%`
     : '—'
   const latestGrowth = growthRecords[0] || null
-  const reportHeight = latestGrowth?.height_cm ?? student?.height_cm
-  const reportWeight = latestGrowth?.weight_kg ?? student?.weight_kg
+  const reportHeight = latestGrowth?.height_cm
+  const reportWeight = latestGrowth?.weight_kg
   const reportBmi = calculateBmi(reportHeight, reportWeight)
   const reportClassification = reportBmi === '—' ? null : classifyChildBmi({
     bmi: reportBmi,

@@ -4,6 +4,7 @@ import LoadingSpinner from './LoadingSpinner'
 import AuthToast from './AuthToast'
 import ConfirmDialog from './ConfirmDialog'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
+import { getEnrollmentWindow } from '../lib/enrollmentWindow'
 
 const TITLE_LIMIT = 100
 const DESCRIPTION_LIMIT = 500
@@ -16,7 +17,23 @@ function toDateValue(date) {
   return `${year}-${month}-${day}`
 }
 
-function CalendarPanel({ canManage = false, listView = false }) {
+function toPhilippineDateValue(value) {
+  if (!value) return ''
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(new Date(value))
+  const part = (type) => parts.find((item) => item.type === type)?.value || ''
+  return `${part('year')}-${part('month')}-${part('day')}`
+}
+
+function formatPhilippineTime(value) {
+  if (!value) return ''
+  return `${new Date(value).toLocaleTimeString('en-PH', {
+    hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila',
+  })} PHT`
+}
+
+function CalendarPanel({ canManage = false, listView = false, showEnrollmentMilestones = false }) {
   const today = toDateValue(new Date())
   const [visibleMonth, setVisibleMonth] = useState(() => {
     const now = new Date()
@@ -24,6 +41,7 @@ function CalendarPanel({ canManage = false, listView = false }) {
   })
   const [selectedDate, setSelectedDate] = useState(today)
   const [events, setEvents] = useState([])
+  const [enrollmentMilestones, setEnrollmentMilestones] = useState([])
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [loading, setLoading] = useState(true)
@@ -57,8 +75,35 @@ function CalendarPanel({ canManage = false, listView = false }) {
     } else {
       setEvents(data || [])
     }
+
+    if (showEnrollmentMilestones) {
+      const windowResult = await getEnrollmentWindow()
+      const activeBatchId = windowResult.data?.current_batch_id
+      const batchResult = activeBatchId
+        ? await supabase
+          .from('enrollment_batches')
+          .select('id, name, starts_on, ends_on, opens_at, closes_at')
+          .eq('id', activeBatchId)
+          .maybeSingle()
+        : { data: null, error: null }
+
+      if (!windowResult.error && !batchResult.error && batchResult.data) {
+        const batch = batchResult.data
+        const milestones = [
+          { id: `semester-${batch.id}-opens`, title: 'Enrollment opens', description: `${batch.name} enrollment opens at ${formatPhilippineTime(batch.opens_at)}.`, event_date: toPhilippineDateValue(batch.opens_at), system: true },
+          { id: `semester-${batch.id}-closes`, title: 'Enrollment closes', description: `${batch.name} enrollment closes at ${formatPhilippineTime(batch.closes_at)}.`, event_date: toPhilippineDateValue(batch.closes_at), system: true },
+          { id: `semester-${batch.id}-starts`, title: 'Semester starts', description: `${batch.name} begins.`, event_date: batch.starts_on, system: true },
+          { id: `semester-${batch.id}-ends`, title: 'Semester ends', description: `${batch.name} ends.`, event_date: batch.ends_on, system: true },
+        ].filter((item) => item.event_date)
+        setEnrollmentMilestones(milestones)
+      } else {
+        setEnrollmentMilestones([])
+      }
+    } else {
+      setEnrollmentMilestones([])
+    }
     setLoading(false)
-  }, [monthKey, visibleMonth])
+  }, [monthKey, showEnrollmentMilestones, visibleMonth])
 
   useEffect(() => {
     const loadTimer = window.setTimeout(loadEvents, 0)
@@ -67,7 +112,7 @@ function CalendarPanel({ canManage = false, listView = false }) {
 
   useRealtimeRefresh(() => loadEvents({ silent: true }), {
     channelName: 'calendar-panel',
-    tables: ['calendar_events'],
+    tables: showEnrollmentMilestones ? ['calendar_events', 'enrollment_settings', 'enrollment_batches'] : ['calendar_events'],
   })
 
   function changeMonth(amount) {
@@ -139,8 +184,11 @@ function CalendarPanel({ canManage = false, listView = false }) {
       return { key: value, value, day: index + 1 }
     }),
   ]
-  const selectedEvents = events.filter((item) => item.event_date === selectedDate)
-  const visibleEvents = listView && !calendarVisible ? events : selectedEvents
+  const displayedEvents = [...events, ...enrollmentMilestones].sort((a, b) => a.event_date.localeCompare(b.event_date))
+  const selectedEvents = displayedEvents.filter((item) => item.event_date === selectedDate)
+  const visibleEvents = listView && !calendarVisible
+    ? displayedEvents.filter((item) => item.event_date.startsWith(monthKey))
+    : selectedEvents
 
   return (
     <section className={`calendar-panel${listView ? ' calendar-list-view' : ''}`}>
@@ -148,7 +196,7 @@ function CalendarPanel({ canManage = false, listView = false }) {
       {pendingDelete && <ConfirmDialog title="Delete school calendar event?" message={`“${pendingDelete.title}” will be permanently removed from the school calendar.`} confirmLabel="Delete" busy={deletingId === pendingDelete.id} onConfirm={deleteEvent} onCancel={() => setPendingDelete(null)} />}
       <header className="calendar-header">
         <h2>School Calendar</h2>
-        <span className="dashboard-header-detail">{events.length} events</span>
+        <span className="dashboard-header-detail">{displayedEvents.filter((item) => item.event_date.startsWith(monthKey)).length} events</span>
       </header>
       {listView && <div className="calendar-toolbar"><button type="button" className="calendar-view-toggle" aria-expanded={calendarVisible} onClick={() => setCalendarVisible((visible) => !visible)}>{calendarVisible ? 'Hide calendar' : 'Show calendar'}</button></div>}
 
@@ -165,7 +213,7 @@ function CalendarPanel({ canManage = false, listView = false }) {
               <button
                 type="button"
                 key={cell.key}
-                className={`${cell.value === selectedDate ? 'selected ' : ''}${cell.value === today ? 'today ' : ''}${events.some((item) => item.event_date === cell.value) ? 'has-event' : ''}`.trim()}
+                className={`${cell.value === selectedDate ? 'selected ' : ''}${cell.value === today ? 'today ' : ''}${displayedEvents.some((item) => item.event_date === cell.value) ? 'has-event' : ''}`.trim()}
                 onClick={() => setSelectedDate(cell.value)}
                 aria-label={new Date(`${cell.value}T00:00:00`).toLocaleDateString('en-PH', { dateStyle: 'full' })}
               >{cell.day}</button>
@@ -193,7 +241,7 @@ function CalendarPanel({ canManage = false, listView = false }) {
 
           {message && <p className="calendar-message">{message}</p>}
           {loading ? <div className="calendar-empty"><LoadingSpinner label="Loading events..." compact /></div> : visibleEvents.length === 0 ? <p className="calendar-empty">{listView && !calendarVisible ? 'No events this month.' : 'No events for this day.'}</p> : <div className="calendar-event-list">
-            {visibleEvents.map((item) => <article key={item.id}><div>{listView && !calendarVisible && <time dateTime={item.event_date}>{new Date(`${item.event_date}T00:00:00`).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}</time>}<h4>{item.title}</h4>{item.description && <p>{item.description}</p>}</div>{canManage && <button type="button" disabled={deletingId === item.id} onClick={() => setPendingDelete(item)} aria-label={`Delete school calendar event: ${item.title}`} title="Delete school calendar event"><i className="app-icon app-icon-trash" aria-hidden="true" /></button>}</article>)}
+            {visibleEvents.map((item) => <article key={item.id} className={item.system ? 'calendar-system-event' : undefined}><div>{listView && !calendarVisible && <time dateTime={item.event_date}>{new Date(`${item.event_date}T00:00:00`).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}</time>}<h4>{item.title}</h4>{item.description && <p>{item.description}</p>}</div>{canManage && !item.system && <button type="button" disabled={deletingId === item.id} onClick={() => setPendingDelete(item)} aria-label={`Delete school calendar event: ${item.title}`} title="Delete school calendar event"><i className="app-icon app-icon-trash" aria-hidden="true" /></button>}</article>)}
           </div>}
         </aside>
       </div>

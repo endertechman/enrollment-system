@@ -104,66 +104,6 @@
 }
 
 
-.measurement-input {
-  position: relative;
-  display: flex;
-}
-
-.measurement-input input {
-  padding-right: 78px;
-}
-
-.measurement-input select {
-  position: absolute;
-  top: 1px;
-  right: 7px;
-  width: 68px;
-  height: 46px;
-  padding: 0 24px 0 8px;
-  border: 0;
-  border-radius: 0;
-  background-color: transparent;
-  background-position: right 6px center;
-  color: #5f5860;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.measurement-input-static input { padding-right: 78px; }
-
-.measurement-unit {
-  position: absolute;
-  top: 1px;
-  right: 7px;
-  display: grid;
-  place-items: center;
-  width: 68px;
-  height: 46px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: #5f5860;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.bmi-preview {
-  display: grid;
-  align-content: center;
-  gap: 3px;
-  width: 100%;
-  min-height: 48px;
-  padding: 7px 14px;
-  border: 1px solid #ded7dd;
-  border-radius: 12px;
-  background: #f6f3f5;
-  color: #777078;
-  font-size: 14px;
-  line-height: 1.55;
-  font-weight: 500;
-}
-.bmi-preview strong { color:#4b454c; font-size:15px; }
-
 .enrollment-grid select {
   padding-right: 42px;
 
@@ -346,8 +286,6 @@
 .enrollment-grid { gap: 15px 18px; }
 .enrollment-grid input,
 .enrollment-grid select { height: 44px; font-size: 14px; }
-.measurement-input select { height: 42px; }
-.measurement-unit { height: 42px; }
 .enrollment-submit { padding: 12px 21px; font-size: 14px; }
 
 @media (max-width: 480px) {

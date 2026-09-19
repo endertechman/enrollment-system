@@ -125,7 +125,7 @@ function AccountSettingsDialog({ user, fullName, role, onClose }) {
     <div className="settings-overlay" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
       <section ref={dialogRef} className="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="account-settings-title" aria-describedby="account-settings-description">
         <header className="settings-header">
-          <button ref={closeButtonRef} type="button" className="settings-close" onClick={onClose} aria-label="Close account settings">
+          <button ref={closeButtonRef} type="button" className="settings-close popup-close-button" onClick={onClose} aria-label="Close account settings">
             <i className="app-icon app-icon-close" aria-hidden="true" />
           </button>
           <span>Account</span>

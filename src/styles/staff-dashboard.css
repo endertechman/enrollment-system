@@ -325,6 +325,94 @@
   .enrollment-batch-buttons .batch-delete-button { grid-column:auto; }
 }
 
+/* Semester-based enrollment schedule */
+.semester-schedule-layout {
+  display:grid;
+  grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);
+  gap:28px;
+  align-items:center;
+  padding:26px 0 4px;
+}
+.semester-management { display:grid; gap:14px; min-width:0; }
+.semester-copy { display:grid; gap:4px; }
+.semester-copy > span { color:var(--color-accent-ink); font-size:10px; font-weight:780; }
+.semester-copy > strong { color:var(--color-text); font-size:15px; font-weight:760; overflow-wrap:anywhere; }
+.semester-copy > p { margin:0; color:var(--color-muted); font-size:11.5px; line-height:1.5; }
+.semester-picker-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; }
+.semester-create-button {
+  width:100%;
+  min-height:42px;
+  border:1px solid var(--color-border);
+  border-radius:9px;
+  background:var(--color-surface);
+  color:var(--color-text);
+  font:inherit;
+  font-size:11.5px;
+  font-weight:680;
+  transition:border-color .2s ease,background-color .2s ease,color .2s ease,box-shadow .2s ease;
+}
+.semester-create-button { width:auto; padding:8px 18px; cursor:pointer; }
+.semester-create-button:hover:not(:disabled) { background:var(--color-accent-soft); color:var(--color-accent-ink); }
+.semester-management-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.semester-management-actions:has(.semester-update-button) { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.semester-management-actions button { min-width:0; min-height:42px; padding:8px 10px; border-radius:9px; font:inherit; font-size:11px; font-weight:720; line-height:1.25; white-space:normal; text-wrap:balance; cursor:pointer; transition:border-color .2s ease,background-color .2s ease,color .2s ease; }
+.semester-update-button { border:1px solid var(--color-accent); background:var(--color-accent); color:var(--color-on-accent); }
+.semester-update-button:hover:not(:disabled) { border-color:var(--color-accent-hover); background:var(--color-accent-hover); }
+.semester-activate-button { border:1px solid var(--color-primary); background:var(--color-primary-soft); color:var(--color-primary-ink); }
+.semester-activate-button:hover:not(:disabled) { background:color-mix(in srgb,var(--color-primary) 22%,var(--color-surface)); }
+.semester-management-actions button:disabled { opacity:.48; cursor:not-allowed; }
+.semester-schedule-cards { display:grid; gap:12px; margin:0; }
+.semester-schedule-cards .schedule-visual-card { display:flex; align-items:center; gap:clamp(8px,1.2vw,13px); min-width:0; padding:clamp(12px,1.5vw,17px); border:1px solid var(--color-border); border-radius:13px; background:var(--color-surface); }
+.semester-schedule-cards .schedule-visual-card > div { min-width:0; }
+.semester-schedule-cards dt { color:var(--color-muted); font-size:9.5px; font-weight:780; letter-spacing:.035em; text-transform:uppercase; }
+.semester-schedule-cards dd { display:grid; gap:3px; margin:5px 0 0; }
+.semester-schedule-cards dd strong { color:var(--color-text); font-size:clamp(11.5px,1.25vw,13.5px); font-weight:730; overflow-wrap:anywhere; }
+.semester-schedule-cards dd span { color:var(--color-primary-ink); font-size:11px; font-weight:740; }
+
+.semester-dialog-overlay { position:fixed; inset:0; z-index:1600; display:grid; place-items:center; padding:24px; overflow-y:auto; background:rgba(53,48,57,.28); backdrop-filter:blur(4px); }
+.semester-dialog { display:flex; width:min(580px,100%); height:min(680px,calc(100dvh - 48px)); max-height:calc(100dvh - 48px); flex-direction:column; overflow:hidden; border:1px solid var(--color-border); border-radius:18px; background:var(--color-surface); box-shadow:0 24px 70px rgba(65,48,59,.2); }
+.semester-dialog-header { position:sticky; top:0; z-index:1; display:flex; align-items:flex-start; justify-content:space-between; gap:18px; padding:19px 20px; border-bottom:1px solid var(--color-border); background:linear-gradient(105deg,var(--color-accent-soft),var(--color-primary-soft)); }
+.semester-dialog-header h2 { margin:0; color:var(--color-text); font-size:18px; }
+.semester-dialog-header p { margin:4px 0 0; color:var(--color-muted); font-size:11px; }
+.semester-dialog-header button { display:grid; width:32px; height:32px; flex:0 0 32px; place-items:center; border:0; border-radius:50%; background:transparent; color:var(--color-muted); cursor:pointer; transition:background-color .2s ease,color .2s ease; }
+.semester-dialog-header button:hover:not(:disabled) { background:transparent; color:var(--color-accent-ink); }
+.semester-dialog-header .app-icon { width:16px; height:16px; flex-basis:16px; }
+.semester-form { display:grid; min-height:0; gap:13px; padding:18px 20px 20px; overflow-y:auto; scrollbar-gutter:stable; }
+.semester-form label { display:grid; gap:6px; min-width:0; color:var(--color-text); font-size:11px; font-weight:700; }
+.semester-form input { width:100%; min-height:42px; padding:8px 11px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface); color:var(--color-text); font:inherit; font-size:12px; color-scheme:light; outline:0; transition:border-color .2s ease,box-shadow .2s ease; }
+.semester-form input:hover { border-color:color-mix(in srgb,var(--color-primary) 45%,var(--color-border)); }
+.semester-form input:focus { border-color:var(--color-primary); box-shadow:0 0 0 3px color-mix(in srgb,var(--color-primary) 18%,transparent); }
+.semester-name-field small { color:var(--color-muted); font-size:9.5px; font-weight:500; }
+.semester-form-section { min-width:0; margin:0; padding:13px; border:1px solid var(--color-border); border-radius:11px; background:var(--color-surface-soft); }
+.semester-form-section legend { padding:0 4px; color:var(--color-text); font-size:13px; font-weight:760; }
+.semester-form-section > p { margin:0 0 11px; color:var(--color-muted); font-size:10px; line-height:1.45; }
+.semester-date-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.semester-window-fields { display:grid; grid-template-columns:minmax(0,1fr) 112px; gap:10px; }
+.semester-time-note { display:flex; align-items:center; gap:7px; margin:0; padding:9px 10px; border-radius:8px; background:var(--color-primary-soft); color:var(--color-primary-ink); font-size:10px; font-weight:620; line-height:1.4; }
+.semester-time-note .app-icon { width:14px; height:14px; flex-basis:14px; }
+.semester-dialog-actions { display:flex; justify-content:flex-end; gap:9px; }
+.semester-dialog-actions button { min-height:40px; padding:8px 15px; border-radius:9px; font:inherit; font-size:11.5px; font-weight:720; cursor:pointer; }
+.semester-dialog-actions .button-secondary { border:1px solid var(--color-border); background:var(--color-surface); color:var(--color-muted); }
+.semester-dialog-actions .button-secondary:hover:not(:disabled) { background:var(--color-surface-soft); color:var(--color-text); }
+
+@media(max-width:850px) {
+  .semester-schedule-layout { grid-template-columns:1fr; align-items:start; gap:18px; }
+  .semester-schedule-cards { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:580px) {
+  .semester-schedule-layout { padding-top:20px; }
+  .semester-picker-row,
+  .semester-management-actions,
+  .semester-management-actions:has(.semester-update-button),
+  .semester-schedule-cards,
+  .semester-date-fields,
+  .semester-window-fields { grid-template-columns:1fr; }
+  .semester-create-button { width:100%; }
+  .semester-dialog-overlay { align-items:start; padding:12px; }
+  .semester-dialog { height:calc(100dvh - 24px); max-height:calc(100dvh - 24px); border-radius:15px; }
+  .semester-dialog-header,.semester-form { padding-inline:15px; }
+}
+
 .records-select-column {
   width: 38px;
   padding-right: 4px !important;

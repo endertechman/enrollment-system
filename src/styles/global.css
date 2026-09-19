@@ -217,3 +217,5 @@ button {
 .enrollment-window-badge.open { background: var(--color-primary-soft); color: var(--color-primary-ink); }
 .enrollment-window-badge.scheduled { background: var(--color-accent-soft); color: var(--color-accent-ink); }
 .enrollment-window-badge.closed { background: var(--color-surface-soft); color: var(--color-muted); }
+.popup-close-button { transition:color .2s ease !important; }
+.popup-close-button:hover:not(:disabled) { background:transparent !important; color:var(--color-accent-ink) !important; }

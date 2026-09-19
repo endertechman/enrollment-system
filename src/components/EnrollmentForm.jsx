@@ -25,10 +25,6 @@ function EnrollmentForm() {
   const [motherTongue, setMotherTongue] = useState('')
   const [otherDialect, setOtherDialect] = useState('')
 
-  const [heightValue, setHeightValue] = useState('')
-  const [heightUnit, setHeightUnit] = useState('cm')
-  const [weightKg, setWeightKg] = useState('')
-
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [enrollmentOpen, setEnrollmentOpen] = useState(false)
@@ -131,22 +127,6 @@ function EnrollmentForm() {
     return `ENR-${new Date().getFullYear()}-${randomPart}`
   }
 
-  function getHeightCm() {
-    const value = Number(heightValue)
-    if (!Number.isFinite(value) || value <= 0) return null
-    return heightUnit === 'in' ? value * 2.54 : value
-  }
-
-  function calculateBmi() {
-    const heightCm = getHeightCm()
-    const weight = Number(weightKg)
-    if (!heightCm || !Number.isFinite(weight) || weight <= 0) return '—'
-    const heightMeters = heightCm / 100
-    return (weight / (heightMeters * heightMeters)).toFixed(1)
-  }
-
-  const liveBmi = calculateBmi()
-
   function goToNextStep() {
     const currentSection = formRef.current?.querySelector(
       `[data-step="${currentStep}"]`,
@@ -161,7 +141,7 @@ function EnrollmentForm() {
     }
 
     setMessage('')
-    setCurrentStep((step) => Math.min(step + 1, 3))
+    setCurrentStep((step) => Math.min(step + 1, 2))
   }
 
   async function handleSubmit(e) {
@@ -182,16 +162,9 @@ function EnrollmentForm() {
       return
     }
 
-    if (!getHeightCm()) {
-      setMessage('Enter a valid height.')
-      setSubmitting(false)
-      return
-    }
-
     const windowResult = await getEnrollmentWindow()
-    if (windowResult.error || !isEnrollmentOpen(windowResult.data)) {
-      setEnrollmentOpen(false)
-      setMessage('Enrollment is currently closed. Your form was not submitted.')
+    if (windowResult.error || !windowResult.data?.current_batch_id) {
+      setMessage('Unable to verify the enrollment schedule right now. Please try again.')
       setSubmitting(false)
       return
     }
@@ -228,9 +201,6 @@ function EnrollmentForm() {
         is_registered: isRegistered === 'yes',
         mother_tongue: motherTongue.trim(),
         other_dialect: otherDialect.trim() || null,
-
-        height_cm: Number(getHeightCm().toFixed(2)),
-        weight_kg: Number(weightKg),
 
         status: 'pending',
         reference_code: referenceCode,
@@ -301,12 +271,12 @@ function EnrollmentForm() {
             className="enrollment-form"
             onSubmit={handleSubmit}
           >
-            <div className="enrollment-progress" role="list" aria-label={`Form section ${currentStep} of 3`}>
-              {[1, 2, 3].map((step) => (
+            <div className="enrollment-progress" role="list" aria-label={`Form section ${currentStep} of 2`}>
+              {[1, 2].map((step) => (
                 <div
                   key={step}
                   role="listitem"
-                  aria-label={`${['Child Details', 'Registration and Language', 'Health and Growth'][step - 1]}${step === currentStep ? ', current section' : step < currentStep ? ', completed' : ''}`}
+                  aria-label={`${['Child Details', 'Registration and Language'][step - 1]}${step === currentStep ? ', current section' : step < currentStep ? ', completed' : ''}`}
                   aria-current={step === currentStep ? 'step' : undefined}
                   className={`enrollment-progress-step${step === currentStep ? ' active' : ''}${step < currentStep ? ' complete' : ''}`}
                 >
@@ -473,58 +443,6 @@ function EnrollmentForm() {
               </div>
             </section>}
 
-            {currentStep === 3 && <section className="enrollment-section" data-step="3">
-              <div className="enrollment-section-heading"><h2>Health & Growth</h2><p>Provide current measurements and review the calculated BMI.</p></div>
-
-              <div className="enrollment-grid">
-                <div>
-                  <label>Height *</label>
-                  <div className="measurement-input">
-                    <input
-                      type="number"
-                      value={heightValue}
-                      onChange={(e) => setHeightValue(e.target.value)}
-                      min={heightUnit === 'cm' ? '30' : '11.8'}
-                      max={heightUnit === 'cm' ? '200' : '78.7'}
-                      step="0.1"
-                      required
-                    />
-                    <select
-                      value={heightUnit}
-                      onChange={(e) => setHeightUnit(e.target.value)}
-                      aria-label="Height unit"
-                    >
-                      <option value="cm">cm</option>
-                      <option value="in">in</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label>Weight *</label>
-                  <div className="measurement-input measurement-input-static">
-                    <input
-                      type="number"
-                      value={weightKg}
-                      onChange={(e) => setWeightKg(e.target.value)}
-                      min="1"
-                      max="150"
-                      step="0.1"
-                      required
-                    />
-                    <span className="measurement-unit">kg</span>
-                  </div>
-                </div>
-
-                <div>
-                  <label>Calculated BMI</label>
-                  <div className="bmi-preview" aria-live="polite">
-                    <strong>{liveBmi}</strong>
-                  </div>
-                </div>
-              </div>
-            </section>}
-
             {message && (
               <p className="form-message">
                 {message}
@@ -533,7 +451,7 @@ function EnrollmentForm() {
 
             <div className="enrollment-step-actions">
               {currentStep > 1 && <button type="button" className="enrollment-previous" onClick={() => setCurrentStep((step) => step - 1)}>Previous</button>}
-              {currentStep < 3 ? <button type="button" className="enrollment-next" onClick={goToNextStep}>Next</button> : <button type="submit" className="enrollment-submit" disabled={submitting}>{submitting ? <LoadingSpinner label="Submitting..." inline /> : 'Submit Enrollment'}</button>}
+              {currentStep < 2 ? <button type="button" className="enrollment-next" onClick={goToNextStep}>Next</button> : <button type="submit" className="enrollment-submit" disabled={submitting}>{submitting ? <LoadingSpinner label="Submitting..." inline /> : 'Submit Enrollment'}</button>}
             </div>
           </form>
         </main>

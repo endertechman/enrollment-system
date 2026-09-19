@@ -88,8 +88,6 @@ function ParentDashboard() {
           is_registered,
           mother_tongue,
           other_dialect,
-          height_cm,
-          weight_kg,
           status,
           submitted_at,
           reference_code
@@ -183,11 +181,6 @@ function ParentDashboard() {
   function formatSex(sex) {
     if (!sex) return 'Not provided'
     return sex.charAt(0).toUpperCase() + sex.slice(1)
-  }
-
-  function formatMeasurement(value, unit) {
-    if (value === null || value === undefined || value === '') return 'Not provided'
-    return `${value} ${unit}`
   }
 
   function getChildName(enrollment, includeMiddleName = false) {
@@ -336,7 +329,7 @@ function ParentDashboard() {
               ) : activeTab === 'student-report' ? (
                 <StudentReportPanel enrollments={selectedEnrollment ? [selectedEnrollment] : []} parentName={parentName} />
               ) : activeTab === 'calendar' ? (
-                <CalendarPanel listView />
+                <CalendarPanel listView showEnrollmentMilestones />
               ) : activeTab === 'announcements' ? (
                 <AnnouncementsPanel />
               ) : activeTab === 'information' ? (
@@ -370,14 +363,6 @@ function ParentDashboard() {
                         <div>
                           <dt>Other Dialect</dt>
                           <dd>{formatValue(selectedEnrollment.other_dialect)}</dd>
-                        </div>
-                        <div>
-                          <dt>Height</dt>
-                          <dd>{formatMeasurement(selectedEnrollment.height_cm, 'cm')}</dd>
-                        </div>
-                        <div>
-                          <dt>Weight</dt>
-                          <dd>{formatMeasurement(selectedEnrollment.weight_kg, 'kg')}</dd>
                         </div>
                       </dl>
                     </section>

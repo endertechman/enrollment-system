@@ -62,9 +62,9 @@ function HealthGrowthPanel({ enrollments, canManage = false }) {
     const latest = latestMeasurements[student.id]
     const classification = bmiClassification(
       student,
-      latest?.height_cm ?? student.height_cm,
-      latest?.weight_kg ?? student.weight_kg,
-      latest?.measured_on ?? student.submitted_at ?? new Date(),
+      latest?.height_cm,
+      latest?.weight_kg,
+      latest?.measured_on ?? new Date(),
     )
     return { student, classification }
   }), [latestMeasurements, students])

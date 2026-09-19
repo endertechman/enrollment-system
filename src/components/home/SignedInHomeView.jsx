@@ -91,7 +91,7 @@ function SignedInHomeView({ role, enrollments, enrollmentWindow }) {
       {role === 'parent' && admittedEnrollments.length > 1 && showDashboardChildPicker && (
         <div className="child-picker-overlay" role="dialog" aria-modal="true" aria-labelledby="child-picker-title">
           <div className="child-picker-dialog">
-            <button type="button" className="child-picker-close" onClick={() => setShowDashboardChildPicker(false)} aria-label="Close child selector">×</button>
+            <button type="button" className="child-picker-close popup-close-button" onClick={() => setShowDashboardChildPicker(false)} aria-label="Close child selector">×</button>
             <h2 id="child-picker-title">Which child are you viewing?</h2>
             <p>Select a child to open the correct enrollment information.</p>
             <div className="home-child-selector">

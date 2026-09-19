@@ -75,7 +75,7 @@ function RoleManagerDialog({ onClose }) {
       {pendingRole && account && <ConfirmDialog title="Change account role?" message={`${account.full_name} will become ${formatRole(pendingRole)}.`} confirmLabel="Change Role" tone="primary" iconClass="app-icon-user-add" busy={Boolean(updatingRole)} onConfirm={changeRole} onCancel={() => setPendingRole('')} />}
       <section className="role-manager-dialog">
         <header className="role-manager-header">
-          <button type="button" className="role-manager-close" onClick={onClose} aria-label="Close role manager"><i className="app-icon app-icon-close" aria-hidden="true" /></button>
+          <button type="button" className="role-manager-close popup-close-button" onClick={onClose} aria-label="Close role manager"><i className="app-icon app-icon-close" aria-hidden="true" /></button>
           <span>Teacher tools</span>
           <h2 id="role-manager-title">Manage Account Role</h2>
           <p>Search securely using the account&apos;s exact email.</p>

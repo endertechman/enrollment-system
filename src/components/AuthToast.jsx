@@ -92,7 +92,7 @@ function AuthToast({ message, onDismiss, duration = 8000, variant = 'auto' }) {
   return createPortal(
     <div key={message} className={`auth-toast ${isSuccess ? 'auth-toast-success' : 'auth-toast-error'} ${isLeaving ? 'auth-toast-leaving' : ''}`} role="alert">
       <span>{message}</span>
-      <button type="button" onClick={handleDismiss} aria-label="Dismiss message">
+      <button type="button" className="popup-close-button" onClick={handleDismiss} aria-label="Dismiss message">
         <i className="app-icon app-icon-close" aria-hidden="true" />
       </button>
     </div>,

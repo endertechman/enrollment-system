@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import LoadingSpinner from './LoadingSpinner'
 import AuthToast from './AuthToast'
 import ConfirmDialog from './ConfirmDialog'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
@@ -125,14 +124,14 @@ function AnnouncementsPanel({ canManage = false }) {
             <textarea value={body} onChange={(event) => setBody(event.target.value)} maxLength={BODY_LIMIT} rows="5" placeholder="Write the announcement clearly and briefly." required />
             <small>{body.length}/{BODY_LIMIT}</small>
           </label>
-          <button type="submit" disabled={saving || !title.trim() || !body.trim()}>{saving ? <LoadingSpinner label="Publishing..." inline /> : <><i className="app-icon app-icon-mail" aria-hidden="true" /><span>Publish Announcement</span></>}</button>
+          <button type="submit" disabled={saving || !title.trim() || !body.trim()}><i className="app-icon app-icon-mail" aria-hidden="true" /><span>Publish Announcement</span></button>
         </form>
       )}
 
       {message && <p className="announcement-message">{message}</p>}
 
       {loading ? (
-        <div className="announcement-empty"><LoadingSpinner label="Loading announcements..." compact /></div>
+        <p className="announcement-empty app-loading" role="status">Loading announcements...</p>
       ) : announcements.length === 0 ? (
         <p className="announcement-empty">No announcements have been posted yet.</p>
       ) : (

@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import AppHeader from './AppHeader'
-import LoadingSpinner from './LoadingSpinner'
 import { getEnrollmentWindow, isEnrollmentOpen } from '../lib/enrollmentWindow'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 
@@ -226,7 +225,7 @@ function EnrollmentForm() {
   if (loading) {
     return (
       <div className="auth-container">
-        <LoadingSpinner label="Loading enrollment form..." />
+        <p className="app-loading" role="status">Loading enrollment form...</p>
       </div>
     )
   }
@@ -451,7 +450,7 @@ function EnrollmentForm() {
 
             <div className="enrollment-step-actions">
               {currentStep > 1 && <button type="button" className="enrollment-previous" onClick={() => setCurrentStep((step) => step - 1)}>Previous</button>}
-              {currentStep < 2 ? <button type="button" className="enrollment-next" onClick={goToNextStep}>Next</button> : <button type="submit" className="enrollment-submit" disabled={submitting}>{submitting ? <LoadingSpinner label="Submitting..." inline /> : 'Submit Enrollment'}</button>}
+              {currentStep < 2 ? <button type="button" className="enrollment-next" onClick={goToNextStep}>Next</button> : <button type="submit" className="enrollment-submit" disabled={submitting}>Submit Enrollment</button>}
             </div>
           </form>
         </main>

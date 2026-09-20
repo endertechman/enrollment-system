@@ -4,11 +4,10 @@ import { supabase } from '../lib/supabase'
 import AppHeader from '../components/AppHeader'
 import AuthToast from '../components/AuthToast'
 import ConfirmDialog from '../components/ConfirmDialog'
-import LoadingSpinner from '../components/LoadingSpinner'
 import AttendanceRoster from '../components/AttendanceRoster'
 import AnnouncementsPanel from '../components/AnnouncementsPanel'
 import CalendarPanel from '../components/CalendarPanel'
-import HealthGrowthPanel from '../components/HealthGrowthPanel'
+import HealthGrowthPanel from '../components/HealthGrowthDirectory'
 import StudentReportPanel from '../components/StudentReportPanel'
 import DashboardLoadingShell from '../components/DashboardLoadingShell'
 import EnrollmentBatchControls from '../components/EnrollmentBatchControls'
@@ -350,7 +349,7 @@ function TeacherDashboard() {
                   <label><input type="checkbox" checked={visibleRejectedStudentRecords.length > 0 && visibleRejectedStudentRecords.every((item) => selectedRejectedIds.includes(item.id))} disabled={visibleRejectedStudentRecords.length === 0} onChange={(event) => setSelectedRejectedIds(event.target.checked ? [...new Set([...selectedRejectedIds, ...visibleRejectedStudentRecords.map((item) => item.id)])] : selectedRejectedIds.filter((id) => !visibleRejectedStudentRecords.some((item) => item.id === id)))} /> Select visible</label>
                   <button type="button" className="bulk-delete-button" disabled={!selectedRejectedIds.length || deletingRejected} onClick={() => setPendingRejectedDelete(selectedRejectedIds)} aria-label={`Delete ${selectedRejectedIds.length} selected records`} title={`Delete selected (${selectedRejectedIds.length})`}><i className="app-icon app-icon-trash" aria-hidden="true" /></button>
                 </div>}
-                {loading ? <div className="teacher-empty-state"><LoadingSpinner label="Loading student records..." compact /></div> : visibleStudentRecords.length === 0 ? <p className="teacher-empty-state">{studentSearchTerm ? 'No students match your search.' : `No ${studentFilter === 'all' ? '' : studentFilter} student records found.`}</p> : <div className="records-table-shell">
+                {loading ? <p className="teacher-empty-state app-loading" role="status">Loading student records...</p> : visibleStudentRecords.length === 0 ? <p className="teacher-empty-state">{studentSearchTerm ? 'No students match your search.' : `No ${studentFilter === 'all' ? '' : studentFilter} student records found.`}</p> : <div className="records-table-shell">
                   <table className="records-table student-records-table">
                     <caption className="visually-hidden">Student enrollment records</caption>
                     <thead><tr>
@@ -400,7 +399,7 @@ function TeacherDashboard() {
             <label className="dashboard-search"><span className="visually-hidden">Search enrollment requests</span><input type="search" value={requestSearch} onChange={(event) => setRequestSearch(event.target.value)} placeholder="Search student, parent, or reference code" /></label>
 
             {loading ? (
-              <div className="teacher-empty-state"><LoadingSpinner label="Loading applications..." compact /></div>
+              <p className="teacher-empty-state app-loading" role="status">Loading applications...</p>
             ) : visibleRequests.length === 0 ? (
               <p className="teacher-empty-state">{requestSearchTerm ? 'No requests match your search.' : 'No pending applications.'}</p>
             ) : (

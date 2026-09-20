@@ -49,7 +49,7 @@
 .calendar-event-list button .app-icon { width:14px; height:14px; flex-basis:14px; }
 .calendar-event-list button:hover:not(:disabled) { background:#ffe2ea; color:#bd3158; }
 .calendar-event-list button:focus-visible { outline:3px solid rgba(217,75,112,.2); outline-offset:1px; }
-.calendar-event-list button:disabled { opacity:.55; cursor:wait; }
+.calendar-event-list button:disabled { opacity:.55; cursor:not-allowed; }
 .calendar-empty { margin:14px 0 0; padding:28px 12px; border-radius:11px; background:#f9f8f9; color:var(--color-muted); font-size:11.5px; text-align:center; }
 .calendar-list-view .calendar-layout { grid-template-columns:1fr; }
 .calendar-list-view .calendar-main { width:100%; margin-inline:0; padding:16px; }

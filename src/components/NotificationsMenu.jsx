@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import LoadingSpinner from './LoadingSpinner'
 import { getEnrollmentWindow } from '../lib/enrollmentWindow'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 
@@ -313,7 +312,7 @@ function NotificationsMenu({ user, role }) {
         </header>
         <div className="notifications-content" aria-live="polite">
           {error && <div className="notifications-error" role="alert"><p>{error}</p><button type="button" disabled={loading} onClick={loadNotifications}>Try again</button></div>}
-          {loading && items.length === 0 ? <div className="notifications-empty"><LoadingSpinner label="Loading notifications..." compact /></div> : items.length === 0 && !error ? <p className="notifications-empty">{emptyMessage}</p> : items.length > 0 ? <div className="notification-list">
+          {loading && items.length === 0 ? <p className="notifications-empty app-loading" role="status">Loading notifications...</p> : items.length === 0 && !error ? <p className="notifications-empty">{emptyMessage}</p> : items.length > 0 ? <div className="notification-list">
             {items.map((item) => {
               const type = notificationTypes[item.type] || notificationTypes.status
               const unread = !readIds.includes(item.id)

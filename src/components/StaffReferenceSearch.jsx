@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
-import LoadingSpinner from './LoadingSpinner'
 
 function StaffReferenceSearch() {
   const [referenceCode, setReferenceCode] = useState('')
@@ -68,7 +67,7 @@ function StaffReferenceSearch() {
             autoComplete="off"
           />
           <button type="submit" disabled={loading}>
-            {loading ? <LoadingSpinner label="Searching..." inline /> : 'Check Status'}
+            Check Status
           </button>
         </div>
       </form>

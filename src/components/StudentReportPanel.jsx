@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import LoadingSpinner from './LoadingSpinner'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 import { classifyChildBmi } from '../lib/bmiClassification'
 
@@ -244,7 +243,7 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, parent
 
           {message && <p className="student-report-message">{message}</p>}
           {loading ? (
-            <div className="student-report-empty"><LoadingSpinner label="Preparing student report..." compact /></div>
+            <p className="student-report-empty app-loading" role="status">Preparing student report...</p>
           ) : (
             <div className="student-report-body">
               <section className="student-report-section">

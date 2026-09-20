@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { getEnrollmentWindow } from '../lib/enrollmentWindow'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
-import LoadingSpinner from '../components/LoadingSpinner'
 import GuestHomeView from '../components/home/GuestHomeView'
 import SignedInHomeView from '../components/home/SignedInHomeView'
 
@@ -77,7 +76,7 @@ function HomePage() {
   })
 
   if (homeState.status === 'loading') {
-    return <LoadingSpinner label="Loading your BCDC account..." fullPage />
+    return <div className="app-loading app-loading-full-page" role="status">Loading your BCDC account...</div>
   }
 
   if (homeState.status === 'guest') {

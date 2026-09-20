@@ -2,11 +2,10 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import AppHeader from '../components/AppHeader'
-import LoadingSpinner from '../components/LoadingSpinner'
 import AttendanceRoster from '../components/AttendanceRoster'
 import AnnouncementsPanel from '../components/AnnouncementsPanel'
 import CalendarPanel from '../components/CalendarPanel'
-import HealthGrowthPanel from '../components/HealthGrowthPanel'
+import HealthGrowthPanel from '../components/HealthGrowthDirectory'
 import StudentReportPanel from '../components/StudentReportPanel'
 import AuthToast from '../components/AuthToast'
 import DashboardLoadingShell from '../components/DashboardLoadingShell'
@@ -264,7 +263,7 @@ function TeacherAideDashboard() {
                 </div>
                 <label className="dashboard-search"><span className="visually-hidden">Search student records</span><input type="search" value={studentSearch} onChange={(event) => setStudentSearch(event.target.value)} placeholder="Search student, parent, or reference code" /></label>
                 {message && <p className="teacher-dashboard-message" role="status">{message}</p>}
-                {loading ? <div className="teacher-empty-state"><LoadingSpinner label="Loading student records..." compact /></div> : visibleStudents.length === 0 ? <p className="teacher-empty-state">{studentSearchTerm ? 'No students match your search.' : `No ${studentFilter === 'all' ? '' : studentFilter} student records found.`}</p> : <div className="records-table-shell">
+                {loading ? <p className="teacher-empty-state app-loading" role="status">Loading student records...</p> : visibleStudents.length === 0 ? <p className="teacher-empty-state">{studentSearchTerm ? 'No students match your search.' : `No ${studentFilter === 'all' ? '' : studentFilter} student records found.`}</p> : <div className="records-table-shell">
                   <table className="records-table student-records-table">
                     <caption className="visually-hidden">Student enrollment records</caption>
                     <thead><tr><th scope="col">Student</th><th scope="col">Age</th><th scope="col">Sex</th><th scope="col">Parent</th><th scope="col">Status</th><th scope="col">Student Report</th></tr></thead>
@@ -298,7 +297,7 @@ function TeacherAideDashboard() {
               <p className="enrollment-window-note">Teacher aides can inspect requests, but only teachers can accept or reject them.</p>
               <label className="dashboard-search"><span className="visually-hidden">Search enrollment requests</span><input type="search" value={requestSearch} onChange={(event) => setRequestSearch(event.target.value)} placeholder="Search student, parent, or reference code" /></label>
               {message && <p className="teacher-dashboard-message" role="status">{message}</p>}
-              {loading ? <div className="teacher-empty-state"><LoadingSpinner label="Loading applications..." compact /></div> : visibleRequests.length === 0 ? <p className="teacher-empty-state">{requestSearchTerm ? 'No requests match your search.' : 'No pending applications.'}</p> : <div className="records-table-shell">
+              {loading ? <p className="teacher-empty-state app-loading" role="status">Loading applications...</p> : visibleRequests.length === 0 ? <p className="teacher-empty-state">{requestSearchTerm ? 'No requests match your search.' : 'No pending applications.'}</p> : <div className="records-table-shell">
                 <table className="records-table approvals-table">
                   <caption className="visually-hidden">Pending enrollment requests</caption>
                   <thead><tr><th scope="col">Student</th><th scope="col">Age</th><th scope="col">Sex</th><th scope="col">Parent</th><th scope="col">Status</th></tr></thead>

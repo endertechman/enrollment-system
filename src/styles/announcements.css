@@ -28,6 +28,6 @@
 .announcement-card-heading button .app-icon { width:15px; height:15px; flex-basis:15px; }
 .announcement-card-heading button:hover:not(:disabled) { background:#ffe2ea; color:#bd3158; }
 .announcement-card-heading button:focus-visible { outline:3px solid rgba(217,75,112,.2); outline-offset:1px; }
-.announcement-card-heading button:disabled { opacity:.55; cursor:wait; }
+.announcement-card-heading button:disabled { opacity:.55; cursor:not-allowed; }
 .announcement-empty { margin:18px 0 0; padding:48px 20px; border-radius:15px; background:rgba(255,255,255,.5); color:var(--color-muted); text-align:center; }
 @media(max-width:520px) { .announcements-header-actions{width:100%;justify-content:flex-end}.announcement-form{padding:14px}.announcement-form button{width:100%}.announcement-card-heading{gap:12px}.announcement-card-heading button{align-self:flex-start} }

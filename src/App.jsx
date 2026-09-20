@@ -3,7 +3,6 @@ import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom'
 
 import HomePage from './pages/HomePage'
 import RoleRoute from './components/RoleRoute'
-import LoadingSpinner from './components/LoadingSpinner'
 
 const Login = lazy(() => import('./components/Login'))
 const Register = lazy(() => import('./components/Register'))
@@ -16,7 +15,7 @@ const TeacherAideDashboard = lazy(() => import('./pages/TeacherAideDashboard'))
 function App() {
   return (
     <BrowserRouter>
-      <Suspense fallback={<LoadingSpinner label="Loading page..." fullPage />}>
+      <Suspense fallback={<div className="app-loading app-loading-full-page" role="status">Loading page...</div>}>
       <Routes>
         {/* Public */}
         <Route path="/" element={<HomePage />} />

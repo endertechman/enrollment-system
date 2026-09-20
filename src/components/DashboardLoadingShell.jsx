@@ -1,5 +1,4 @@
 import AppHeader from './AppHeader'
-import LoadingSpinner from './LoadingSpinner'
 
 function DashboardLoadingShell({ role = 'staff', label = 'Loading dashboard...' }) {
   const isParent = role === 'parent'
@@ -32,7 +31,7 @@ function DashboardLoadingShell({ role = 'staff', label = 'Loading dashboard...' 
             </div>
             <section className="dashboard-loading-panel">
               <div className="dashboard-loading-panel-title" aria-hidden="true"><span className="dashboard-loading-line" /></div>
-              <LoadingSpinner label={label} compact />
+              <p className="app-loading app-loading-compact" role="status">{label}</p>
             </section>
           </div>
         </div>

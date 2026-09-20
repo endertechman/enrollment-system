@@ -33,6 +33,6 @@
 .settings-password-toggle .app-icon { width:19px; height:19px; }
 .settings-password-form>.settings-submit { justify-self:end; min-height:var(--dashboard-control-height); padding:0 14px; border:0; border-radius:var(--dashboard-control-radius); background:var(--color-primary); color:var(--color-on-primary); font:inherit; font-size:13px; font-weight:700; cursor:pointer; transition:background-color .2s ease; }
 .settings-password-form>.settings-submit:hover:not(:disabled) { background:#20b6c0; }
-.settings-submit:disabled { cursor:wait; opacity:.58; }
+.settings-submit:disabled { cursor:not-allowed; opacity:.58; }
 @media(prefers-reduced-motion:reduce) { .settings-overlay{animation:none} }
 @media(max-width:560px) { .settings-overlay{padding:12px}.settings-dialog{border-radius:16px}.settings-header{padding:20px 60px 0 17px}.settings-body{padding:0 17px 20px}.settings-profile{grid-template-columns:42px minmax(0,1fr);margin-top:15px}.settings-profile dl{grid-column:2}.settings-profile dl div{justify-items:start}.settings-profile-note{grid-column:1/-1;margin-top:7px}.settings-password-form{gap:11px;margin-top:12px}.settings-password-form>.settings-submit{width:100%} }

@@ -439,6 +439,8 @@
 .app-icon-clock { --icon-url: url('/icons/clock.svg'); }
 .app-icon-heart { --icon-url: url('/icons/heart.svg'); }
 .app-icon-check-o { --icon-url: url('/icons/check-o.svg'); }
+.app-icon-sort-az { --icon-url: url('/icons/sort-az.svg'); }
+.app-icon-sort-za { --icon-url: url('/icons/sort-za.svg'); }
 
 
 .nav-home-action {
@@ -831,7 +833,7 @@
 .home-tracker-form input:focus { border-color:#8de1e5; box-shadow:0 0 0 3px rgba(53,200,208,.13); }
 .home-tracker-form button { min-height:43px; padding:0 16px; flex:0 0 auto; border:0; border-radius:11px; background:#ef92b3; color:#fff; font:inherit; font-size:12px; font-weight:700; cursor:pointer; transition:background-color .2s ease; }
 .home-tracker-form button:hover:not(:disabled) { background:#e781a6; }
-.home-tracker-form button:disabled { opacity:.58; cursor:wait; }
+.home-tracker-form button:disabled { opacity:.58; cursor:not-allowed; }
 .home-tracker-message { margin:13px 0 0; padding:10px 12px; border-radius:10px; background:#fff4f8; color:#9c4966; font-size:12px; line-height:1.45; }
 .home-tracker-result { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) auto; gap:10px; margin-top:14px; padding:14px; border-radius:13px; background:#f7fbfb; }
 .home-tracker-result > div { display:grid; align-content:start; gap:5px; min-width:0; }

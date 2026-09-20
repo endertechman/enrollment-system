@@ -506,7 +506,7 @@
 
 .login-recovery-link:disabled {
   opacity: 0.55;
-  cursor: wait;
+  cursor: not-allowed;
 }
 
 .auth-form .auth-back-link {

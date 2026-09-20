@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import LoadingSpinner from './LoadingSpinner'
 import AuthToast from './AuthToast'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 import { classifyChildBmi } from '../lib/bmiClassification'
@@ -316,13 +315,13 @@ function HealthGrowthPanel({ enrollments, canManage = false }) {
             <strong>{previewBmi}</strong>
             {previewBmi !== '—' && <small data-tone={previewClassification?.tone || 'unavailable'}>{previewClassification?.label || 'Classification unavailable'}</small>}
           </div>
-          <button type="submit" disabled={saving}>{saving ? <LoadingSpinner label="Saving..." inline /> : 'Save Measurement'}</button>
+          <button type="submit" disabled={saving}>Save Measurement</button>
         </form>}
 
         {message && <p className="growth-message">{message}</p>}
 
         <div className="growth-record-heading"><h3>{activeStudent ? `${childName(activeStudent)}’s records` : 'Growth records'}</h3><span>{records.length} entries</span></div>
-        {loading ? <div className="growth-empty"><LoadingSpinner label="Loading growth records..." compact /></div> : records.length === 0 ? <p className="growth-empty">No growth measurements have been recorded.</p> : <div className="growth-record-list">
+        {loading ? <p className="growth-empty app-loading" role="status">Loading growth records...</p> : records.length === 0 ? <p className="growth-empty">No growth measurements have been recorded.</p> : <div className="growth-record-list">
           {records.map((record) => {
             const classification = bmiClassification(activeStudent, record.height_cm, record.weight_kg, record.measured_on)
             return <article key={record.id}>
@@ -334,7 +333,7 @@ function HealthGrowthPanel({ enrollments, canManage = false }) {
             </article>
           })}
         </div>}
-        <p className="growth-classification-note">BMI-for-age is a screening classification based on Philippine use of WHO child growth standards and is not a medical diagnosis.</p>
+        <p className="growth-classification-note"><strong>BMI classification used:</strong> Underweight (below −2 SD), Normal (−2 to +2 SD), Overweight (above +2 to +3 SD), and Obese (above +3 SD).</p>
       </>}
     </section>
   )

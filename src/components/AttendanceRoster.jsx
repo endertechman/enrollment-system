@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import LoadingSpinner from './LoadingSpinner'
 import AuthToast from './AuthToast'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 
@@ -121,7 +120,7 @@ function AttendanceRoster({ enrollments, loading, attendanceDate, onDateChange, 
       {message && <p className="teacher-dashboard-message">{message}</p>}
 
       {loading || recordsLoading ? (
-        <div className="teacher-empty-state"><LoadingSpinner label="Loading attendance roster..." compact /></div>
+        <p className="teacher-empty-state app-loading" role="status">Loading attendance roster...</p>
       ) : students.length === 0 ? (
         <p className="teacher-empty-state">No accepted students are available for attendance yet.</p>
       ) : (

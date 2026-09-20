@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import takeAuthAttempt from '../lib/authRateLimit'
 import AuthToast from './AuthToast'
-import LoadingSpinner from './LoadingSpinner'
 
 function formatRole(role) {
   if (role === 'teacher_aide') return 'Teacher Aide'
@@ -177,7 +176,7 @@ function AccountSettingsDialog({ user, fullName, role, onClose }) {
             </div>
           </label>
 
-            <button type="submit" className="settings-submit" disabled={saving}>{saving ? <LoadingSpinner label="Updating..." inline /> : 'Update Password'}</button>
+            <button type="submit" className="settings-submit" disabled={saving}>Update Password</button>
           </form>
         </div>
       </section>

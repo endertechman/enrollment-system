@@ -33,6 +33,6 @@
 .notifications-error p { margin:0; color:var(--color-text); font-size:12px; line-height:1.4; }
 .notifications-error button { flex:0 0 auto; min-height:44px; padding:0 12px; border:1px solid color-mix(in srgb, var(--color-primary) 36%, var(--color-surface)); border-radius:9px; background:var(--color-surface); color:var(--color-primary-ink); font:inherit; font-size:11.5px; font-weight:750; cursor:pointer; transition:background-color .2s ease,border-color .2s ease; }
 .notifications-error button:hover:not(:disabled) { border-color:var(--color-primary); background:var(--color-primary-soft); }
-.notifications-error button:disabled { cursor:wait; opacity:.65; }
+.notifications-error button:disabled { cursor:not-allowed; opacity:.65; }
 .notifications-empty { margin:0; padding:38px 24px; color:var(--color-muted); font-size:12.5px; line-height:1.55; text-align:center; }
 @media(max-width:480px) { .notifications-dropdown{position:fixed;top:70px;right:14px;left:14px;width:auto;max-height:calc(100dvh - 84px)}.notification-list{max-height:calc(100dvh - 184px)}.notifications-dropdown>header{padding:13px 14px}.notification-item{padding:13px 14px}.notification-meta{align-items:flex-start;flex-direction:column;gap:4px}.notifications-error{align-items:flex-start;flex-direction:column}.notifications-error button{width:100%} }

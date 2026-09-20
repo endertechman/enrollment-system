@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import LoadingSpinner from './LoadingSpinner'
 import AuthToast from './AuthToast'
 import ConfirmDialog from './ConfirmDialog'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
@@ -235,12 +234,12 @@ function CalendarPanel({ canManage = false, listView = false, showEnrollmentMile
               {listView && !calendarVisible && <label>Event date<input type="date" value={selectedDate} min={`${monthKey}-01`} max={toDateValue(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 0))} onChange={(event) => setSelectedDate(event.target.value)} required /></label>}
               <label>Event title<input value={title} onChange={(event) => setTitle(event.target.value)} maxLength={TITLE_LIMIT} placeholder="School event" required /><small>{title.length}/{TITLE_LIMIT}</small></label>
               <label>Details <span>(optional)</span><textarea value={description} onChange={(event) => setDescription(event.target.value)} maxLength={DESCRIPTION_LIMIT} rows="3" placeholder="Add helpful details." /><small>{description.length}/{DESCRIPTION_LIMIT}</small></label>
-              <button type="submit" disabled={saving || !title.trim()}>{saving ? <LoadingSpinner label="Adding..." inline /> : 'Add Event'}</button>
+              <button type="submit" disabled={saving || !title.trim()}>Add Event</button>
             </form>
           )}
 
           {message && <p className="calendar-message">{message}</p>}
-          {loading ? <div className="calendar-empty"><LoadingSpinner label="Loading events..." compact /></div> : visibleEvents.length === 0 ? <p className="calendar-empty">{listView && !calendarVisible ? 'No events this month.' : 'No events for this day.'}</p> : <div className="calendar-event-list">
+          {loading ? <p className="calendar-empty app-loading" role="status">Loading events...</p> : visibleEvents.length === 0 ? <p className="calendar-empty">{listView && !calendarVisible ? 'No events this month.' : 'No events for this day.'}</p> : <div className="calendar-event-list">
             {visibleEvents.map((item) => <article key={item.id} className={item.system ? 'calendar-system-event' : undefined}><div>{listView && !calendarVisible && <time dateTime={item.event_date}>{new Date(`${item.event_date}T00:00:00`).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}</time>}<h4>{item.title}</h4>{item.description && <p>{item.description}</p>}</div>{canManage && !item.system && <button type="button" disabled={deletingId === item.id} onClick={() => setPendingDelete(item)} aria-label={`Delete school calendar event: ${item.title}`} title="Delete school calendar event"><i className="app-icon app-icon-trash" aria-hidden="true" /></button>}</article>)}
           </div>}
         </aside>

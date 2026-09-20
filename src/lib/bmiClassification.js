@@ -89,7 +89,6 @@ export function classifyChildBmi({ bmi, sex, birthDate, measuredAt }) {
   const coefficient = reference.s[index]
   const zScore = (Math.pow(numericBmi / median, l) - 1) / (l * coefficient)
 
-  if (zScore < -3) return { label: 'Severely underweight', tone: 'alert', zScore, ageMonths }
   if (zScore < -2) return { label: 'Underweight', tone: 'warning', zScore, ageMonths }
   if (zScore > 3) return { label: 'Obese', tone: 'alert', zScore, ageMonths }
   if (zScore > 2) return { label: 'Overweight', tone: 'warning', zScore, ageMonths }

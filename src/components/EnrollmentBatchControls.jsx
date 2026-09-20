@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import ConfirmDialog from './ConfirmDialog'
-import LoadingSpinner from './LoadingSpinner'
 import PaginatedDropdown from './PaginatedDropdown'
 import AuthToast from './AuthToast'
 
@@ -147,7 +146,7 @@ function EnrollmentBatchControls({ batches, currentBatchId, selectedBatchId, onS
             <fieldset className="semester-form-section"><legend>Semester dates</legend><p>The period when classes and student records belong to this semester.</p><div className="semester-date-fields"><label><span>Semester starts</span><input type="date" value={semester.startsOn} min={dialogMode === 'create' ? today : undefined} onChange={(event) => updateSemester('startsOn', event.target.value)} required /></label><label><span>Semester ends</span><input type="date" value={semester.endsOn} min={semester.startsOn || (dialogMode === 'create' ? today : undefined)} onChange={(event) => updateSemester('endsOn', event.target.value)} required /></label></div></fieldset>
             <fieldset className="semester-form-section"><legend>Enrollment window</legend><p>When students can submit enrollment requests. These dates are independent of semester dates.</p><div className="semester-window-fields"><label><span>Enrollment opens</span><input type="date" value={semester.opensDate} min={dialogMode === 'create' ? today : undefined} onChange={(event) => updateSemester('opensDate', event.target.value)} required /></label><label><span>Time</span><input type="time" value={semester.opensTime} onChange={(event) => updateSemester('opensTime', event.target.value)} required /></label><label><span>Enrollment closes</span><input type="date" value={semester.closesDate} min={semester.opensDate || (dialogMode === 'create' ? today : undefined)} onChange={(event) => updateSemester('closesDate', event.target.value)} required /></label><label><span>Time</span><input type="time" value={semester.closesTime} onChange={(event) => updateSemester('closesTime', event.target.value)} required /></label></div></fieldset>
             <p className="semester-time-note"><i className="app-icon app-icon-clock" aria-hidden="true" /> Enrollment may remain open after the semester starts. All times use Philippine Time (PHT).</p>
-            <div className="semester-dialog-actions"><button type="button" className="button-secondary" onClick={() => setDialogMode('')} disabled={working}>Cancel</button><button type="submit" className="approve-button" disabled={working}>{working ? <LoadingSpinner label="Saving..." inline /> : dialogMode === 'update' ? 'Update Semester' : 'Create Semester'}</button></div>
+            <div className="semester-dialog-actions"><button type="button" className="button-secondary" onClick={() => setDialogMode('')} disabled={working}>Cancel</button><button type="submit" className="approve-button" disabled={working}>{dialogMode === 'update' ? 'Update Semester' : 'Create Semester'}</button></div>
           </form>
         </section>
       </div>}

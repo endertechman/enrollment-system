@@ -2,11 +2,16 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 import { classifyChildBmi } from '../lib/bmiClassification'
+import ConfirmDialog from './ConfirmDialog'
 
 function childName(student) {
-  return [student.child_first_name, student.child_last_name, student.child_suffix]
+  const lastName = String(student?.child_last_name || '').trim()
+  const givenNames = [student?.child_first_name, student?.child_middle_name, student?.child_suffix]
+    .map((part) => String(part || '').trim())
     .filter(Boolean)
     .join(' ')
+  if (lastName && givenNames) return `${lastName}, ${givenNames}`
+  return lastName || givenNames || 'Unnamed student'
 }
 
 function calculateAge(birthDate) {
@@ -31,7 +36,7 @@ function formatDate(value) {
   if (!value) return '—'
   const date = new Date(`${value}T00:00:00`)
   if (Number.isNaN(date.getTime())) return '—'
-  return date.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' })
+  return date.toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })
 }
 
 function formatValue(value) {
@@ -43,7 +48,7 @@ function formatPlaceOfBirth(value) {
   return String(value).replace(/,\s*Philippines\s*$/i, '').trim()
 }
 
-function StudentReportPanel({ enrollments, allowStudentSelection = false, parentName = '', onBack = null }) {
+function StudentReportPanel({ enrollments, allowStudentSelection = false, parentName = '', parentEmail = '', onBack = null, onClose = null, canManageStatus = false, updatingStatusId = null, onStatusChange = null }) {
   const students = useMemo(
     () => enrollments.filter((item) => item.status === 'approved'),
     [enrollments],
@@ -55,6 +60,7 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, parent
   const [growthRecords, setGrowthRecords] = useState([])
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [pendingStatus, setPendingStatus] = useState('')
 
   const activeEnrollmentId = useMemo(
     () => students.some((item) => item.id === selectedEnrollmentId)
@@ -91,7 +97,7 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, parent
       setMessage('')
     }
 
-    const [attendanceResult, growthResult] = await Promise.all([
+    const [attendanceResult, growthResult, nonSchoolResult] = await Promise.all([
       supabase
         .from('attendance_records')
         .select('id, attendance_date, status')
@@ -102,37 +108,53 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, parent
         .select('id, measured_on, height_cm, weight_kg')
         .eq('enrollment_id', activeEnrollmentId)
         .order('measured_on', { ascending: false }),
+      student?.batch_id
+        ? supabase
+          .from('attendance_non_school_days')
+          .select('attendance_date')
+          .eq('batch_id', student.batch_id)
+        : Promise.resolve({ data: [], error: null }),
     ])
 
-    setAttendance(attendanceResult.data || [])
+    const excludedDates = new Set((nonSchoolResult.data || []).map((row) => row.attendance_date))
+    setAttendance((attendanceResult.data || []).filter((record) => !excludedDates.has(record.attendance_date)))
     setGrowthRecords(growthResult.data || [])
-    if (attendanceResult.error || growthResult.error) {
+    if (attendanceResult.error || growthResult.error || nonSchoolResult.error) {
       setMessage('Some report details are temporarily unavailable.')
     } else {
       setMessage('')
     }
     setLoading(false)
-  }, [activeEnrollmentId])
+  }, [activeEnrollmentId, student])
 
   useEffect(() => {
     const loadTimer = window.setTimeout(loadReport, 0)
     return () => window.clearTimeout(loadTimer)
   }, [loadReport])
 
+  useEffect(() => {
+    if (!onClose) return undefined
+    function closeOnEscape(event) {
+      if (event.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', closeOnEscape)
+    return () => document.removeEventListener('keydown', closeOnEscape)
+  }, [onClose])
+
   useRealtimeRefresh(() => loadReport({ silent: true }), {
     channelName: `student-report-${activeEnrollmentId || 'none'}`,
-    tables: ['attendance_records', 'growth_records'],
+    tables: ['attendance_records', 'attendance_non_school_days', 'growth_records'],
     enabled: Boolean(activeEnrollmentId),
   })
 
   const attendanceCounts = attendance.reduce((counts, record) => {
-    const status = record.status === 'late' ? 'excused' : record.status
-    if (status in counts) counts[status] += 1
+    const status = record.status === 'present' ? 'present' : 'absent'
+    counts[status] += 1
     return counts
-  }, { present: 0, absent: 0, excused: 0 })
-  const countedAttendanceDays = attendanceCounts.present + attendanceCounts.absent
-  const attendanceRate = countedAttendanceDays > 0
-    ? `${Math.round((attendanceCounts.present / countedAttendanceDays) * 100)}%`
+  }, { present: 0, absent: 0 })
+  const totalAttendanceDays = attendance.length
+  const presentAttendanceFraction = totalAttendanceDays > 0
+    ? `${attendanceCounts.present} / ${totalAttendanceDays}`
     : '—'
   const latestGrowth = growthRecords[0] || null
   const reportHeight = latestGrowth?.height_cm
@@ -144,14 +166,38 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, parent
     birthDate: student?.birth_date,
     measuredAt: latestGrowth?.measured_on ?? student?.submitted_at ?? new Date(),
   })
+  const currentStudentStatus = student?.student_state || 'enrolled'
 
-  return (
-    <section className="student-report-panel">
-      <header className="student-report-header">
-        <div><h2>Student Report</h2></div>
-        {onBack && <button type="button" className="student-report-back" onClick={onBack}>Back to students</button>}
+  async function confirmStatusChange() {
+    if (!student || !pendingStatus || !onStatusChange) return
+    await onStatusChange(student.id, pendingStatus)
+    setPendingStatus('')
+  }
+
+  const pendingStatusCopy = pendingStatus === 'enrolled'
+    ? {
+        title: 'Enroll student again?',
+        message: `${childName(student)} will return to active enrolled status. Their existing records will remain available.`,
+        label: 'Enroll Student Again',
+        tone: 'primary',
+        icon: 'app-icon-check-o',
+      }
+    : {
+        title: pendingStatus === 'withdrawn' ? 'Withdraw student?' : 'Drop student?',
+        message: `${childName(student)} will be marked as ${pendingStatus || 'inactive'}. Their enrollment and historical records will not be deleted.`,
+        label: pendingStatus === 'withdrawn' ? 'Withdraw Student' : 'Drop Student',
+        tone: 'danger',
+        icon: 'app-icon-user-list',
+      }
+
+  const reportPanel = (
+    <section className={onClose ? 'semester-dialog student-report-dialog' : 'student-report-panel'} role={onClose ? 'dialog' : undefined} aria-modal={onClose ? 'true' : undefined} aria-labelledby="student-report-title">
+      <header className={onClose ? 'semester-dialog-header' : 'student-report-header'}>
+        <div><h2 id="student-report-title">{onClose ? 'Full Details' : 'Student Report'}</h2>{onClose && <p>Complete student information and latest records.</p>}</div>
+        {onClose ? <button type="button" className="popup-close-button" onClick={onClose} aria-label="Close student report"><i className="app-icon app-icon-close" aria-hidden="true" /></button> : onBack && <button type="button" className="student-report-back" onClick={onBack}>Back to students</button>}
       </header>
 
+      <div className={onClose ? 'student-report-dialog-body' : undefined}>
       {students.length === 0 ? (
         <p className="student-report-empty">No enrolled student is available for a report yet.</p>
       ) : (
@@ -229,7 +275,7 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, parent
             </div>
           )}
 
-          <div className="student-report-identity">
+          {!onClose && <div className="student-report-identity">
             <div className="student-report-avatar" aria-hidden="true">
               {(student?.child_first_name?.[0] || '')}{(student?.child_last_name?.[0] || '')}
             </div>
@@ -239,7 +285,7 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, parent
               <p>{formatValue(student?.reference_code)}</p>
             </div>
             <span className="enrollment-status approved">enrolled</span>
-          </div>
+          </div>}
 
           {message && <p className="student-report-message">{message}</p>}
           {loading ? (
@@ -247,17 +293,29 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, parent
           ) : (
             <div className="student-report-body">
               <section className="student-report-section">
-                <div className="student-report-section-heading"><h3>Student Information</h3></div>
+                <div className="student-report-section-heading"><h3>Child Information</h3></div>
                 <dl className="student-report-grid">
+                  <div><dt>Last Name</dt><dd>{formatValue(student?.child_last_name)}</dd></div>
+                  <div><dt>First Name</dt><dd>{formatValue(student?.child_first_name)}</dd></div>
+                  <div><dt>Middle Name</dt><dd>{formatValue(student?.child_middle_name)}</dd></div>
+                  <div><dt>Reference Code</dt><dd>{formatValue(student?.reference_code)}</dd></div>
                   <div><dt>Age</dt><dd>{calculateAge(student?.birth_date)}</dd></div>
                   <div><dt>Date of Birth</dt><dd>{formatDate(student?.birth_date)}</dd></div>
-                  <div><dt>Sex</dt><dd>{student?.sex ? `${student.sex.charAt(0).toUpperCase()}${student.sex.slice(1)}` : '—'}</dd></div>
+                  <div><dt>Gender</dt><dd>{student?.sex ? `${student.sex.charAt(0).toUpperCase()}${student.sex.slice(1)}` : '—'}</dd></div>
+                  <div><dt>Student Status</dt><dd>{student?.student_state ? `${student.student_state.charAt(0).toUpperCase()}${student.student_state.slice(1)}` : 'Enrolled'}</dd></div>
                   <div><dt>Parent / Guardian</dt><dd>{student?.parent_full_name || parentName || '—'}</dd></div>
+                  <div><dt>Parent Email</dt><dd>{student?.parent_email || parentEmail || '—'}</dd></div>
                   <div><dt>Place of Birth</dt><dd>{formatPlaceOfBirth(student?.place_of_birth)}</dd></div>
                   <div><dt>Registered</dt><dd>{typeof student?.is_registered === 'boolean' ? (student.is_registered ? 'Yes' : 'No') : '—'}</dd></div>
                   <div><dt>Mother Tongue</dt><dd>{formatValue(student?.mother_tongue)}</dd></div>
                   <div><dt>Other Dialect</dt><dd>{formatValue(student?.other_dialect)}</dd></div>
                 </dl>
+                {canManageStatus && <div className="student-status-actions" aria-label="Update student status">
+                  {currentStudentStatus === 'enrolled' ? <>
+                    <button type="button" className="student-status-action danger" disabled={updatingStatusId === student?.id} onClick={() => setPendingStatus('withdrawn')}>Withdraw Student</button>
+                    <button type="button" className="student-status-action danger" disabled={updatingStatusId === student?.id} onClick={() => setPendingStatus('dropped')}>Drop Student</button>
+                  </> : <button type="button" className="student-status-action primary" disabled={updatingStatusId === student?.id} onClick={() => setPendingStatus('enrolled')}>Enroll Student Again</button>}
+                </div>}
               </section>
 
               <section className="student-report-section">
@@ -277,21 +335,26 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, parent
               <section className="student-report-section">
                 <div className="student-report-section-heading">
                   <h3>Attendance Summary</h3>
-                  <span>{attendance.length} recorded days</span>
+                  <span>{totalAttendanceDays} recorded days</span>
                 </div>
                 <dl className="student-report-metrics attendance">
                   <div><dt>Present</dt><dd>{attendanceCounts.present}</dd></div>
-                  <div><dt>Excused</dt><dd>{attendanceCounts.excused}</dd></div>
                   <div><dt>Absent</dt><dd>{attendanceCounts.absent}</dd></div>
-                  <div><dt>Attendance Rate</dt><dd>{attendanceRate}</dd></div>
+                  <div><dt>Total Days Recorded</dt><dd>{totalAttendanceDays}</dd></div>
+                  <div><dt>Present / Total</dt><dd>{presentAttendanceFraction}</dd></div>
                 </dl>
               </section>
             </div>
           )}
         </>
       )}
+      </div>
     </section>
   )
+
+  if (!onClose) return reportPanel
+
+  return <div className="semester-dialog-overlay student-report-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>{reportPanel}{pendingStatus && <ConfirmDialog title={pendingStatusCopy.title} message={pendingStatusCopy.message} confirmLabel={pendingStatusCopy.label} tone={pendingStatusCopy.tone} iconClass={pendingStatusCopy.icon} busy={updatingStatusId === student?.id} onConfirm={confirmStatusChange} onCancel={() => setPendingStatus('')} />}</div>
 }
 
 export default StudentReportPanel

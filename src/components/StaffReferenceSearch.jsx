@@ -87,7 +87,7 @@ function StaffReferenceSearch() {
           <div>
             <span>Status</span>
             <strong className={`enrollment-status ${result.status}`}>
-              {result.status === 'approved' ? 'accepted' : result.status}
+              {result.status === 'approved' ? 'accepted' : result.status === 'rejected' ? 'needs changes' : result.status}
             </strong>
           </div>
         </article>

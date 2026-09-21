@@ -1,5 +1,6 @@
-/* Teacher navigation mirrors the Parent dashboard spacing. */
-.teacher-dashboard-page .teacher-tabs {
+/* One navigation system shared by Teacher, Teacher Aide, and Parent dashboards. */
+.teacher-dashboard-page .teacher-tabs,
+.parent-dashboard-page .parent-workspace-tabs {
   gap: 10px;
   padding: 9px;
   border: 1px solid var(--color-border);
@@ -8,7 +9,8 @@
   box-shadow: none;
 }
 
-.teacher-dashboard-page .teacher-tab-group {
+.teacher-dashboard-page .teacher-tab-group,
+.parent-dashboard-page .parent-tab-group {
   display: grid;
   min-width: 0;
   gap: 5px;
@@ -17,12 +19,14 @@
   background: transparent;
 }
 
-.teacher-dashboard-page .aide-tab-group-center {
+.teacher-dashboard-page .aide-tab-group-center,
+.parent-dashboard-page .parent-tab-group-center {
   padding-top: 10px;
   border-top: 1px solid var(--color-border);
 }
 
-.teacher-dashboard-page .teacher-tab-group-title {
+.teacher-dashboard-page .teacher-tab-group-title,
+.parent-dashboard-page .parent-tab-group-title {
   padding: 0 7px;
   color: var(--color-muted);
   font-size: .72rem;
@@ -33,7 +37,8 @@
   white-space: nowrap;
 }
 
-.teacher-dashboard-page .teacher-tab {
+.teacher-dashboard-page .teacher-tab,
+.parent-dashboard-page .parent-sidebar-tab {
   display: inline-flex;
   width: 100%;
   min-height: 44px;
@@ -55,13 +60,13 @@
   transition: background-color .2s ease, border-color .2s ease, color .2s ease;
 }
 
-.parent-sidebar-tab:hover,
+.parent-dashboard-page .parent-sidebar-tab:hover,
 .teacher-dashboard-page .teacher-tab:not(:disabled):hover {
   background: var(--color-accent-soft);
   color: var(--color-accent-ink);
 }
 
-.parent-sidebar-tab.active,
+.parent-dashboard-page .parent-sidebar-tab.active,
 .teacher-dashboard-page .teacher-tab.active {
   border-color: transparent;
   background: var(--color-accent-soft);
@@ -69,26 +74,30 @@
   box-shadow: inset 3px 0 0 var(--color-accent);
 }
 
-.parent-sidebar-tab:focus-visible,
+.parent-dashboard-page .parent-sidebar-tab:focus-visible,
 .teacher-dashboard-page .teacher-tab:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--color-primary) 55%, transparent);
   outline-offset: 3px;
 }
 
 @media (max-width: 900px) {
-  .teacher-dashboard-page .teacher-tabs {
+  .teacher-dashboard-page .teacher-tabs,
+  .parent-dashboard-page .parent-workspace-tabs {
     position: static;
     display: grid;
   }
 
-  .teacher-dashboard-page .teacher-tab-group {
+  .teacher-dashboard-page .teacher-tab-group,
+  .parent-dashboard-page .parent-tab-group {
     display: flex;
     flex-wrap: wrap;
   }
 
-  .teacher-dashboard-page .teacher-tab { width: auto; }
+  .teacher-dashboard-page .teacher-tab,
+  .parent-dashboard-page .parent-sidebar-tab { width: auto; }
 
-  .teacher-dashboard-page .aide-tab-group-center {
+  .teacher-dashboard-page .aide-tab-group-center,
+  .parent-dashboard-page .parent-tab-group-center {
     padding-top: 9px;
     padding-left: 0;
     border-top: 1px solid var(--color-border);

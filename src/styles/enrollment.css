@@ -164,6 +164,27 @@
   font-weight: 600;
 }
 
+.enrollment-resubmission-note {
+  display: grid;
+  gap: 5px;
+  padding: 13px 15px;
+  border-radius: 12px;
+  background: var(--color-accent-soft);
+}
+
+.enrollment-resubmission-note > span {
+  color: var(--color-accent-ink);
+  font-size: 11px;
+  font-weight: 760;
+}
+
+.enrollment-resubmission-note > p {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 
 /* ========================================
    ENROLLMENT RESPONSIVE

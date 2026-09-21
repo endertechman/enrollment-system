@@ -620,6 +620,24 @@
   color: var(--color-accent-ink);
 }
 
+/* Shared destructive icon treatment */
+.icon-delete-button.icon-delete-button {
+  border-radius: 50%;
+  background: transparent;
+  color: #d72f55;
+  transition: background-color .2s ease, color .2s ease;
+}
+
+.icon-delete-button.icon-delete-button:hover:not(:disabled) {
+  background: #ffe2ea;
+  color: #a91f46;
+}
+
+.icon-delete-button.icon-delete-button:focus-visible {
+  outline: 3px solid rgba(215, 47, 85, .2);
+  outline-offset: 1px;
+}
+
 .waiting-badge,
 .dashboard-header-detail,
 .announcements-header-actions > span,

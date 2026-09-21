@@ -97,34 +97,51 @@
 .student-status-filters button.active { border-color:var(--color-primary); background:var(--color-primary-soft); color:var(--color-primary-ink); }
 .student-record-row .enrollment-status { flex:0 0 auto; }
 
-.attendance-toolbar { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-top:18px; padding:13px 15px; border-radius:13px; background:rgba(255,255,255,.72); }
-.attendance-toolbar label { color:var(--color-text); font-size:13px; font-weight:700; }
-.attendance-toolbar input { min-height:40px; padding:7px 11px; border:1px solid var(--color-border); border-radius:10px; background:var(--color-surface); color:var(--color-text); font:inherit; font-size:13px; outline:none; }
-.attendance-toolbar input:focus { border-color:var(--color-primary); box-shadow:0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent); }
-.attendance-table-shell { margin-top:14px; }
-.attendance-table { min-width:560px; }
-.attendance-table th:last-child,
-.attendance-table td:last-child { width:180px; }
-.attendance-status-select { width:100%; min-width:132px; min-height:34px; padding:6px 34px 6px 10px; border:1px solid var(--color-border); border-radius:9px; background-color:var(--color-surface); color:var(--color-text); font:inherit; font-size:11.5px; font-weight:500; outline:none; cursor:pointer; transition:border-color .2s ease,background-color .2s ease,color .2s ease,box-shadow .2s ease; }
-.attendance-status-select:hover:not(:disabled) { border-color:var(--color-primary); }
-.attendance-status-select:focus { border-color:var(--color-primary); box-shadow:0 0 0 3px color-mix(in srgb,var(--color-primary) 18%,transparent); }
-.attendance-status-select[data-status="present"] { border-color:color-mix(in srgb,var(--color-primary) 44%,var(--color-border)); background:var(--color-primary-soft); color:var(--color-primary-ink); }
-.attendance-status-select[data-status="absent"] { border-color:color-mix(in srgb,var(--color-accent) 48%,var(--color-border)); background:var(--color-accent-soft); color:var(--color-accent-ink); }
-.attendance-status-select[data-status="excused"] { background:var(--color-surface-soft); color:var(--color-text); }
-.attendance-status-select:disabled { opacity:.6; cursor:not-allowed; }
-.attendance-value { flex:0 0 auto; padding:6px 10px; border-radius:999px; font-family:inherit; font-size:11.5px; font-style:normal; font-weight:500; }
-.attendance-value.present { background:var(--color-primary-soft); color:var(--color-primary-ink); }
-.attendance-value.absent { background:var(--color-accent-soft); color:var(--color-accent-ink); }
-.attendance-value.excused,
-.attendance-value.unrecorded { background:var(--color-surface-soft); color:var(--color-muted); }
-.attendance-note { margin:16px 0 0; color:var(--color-muted); font-size:12px; line-height:1.55; }
+.growth-directory-toolbar.attendance-directory-toolbar { grid-template-columns:minmax(0,1fr) auto; }
+.attendance-week-controls { display:grid; grid-template-columns:repeat(3,auto); gap:7px; }
+.attendance-week-controls button { min-height:42px; padding:8px 12px; border:1px solid color-mix(in srgb,var(--color-primary) 38%,var(--color-border)); border-radius:10px; background:var(--color-primary-soft); color:var(--color-primary-ink); font:inherit; font-size:10.5px; font-weight:700; white-space:nowrap; cursor:pointer; transition:background-color .2s ease,border-color .2s ease,color .2s ease; }
+.attendance-week-controls button:hover:not(:disabled) { border-color:var(--color-primary); background:color-mix(in srgb,var(--color-primary) 22%,var(--color-surface)); color:var(--color-primary-ink); }
+.attendance-week-controls button:nth-child(2) { border-color:var(--color-primary); background:var(--color-primary); color:var(--color-on-primary); }
+.attendance-week-controls button:nth-child(2):hover:not(:disabled) { border-color:var(--color-primary-hover); background:var(--color-primary-hover); color:var(--color-on-primary); }
+.attendance-week-controls button:disabled { opacity:.42; cursor:not-allowed; }
+.attendance-table-shell { margin-top:14px; overflow-x:auto; }
+.attendance-panel .attendance-table { width:100%; min-width:780px; table-layout:fixed; }
+.attendance-panel .attendance-table th:first-child { width:30%; }
+.attendance-panel .attendance-table th:not(:first-child) { width:14%; }
+.attendance-panel .attendance-table th:not(:first-child),
+.attendance-panel .attendance-table td:not(:first-child) { text-align:center; }
+.attendance-panel .attendance-table thead th { transition:background-color .2s ease,color .2s ease; }
+.attendance-panel .attendance-table th small { display:block; margin-top:1px; color:var(--color-muted); font-size:8.5px; font-weight:620; letter-spacing:0; text-transform:none; }
+.attendance-name-sort { display:inline-flex; align-items:center; gap:4px; padding:0; border:0; background:transparent; color:inherit; font:inherit; letter-spacing:inherit; text-transform:inherit; cursor:pointer; transition:color .2s ease; }
+.attendance-name-sort:hover { color:var(--color-primary-ink); }
+.attendance-name-sort .app-icon { width:13px; height:13px; color:var(--color-muted); opacity:.55; transition:color .2s ease,opacity .2s ease; }
+.attendance-name-sort:hover .app-icon { color:var(--color-primary); opacity:1; }
+.attendance-day-toggle { display:grid; width:100%; height:46px; place-items:center; gap:1px; padding:4px 6px; border:0; border-radius:0; background:transparent; color:inherit; font:inherit; text-transform:inherit; cursor:pointer; transition:background-color .2s ease,color .2s ease; }
+.attendance-day-recorded { background:var(--color-primary-soft) !important; color:var(--color-primary-ink); }
+.attendance-day-recorded:hover { background:color-mix(in srgb,var(--color-primary) 22%,var(--color-surface)) !important; }
+.attendance-day-unrecorded { background:var(--color-accent-soft) !important; color:var(--color-accent-ink); }
+.attendance-day-unrecorded:hover { background:color-mix(in srgb,var(--color-accent) 19%,var(--color-surface)) !important; }
+.attendance-day-toggle:disabled { cursor:not-allowed; }
+.attendance-day-unavailable { opacity:.48; }
+.attendance-checkbox { display:flex; width:100%; min-width:0; align-items:center; justify-content:center; cursor:pointer; }
+.attendance-checkbox input { width:17px; height:17px; flex:0 0 17px; margin:0; accent-color:var(--color-primary); cursor:pointer; }
+.attendance-checkbox:has(input:focus-visible) { outline:3px solid color-mix(in srgb,var(--color-primary) 18%,transparent); outline-offset:3px; border-radius:5px; }
+.attendance-checkbox:has(input:disabled) { opacity:.55; cursor:not-allowed; }
+.attendance-checkbox input:disabled { cursor:not-allowed; }
+.attendance-readonly-checkbox { width:17px; height:17px; margin:0; accent-color:var(--color-primary); }
+.attendance-note { margin:16px 0 0; color:var(--color-muted); font-size:10.5px; line-height:1.45; }
 
-@media(max-width:520px) {
-  .attendance-toolbar { align-items:stretch; flex-direction:column; }
-  .attendance-toolbar input { width:100%; }
-  .attendance-table { min-width:0; }
-  .attendance-table th:last-child,.attendance-table td:last-child { width:100%; }
-  .attendance-status-select { width:min(100%,220px); }
+@media(max-width:800px) {
+  .growth-directory-toolbar.attendance-directory-toolbar { grid-template-columns:1fr; }
+}
+
+@media(max-width:620px) {
+  .attendance-panel .attendance-table { min-width:0; }
+}
+
+@media(max-width:430px) {
+  .attendance-week-controls { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .attendance-week-controls button { min-width:0; padding-inline:6px; white-space:normal; }
 }
 
 /* Compact student directory and integrated rejected-record controls */
@@ -364,7 +381,7 @@
 .semester-create-button { width:auto; padding:8px 18px; cursor:pointer; }
 .semester-create-button:hover:not(:disabled) { background:var(--color-accent-soft); color:var(--color-accent-ink); }
 .semester-management-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
-.semester-management-actions:has(.semester-update-button) { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.semester-management-actions:has(.batch-delete-button) { grid-template-columns:repeat(3,minmax(0,1fr)); }
 .semester-management-actions button { min-width:0; min-height:42px; padding:8px 10px; border-radius:9px; font:inherit; font-size:11px; font-weight:720; line-height:1.25; white-space:normal; text-wrap:balance; cursor:pointer; transition:border-color .2s ease,background-color .2s ease,color .2s ease; }
 .semester-update-button { border:1px solid var(--color-accent); background:var(--color-accent); color:var(--color-on-accent); }
 .semester-update-button:hover:not(:disabled) { border-color:var(--color-accent-hover); background:var(--color-accent-hover); }
@@ -413,7 +430,7 @@
   .semester-schedule-layout { padding-top:20px; }
   .semester-picker-row,
   .semester-management-actions,
-  .semester-management-actions:has(.semester-update-button),
+  .semester-management-actions:has(.batch-delete-button),
   .semester-schedule-cards,
   .semester-date-fields,
   .semester-window-fields { grid-template-columns:1fr; }
@@ -817,4 +834,16 @@
   .teacher-aide-dashboard-page .teacher-dashboard-content { width: calc(100% - 22px); }
   .aide-workload-summary { grid-template-columns: 1fr; }
   .aide-workload-summary > div + div { border-top: 1px solid color-mix(in srgb, var(--color-primary) 34%, var(--color-surface)); border-left: 0; }
+}
+
+@media (max-width: 620px) {
+  .attendance-panel .attendance-table-shell { overflow-x:auto; border-radius:14px; background:var(--color-surface); box-shadow:inset 0 0 0 1px var(--color-border); }
+  .attendance-panel .attendance-table { display:table; width:100%; min-width:660px; }
+  .attendance-panel .attendance-table thead { position:static; display:table-header-group; width:auto; height:auto; overflow:visible; clip:auto; clip-path:none; white-space:normal; }
+  .attendance-panel .attendance-table tbody { display:table-row-group; }
+  .attendance-panel .attendance-table tr { display:table-row; padding:0; border-radius:0; background:transparent; box-shadow:none; }
+  .attendance-panel .attendance-table th,
+  .attendance-panel .attendance-table td { display:table-cell; width:auto; padding:9px 7px; border-top:1px solid var(--color-border); }
+  .attendance-panel .attendance-table th { border-top:0; }
+  .attendance-panel .attendance-table td::before { content:none; }
 }

@@ -14,25 +14,12 @@ function getChildName(enrollment) {
   return [enrollment?.child_first_name, enrollment?.child_last_name].filter(Boolean).join(' ') || 'a student'
 }
 
-function getStoredReadIds(storageKey) {
-  try {
-    const storedIds = JSON.parse(window.localStorage.getItem(storageKey) || '[]')
-    return Array.isArray(storedIds) ? storedIds.filter((id) => typeof id === 'string') : []
-  } catch {
-    return []
-  }
-}
-
-function getStoredTimestamp(storageKey) {
-  const timestamp = window.localStorage.getItem(storageKey)
-  return timestamp && !Number.isNaN(new Date(timestamp).getTime()) ? timestamp : ''
-}
-
 const notificationTypes = {
   announcement: { label: 'Announcement', icon: 'app-icon-bell' },
   application: { label: 'Enrollment request', icon: 'app-icon-inbox' },
   attendance: { label: 'Attendance', icon: 'app-icon-check-o' },
   event: { label: 'School calendar', icon: 'app-icon-calendar-dates' },
+  semester: { label: 'Semester update', icon: 'app-icon-calendar-due' },
   status: { label: 'Enrollment status', icon: 'app-icon-clipboard' },
 }
 
@@ -43,14 +30,11 @@ function NotificationsMenu({ user, role }) {
   const menuRef = useRef(null)
   const panelRef = useRef(null)
   const triggerRef = useRef(null)
-  const storageKey = `bcdc-notifications-read:${user.id}`
-  const requestCheckpointKey = `bcdc-enrollment-requests-read:${user.id}`
   const [open, setOpen] = useState(false)
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [readIds, setReadIds] = useState(() => getStoredReadIds(storageKey))
-  const [lastRequestReadAt, setLastRequestReadAt] = useState(() => getStoredTimestamp(requestCheckpointKey))
+  const [readIds, setReadIds] = useState([])
   const [eligible, setEligible] = useState(role === 'parent' || role === 'teacher' || role === 'teacher_aide')
 
   const loadNotifications = useCallback(async () => {
@@ -84,19 +68,21 @@ function NotificationsMenu({ user, role }) {
           .order('submitted_at', { ascending: false })
           .limit(1)
 
-        if (lastRequestReadAt) {
-          staffRequestQuery = staffRequestQuery.gt('submitted_at', lastRequestReadAt)
-        }
       }
 
-      const [enrollmentResult, requestResult] = await Promise.all([
+      const [enrollmentResult, requestResult, activeBatchResult, archivedBatchResult, readResult] = await Promise.all([
         enrollmentQuery,
         staffRequestQuery,
+        supabase.from('enrollment_batches').select('id, name').eq('id', currentBatchId).single(),
+        supabase.from('enrollment_batches').select('id, archived_at').not('archived_at', 'is', null).order('archived_at', { ascending: false }).limit(1).maybeSingle(),
+        supabase.from('notification_reads').select('notification_id').eq('user_id', user.id).order('read_at', { ascending: false }).limit(200),
       ])
 
-      if (enrollmentResult.error || requestResult.error) {
-        throw enrollmentResult.error || requestResult.error
+      if (enrollmentResult.error || requestResult.error || activeBatchResult.error || archivedBatchResult.error || readResult.error) {
+        throw enrollmentResult.error || requestResult.error || activeBatchResult.error || archivedBatchResult.error || readResult.error
       }
+
+      setReadIds((readResult.data || []).map((row) => row.notification_id))
 
       const enrollments = enrollmentResult.data || []
       const approvedEnrollments = enrollments.filter((enrollment) => enrollment.status === 'approved')
@@ -107,7 +93,7 @@ function NotificationsMenu({ user, role }) {
       const attendanceEnrollmentIds = role === 'parent'
         ? approvedEnrollments.map((enrollment) => enrollment.id)
         : []
-      const [announcementResult, eventResult, attendanceResult] = await Promise.all([
+      const [announcementResult, eventResult, attendanceResult, nonSchoolResult] = await Promise.all([
         canReceiveSchoolUpdates
           ? supabase.from('announcements').select('id, title, published_at').order('published_at', { ascending: false }).limit(12)
           : Promise.resolve({ data: [], error: null }),
@@ -115,13 +101,24 @@ function NotificationsMenu({ user, role }) {
         attendanceEnrollmentIds.length
           ? supabase.from('attendance_records').select('id, enrollment_id, status, attendance_date, updated_at').in('enrollment_id', attendanceEnrollmentIds).order('updated_at', { ascending: false }).limit(20)
           : Promise.resolve({ data: [], error: null }),
+        supabase.from('attendance_non_school_days').select('attendance_date').eq('batch_id', currentBatchId),
       ])
 
-      const partialError = [announcementResult, eventResult, attendanceResult]
+      const partialError = [announcementResult, eventResult, attendanceResult, nonSchoolResult]
         .find((result) => result.error)?.error
 
       const enrollmentMap = new Map(enrollments.map((enrollment) => [enrollment.id, enrollment]))
       const nextItems = []
+
+      if (archivedBatchResult.data?.archived_at && activeBatchResult.data) {
+        nextItems.push({
+          id: `semester-${activeBatchResult.data.id}-${archivedBatchResult.data.archived_at}`,
+          type: 'semester',
+          title: `${activeBatchResult.data.name} is now active`,
+          detail: 'Previous semester records have been archived.',
+          timestamp: archivedBatchResult.data.archived_at,
+        })
+      }
 
       for (const announcement of announcementResult.data || []) {
         nextItems.push({ id: `announcement-${announcement.id}`, type: 'announcement', title: announcement.title, detail: 'New BCDC announcement', timestamp: announcement.published_at })
@@ -131,10 +128,12 @@ function NotificationsMenu({ user, role }) {
         nextItems.push({ id: `event-${event.id}`, type: 'event', title: event.title, detail: 'Scheduled for today', timestamp: event.created_at })
       }
 
+      const nonSchoolDates = new Set((nonSchoolResult.data || []).map((row) => row.attendance_date))
       for (const record of attendanceResult.data || []) {
+        if (nonSchoolDates.has(record.attendance_date)) continue
         const student = enrollmentMap.get(record.enrollment_id)
         const childName = getChildName(student)
-        const attendanceStatus = record.status === 'late' ? 'excused' : record.status
+        const attendanceStatus = record.status === 'present' ? 'present' : 'absent'
         nextItems.push({ id: `attendance-${record.id}-${record.updated_at}`, type: 'attendance', enrollmentId: record.enrollment_id, title: `${childName}'s attendance was marked ${attendanceStatus}`, detail: new Date(`${record.attendance_date}T00:00:00`).toLocaleDateString('en-PH', { dateStyle: 'medium' }), timestamp: record.updated_at })
       }
 
@@ -161,8 +160,8 @@ function NotificationsMenu({ user, role }) {
               type: 'status',
               enrollmentId: enrollment.id,
               enrollmentStatus: enrollment.status,
-              title: `${childName}'s enrollment was ${accepted ? 'accepted' : 'rejected'}`,
-              detail: 'Application review completed',
+              title: accepted ? `${childName}'s enrollment was accepted` : `${childName}'s application needs changes`,
+              detail: accepted ? 'Application review completed' : 'Open the application to review the teacher’s note and resubmit',
               timestamp: enrollment.reviewed_at,
             })
           }
@@ -194,7 +193,29 @@ function NotificationsMenu({ user, role }) {
     } finally {
       setLoading(false)
     }
-  }, [lastRequestReadAt, role, user.id])
+  }, [role, user.id])
+
+  const markNotificationsRead = useCallback(async (notificationIds) => {
+    const uniqueIds = [...new Set(notificationIds)].filter(Boolean)
+    if (uniqueIds.length === 0) return
+
+    setReadIds((currentIds) => [...new Set([...currentIds, ...uniqueIds])])
+    const readAt = new Date().toISOString()
+    const { error: readError } = await supabase
+      .from('notification_reads')
+      .upsert(
+        uniqueIds.map((notificationId) => ({
+          user_id: user.id,
+          notification_id: notificationId,
+          read_at: readAt,
+        })),
+        { onConflict: 'user_id,notification_id' },
+      )
+
+    if (readError) {
+      setError('Notifications could not be marked as read. Please try again.')
+    }
+  }, [user.id])
 
   useEffect(() => {
     const initialLoad = window.setTimeout(loadNotifications, 0)
@@ -205,7 +226,7 @@ function NotificationsMenu({ user, role }) {
 
   useRealtimeRefresh(loadNotifications, {
     channelName: `notifications-${role}-${user.id}`,
-    tables: ['enrollments', 'enrollment_settings', 'enrollment_batches', 'attendance_records', 'announcements', 'calendar_events'],
+    tables: ['enrollments', 'enrollment_settings', 'enrollment_batches', 'attendance_records', 'attendance_non_school_days', 'announcements', 'calendar_events', 'notification_reads'],
   })
 
   useEffect(() => {
@@ -232,35 +253,32 @@ function NotificationsMenu({ user, role }) {
   }, [open])
 
   function toggleMenu() {
-    setOpen((currentlyOpen) => {
-      if (!currentlyOpen) {
-        loadNotifications()
-      }
-      return !currentlyOpen
-    })
+    if (open) {
+      setOpen(false)
+      return
+    }
+
+    setOpen(true)
+    const unreadIds = items
+      .filter((item) => !readIds.includes(item.id))
+      .map((item) => item.id)
+    if (unreadIds.length > 0) void markNotificationsRead(unreadIds)
+    loadNotifications()
   }
 
-  function storeReadIds(nextIds) {
-    const limitedIds = [...new Set(nextIds)].slice(-200)
-    window.localStorage.setItem(storageKey, JSON.stringify(limitedIds))
-    return limitedIds
-  }
-
-  function markNotificationRead(notificationId) {
-    setReadIds((currentIds) => currentIds.includes(notificationId)
-      ? currentIds
-      : storeReadIds([...currentIds, notificationId]))
-  }
-
-  function markRequestCheckpoint(item) {
-    if (item?.type !== 'application' || !item.timestamp) return
-    window.localStorage.setItem(requestCheckpointKey, item.timestamp)
-    setLastRequestReadAt(item.timestamp)
+  async function markNotificationRead(notificationId) {
+    if (readIds.includes(notificationId)) return
+    await markNotificationsRead([notificationId])
   }
 
   function openNotification(item) {
-    markNotificationRead(item.id)
-    markRequestCheckpoint(item)
+    void markNotificationRead(item.id)
+
+    if (item.type === 'semester' && role === 'parent') {
+      setOpen(false)
+      navigate('/')
+      return
+    }
 
     if (role === 'parent' && item.type === 'status' && item.enrollmentStatus !== 'approved') {
       setOpen(false)
@@ -276,10 +294,10 @@ function NotificationsMenu({ user, role }) {
       tab = item.type === 'announcement' ? 'announcements' : item.type === 'event' ? 'calendar' : 'overview'
     } else if (role === 'teacher') {
       dashboard = 'teacher'
-      tab = item.type === 'application' ? 'approvals' : item.type === 'announcement' ? 'announcements' : item.type === 'event' ? 'calendar' : 'students'
+      tab = item.type === 'application' ? 'approvals' : item.type === 'announcement' ? 'announcements' : item.type === 'event' ? 'calendar' : item.type === 'semester' ? 'enrollment-window' : 'students'
     } else {
       dashboard = 'teacher-aide'
-      tab = item.type === 'application' ? 'approvals' : item.type === 'announcement' ? 'announcements' : item.type === 'event' ? 'calendar' : 'students'
+      tab = item.type === 'application' ? 'approvals' : item.type === 'announcement' ? 'announcements' : item.type === 'event' ? 'calendar' : item.type === 'semester' ? 'enrollment-window' : 'students'
     }
 
     const params = new URLSearchParams({ tab })
@@ -292,7 +310,9 @@ function NotificationsMenu({ user, role }) {
     }))
   }
 
-  const hasUnread = items.some((item) => !readIds.includes(item.id))
+  const unreadCount = items.filter((item) => !readIds.includes(item.id)).length
+  const hasUnread = unreadCount > 0
+  const unreadBadgeLabel = unreadCount > 99 ? '99+' : String(unreadCount)
   const emptyMessage = role === 'parent'
     ? 'No updates yet. Enrollment updates will appear here, followed by school updates after acceptance.'
     : 'No updates yet. Enrollment requests, announcements, and today’s events will appear here.'
@@ -301,9 +321,9 @@ function NotificationsMenu({ user, role }) {
 
   return (
     <div className="notifications-menu" ref={menuRef}>
-      <button ref={triggerRef} type="button" className={`notification-toggle${hasUnread ? ' has-unread' : ''}`} aria-label={hasUnread ? 'Notifications, new updates available' : 'Notifications'} aria-expanded={open} aria-controls={panelId} aria-haspopup="dialog" onClick={toggleMenu}>
+      <button ref={triggerRef} type="button" className={`notification-toggle${hasUnread ? ' has-unread' : ''}`} aria-label={hasUnread ? `Notifications, ${unreadCount} unread` : 'Notifications'} aria-expanded={open} aria-controls={panelId} aria-haspopup="dialog" onClick={toggleMenu}>
         <i className="app-icon app-icon-bell" aria-hidden="true" />
-        {hasUnread && <span className="notification-badge" aria-hidden="true" />}
+        {hasUnread && <span className="notification-badge" aria-hidden="true">{unreadBadgeLabel}</span>}
       </button>
 
       {open && <section ref={panelRef} id={panelId} className="notifications-dropdown" role="dialog" aria-modal="false" aria-labelledby={headingId} tabIndex="-1">

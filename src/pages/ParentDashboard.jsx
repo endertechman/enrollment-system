@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import AppHeader from '../components/AppHeader'
 import AnnouncementsPanel from '../components/AnnouncementsPanel'
 import CalendarPanel from '../components/CalendarPanel'
-import HealthGrowthPanel from '../components/HealthGrowthPanel'
+import HealthGrowthPanel from '../components/HealthGrowthDirectory'
 import StudentReportPanel from '../components/StudentReportPanel'
 import AuthToast from '../components/AuthToast'
 import DashboardLoadingShell from '../components/DashboardLoadingShell'
@@ -16,6 +16,7 @@ function ParentDashboard() {
   const [searchParams] = useSearchParams()
 
   const [parentName, setParentName] = useState('Parent')
+  const [parentEmail, setParentEmail] = useState('')
   const [enrollments, setEnrollments] = useState([])
   const [message, setMessage] = useState('')
   const [loadError, setLoadError] = useState('')
@@ -67,6 +68,8 @@ function ParentDashboard() {
       return
     }
 
+    setParentEmail(user.email || '')
+
     const windowResult = await getEnrollmentWindow()
     const [profileResult, enrollmentResult] = await Promise.all([
       supabase
@@ -89,6 +92,7 @@ function ParentDashboard() {
           mother_tongue,
           other_dialect,
           status,
+          student_state,
           submitted_at,
           reference_code
         `)
@@ -194,7 +198,7 @@ function ParentDashboard() {
 
   function getStatusMessage(status) {
     if (status === 'approved') return 'BCDC approved this enrollment application.'
-    if (status === 'rejected') return 'Application was not approved.'
+    if (status === 'rejected') return 'Application needs changes before it can be reviewed again.'
     return 'Application is being reviewed.'
   }
 
@@ -325,9 +329,9 @@ function ParentDashboard() {
 
             <div className="parent-tab-content">
               {activeTab === 'health-growth' ? (
-                <HealthGrowthPanel enrollments={selectedEnrollment ? [selectedEnrollment] : []} />
+                <HealthGrowthPanel enrollments={selectedEnrollment ? [selectedEnrollment] : []} rowsClickable={false} />
               ) : activeTab === 'student-report' ? (
-                <StudentReportPanel enrollments={selectedEnrollment ? [selectedEnrollment] : []} parentName={parentName} />
+                <StudentReportPanel enrollments={selectedEnrollment ? [selectedEnrollment] : []} parentName={parentName} parentEmail={parentEmail} />
               ) : activeTab === 'calendar' ? (
                 <CalendarPanel listView showEnrollmentMilestones />
               ) : activeTab === 'announcements' ? (
@@ -345,7 +349,7 @@ function ParentDashboard() {
                           <dd>{formatDate(selectedEnrollment.birth_date)}</dd>
                         </div>
                         <div>
-                          <dt>Sex</dt>
+                          <dt>Gender</dt>
                           <dd>{formatSex(selectedEnrollment.sex)}</dd>
                         </div>
                         <div>

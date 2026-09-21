@@ -10,7 +10,7 @@ function formatDate(date) {
 
 function statusMessage(status) {
   if (status === 'approved') return 'Your enrollment application has been accepted.'
-  if (status === 'rejected') return 'Your enrollment application was not accepted.'
+  if (status === 'rejected') return 'This application needs a few corrections before it can be reviewed again.'
   return 'Your application is currently being reviewed.'
 }
 
@@ -70,9 +70,11 @@ function SignedInHomeView({ role, enrollments, enrollmentWindow }) {
               {role === 'parent' ? (selected ? <>
                 <header className="hero-card-header enrolled-child-header"><div><span>Enrolled Child</span><small>Enrollment record and current status</small></div>{enrollments.length > 1 && <button type="button" className="home-switch-child" onClick={() => setSelectedId(null)} aria-label="Switch child"><i className="app-icon app-icon-swap" aria-hidden="true" /></button>}</header>
                 <div className="home-child-card-body">
-                  <div className="home-selected-child-heading"><div className="home-child-avatar" style={{ backgroundColor: avatarColor(selected) }}>{initials(selected)}</div><div><h3>{selected.child_first_name} {selected.child_last_name}</h3><span className={`enrollment-status ${selected.status}`}>{selected.status}</span></div></div>
+                  <div className="home-selected-child-heading"><div className="home-child-avatar" style={{ backgroundColor: avatarColor(selected) }}>{initials(selected)}</div><div><h3>{selected.child_first_name} {selected.child_last_name}</h3><span className={`enrollment-status ${selected.status}`}>{selected.status === 'rejected' ? 'needs changes' : selected.status}</span></div></div>
                   <p className="status-message">{statusMessage(selected.status)}</p>
+                  {selected.status === 'rejected' && selected.review_reason && <div className="home-resubmission-reason"><span>Teacher&apos;s note</span><p>{selected.review_reason}</p></div>}
                   <div className="enrollment-details"><div><span>Reference Code</span><strong>{selected.reference_code}</strong></div><div><span>Submitted</span><strong>{formatDate(selected.submitted_at)}</strong></div></div>
+                  {selected.status === 'rejected' && <button type="button" className="primary-cta home-resubmit-action" onClick={() => navigate(`/enroll?resubmit=${selected.id}`)}>Update &amp; Resubmit</button>}
                 </div>
               </> : <>
                 <header className="hero-card-header enrolled-child-header"><div><span>Enrolled Child</span><small>Select a child to view their enrollment</small></div><span className="status-dot" /></header>

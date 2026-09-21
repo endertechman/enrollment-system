@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import AppHeader from './AppHeader'
 import { getEnrollmentWindow, isEnrollmentOpen } from '../lib/enrollmentWindow'
@@ -7,7 +7,9 @@ import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 
 function EnrollmentForm() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const formRef = useRef(null)
+  const requestedResubmissionId = searchParams.get('resubmit')
 
   const [parentEmail, setParentEmail] = useState('')
 
@@ -29,6 +31,8 @@ function EnrollmentForm() {
   const [enrollmentOpen, setEnrollmentOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [currentStep, setCurrentStep] = useState(1)
+  const [resubmissionId, setResubmissionId] = useState(null)
+  const [resubmissionReason, setResubmissionReason] = useState('')
 
   const getEnrollmentCount = useCallback(async (parentId, batchId) => {
     return supabase
@@ -56,6 +60,48 @@ function EnrollmentForm() {
       return
     }
 
+    if (requestedResubmissionId) {
+      if (!windowResult.data?.current_batch_id) {
+        setMessage('This application is not available for resubmission.')
+        setEnrollmentOpen(true)
+        setLoading(false)
+        return
+      }
+
+      setEnrollmentOpen(true)
+      const { data: rejectedEnrollment, error: rejectedError } = await supabase
+        .from('enrollments')
+        .select('id, child_first_name, child_middle_name, child_last_name, child_suffix, birth_date, sex, place_of_birth, birth_order, is_registered, mother_tongue, other_dialect, review_reason')
+        .eq('id', requestedResubmissionId)
+        .eq('parent_id', user.id)
+        .eq('status', 'rejected')
+        .eq('batch_id', windowResult.data.current_batch_id)
+        .maybeSingle()
+
+      if (rejectedError || !rejectedEnrollment) {
+        setMessage('This application is not available for resubmission.')
+        setLoading(false)
+        return
+      }
+
+      setFirstName(rejectedEnrollment.child_first_name || '')
+      setMiddleName(rejectedEnrollment.child_middle_name || '')
+      setLastName(rejectedEnrollment.child_last_name || '')
+      setSuffix(rejectedEnrollment.child_suffix || '')
+      setBirthDate(rejectedEnrollment.birth_date || '')
+      setSex(rejectedEnrollment.sex || '')
+      setPlaceOfBirth(rejectedEnrollment.place_of_birth || '')
+      setBirthOrder(rejectedEnrollment.birth_order == null ? '' : String(rejectedEnrollment.birth_order))
+      setIsRegistered(rejectedEnrollment.is_registered ? 'yes' : 'no')
+      setMotherTongue(rejectedEnrollment.mother_tongue || '')
+      setOtherDialect(rejectedEnrollment.other_dialect || '')
+      setResubmissionReason(rejectedEnrollment.review_reason || '')
+      setResubmissionId(rejectedEnrollment.id)
+      setParentEmail(user.email || '')
+      setLoading(false)
+      return
+    }
+
     if (!isEnrollmentOpen(windowResult.data)) {
       setEnrollmentOpen(false)
       setLoading(false)
@@ -63,6 +109,7 @@ function EnrollmentForm() {
     }
 
     setEnrollmentOpen(true)
+
     const enrollmentResult = await getEnrollmentCount(user.id, windowResult.data.current_batch_id)
     const { count, error } = enrollmentResult
 
@@ -80,7 +127,7 @@ function EnrollmentForm() {
     setParentEmail(user.email || '')
 
     setLoading(false)
-  }, [getEnrollmentCount, navigate])
+  }, [getEnrollmentCount, navigate, requestedResubmissionId])
 
   useEffect(() => {
     const initializationTimer = window.setTimeout(() => {
@@ -168,42 +215,55 @@ function EnrollmentForm() {
       return
     }
 
-    const { count, error: countError } = await getEnrollmentCount(user.id, windowResult.data.current_batch_id)
-
-    if (countError) {
-      setMessage('Unable to verify your enrollments right now.')
-      setSubmitting(false)
-      return
+    const enrollmentValues = {
+      child_first_name: firstName.trim(),
+      child_middle_name: middleName.trim(),
+      child_last_name: lastName.trim(),
+      child_suffix: suffix.trim() || null,
+      birth_date: birthDate,
+      sex,
+      place_of_birth: placeOfBirth.trim(),
+      birth_order: Number(birthOrder),
+      is_registered: isRegistered === 'yes',
+      mother_tongue: motherTongue.trim(),
+      other_dialect: otherDialect.trim() || null,
+      status: 'pending',
     }
 
-    if ((count || 0) >= 3) {
-      navigate('/', { replace: true })
-      return
+    let error
+    if (resubmissionId) {
+      const result = await supabase
+        .from('enrollments')
+        .update(enrollmentValues)
+        .eq('id', resubmissionId)
+        .eq('parent_id', user.id)
+        .eq('status', 'rejected')
+        .select('id')
+        .maybeSingle()
+      error = result.error || (!result.data ? new Error('This application is no longer available for resubmission.') : null)
+    } else {
+      const { count, error: countError } = await getEnrollmentCount(user.id, windowResult.data.current_batch_id)
+
+      if (countError) {
+        setMessage('Unable to verify your enrollments right now.')
+        setSubmitting(false)
+        return
+      }
+
+      if ((count || 0) >= 3) {
+        navigate('/', { replace: true })
+        return
+      }
+
+      const result = await supabase
+        .from('enrollments')
+        .insert({
+          ...enrollmentValues,
+          parent_id: user.id,
+          reference_code: generateReferenceCode(),
+        })
+      error = result.error
     }
-
-    const referenceCode = generateReferenceCode()
-
-    const { error } = await supabase
-      .from('enrollments')
-      .insert({
-        parent_id: user.id,
-
-        child_first_name: firstName.trim(),
-        child_middle_name: middleName.trim(),
-        child_last_name: lastName.trim(),
-        child_suffix: suffix.trim() || null,
-
-        birth_date: birthDate,
-        sex,
-        place_of_birth: placeOfBirth.trim(),
-        birth_order: Number(birthOrder),
-        is_registered: isRegistered === 'yes',
-        mother_tongue: motherTongue.trim(),
-        other_dialect: otherDialect.trim() || null,
-
-        status: 'pending',
-        reference_code: referenceCode,
-      })
 
     if (error) {
       console.error(error)
@@ -218,7 +278,7 @@ function EnrollmentForm() {
       return
     }
 
-    window.sessionStorage.setItem('bcdc:enrollment-success', 'Enrollment application submitted successfully.')
+    window.sessionStorage.setItem('bcdc:enrollment-success', resubmissionId ? 'Enrollment application resubmitted successfully.' : 'Enrollment application submitted successfully.')
     navigate('/', { replace: true })
   }
 
@@ -249,6 +309,23 @@ function EnrollmentForm() {
     )
   }
 
+  if (requestedResubmissionId && !resubmissionId) {
+    return (
+      <div className="landing-page">
+        <AppHeader />
+        <div className="landing-scroll">
+          <main className="enrollment-page">
+            <section className="enrollment-closed-card">
+              <h1>Application unavailable</h1>
+              <p>{message || 'This application cannot be resubmitted.'}</p>
+              <button type="button" className="button-secondary" onClick={() => navigate('/')}>Return Home</button>
+            </section>
+          </main>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="landing-page">
       <AppHeader />
@@ -256,7 +333,7 @@ function EnrollmentForm() {
       <div className="landing-scroll">
         <main className="enrollment-page">
           <div className="enrollment-heading">
-            <h1>Child Information</h1>
+            <h1>{resubmissionId ? 'Update Child Information' : 'Child Information'}</h1>
 
             <p>
               Please enter complete and accurate learner information. These
@@ -270,6 +347,7 @@ function EnrollmentForm() {
             className="enrollment-form"
             onSubmit={handleSubmit}
           >
+            {resubmissionId && <div className="enrollment-resubmission-note"><span>Teacher&apos;s reason for resubmission</span><p>{resubmissionReason || 'Please review and correct the application information.'}</p></div>}
             <div className="enrollment-progress" role="list" aria-label={`Form section ${currentStep} of 2`}>
               {[1, 2].map((step) => (
                 <div
@@ -362,13 +440,13 @@ function EnrollmentForm() {
                 </div>
 
                 <div>
-                  <label>Sex *</label>
+                  <label>Gender *</label>
                   <select
                     value={sex}
                     onChange={(e) => setSex(e.target.value)}
                     required
                   >
-                    <option value="">Select sex</option>
+                    <option value="">Select gender</option>
                     <option value="male">Male</option>
                     <option value="female">Female</option>
                   </select>
@@ -450,7 +528,7 @@ function EnrollmentForm() {
 
             <div className="enrollment-step-actions">
               {currentStep > 1 && <button type="button" className="enrollment-previous" onClick={() => setCurrentStep((step) => step - 1)}>Previous</button>}
-              {currentStep < 2 ? <button type="button" className="enrollment-next" onClick={goToNextStep}>Next</button> : <button type="submit" className="enrollment-submit" disabled={submitting}>Submit Enrollment</button>}
+              {currentStep < 2 ? <button type="button" className="enrollment-next" onClick={goToNextStep}>Next</button> : <button type="submit" className="enrollment-submit" disabled={submitting}>{resubmissionId ? 'Resubmit Application' : 'Submit Enrollment'}</button>}
             </div>
           </form>
         </main>

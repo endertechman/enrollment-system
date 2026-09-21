@@ -7,6 +7,8 @@ import AnnouncementsPanel from '../components/AnnouncementsPanel'
 import CalendarPanel from '../components/CalendarPanel'
 import HealthGrowthPanel from '../components/HealthGrowthDirectory'
 import StudentReportPanel from '../components/StudentReportPanel'
+import StudentReportsDirectory from '../components/StudentReportsDirectory'
+import EnrollmentRequestsDirectory from '../components/EnrollmentRequestsDirectory'
 import AuthToast from '../components/AuthToast'
 import DashboardLoadingShell from '../components/DashboardLoadingShell'
 import EnrollmentBatchControls from '../components/EnrollmentBatchControls'
@@ -21,9 +23,6 @@ function TeacherAideDashboard() {
   const [message, setMessage] = useState('')
   const [notice, setNotice] = useState('')
   const [loading, setLoading] = useState(true)
-  const [studentSearch, setStudentSearch] = useState('')
-  const [requestSearch, setRequestSearch] = useState('')
-  const [studentFilter, setStudentFilter] = useState('all')
   const [activeTab, setActiveTab] = useState(() => {
     const requestedTab = new URLSearchParams(window.location.search).get('tab')
     if (requestedTab === 'student-report') return 'students'
@@ -62,7 +61,7 @@ function TeacherAideDashboard() {
       return
     }
 
-    const [profileResult, parentNamesResult, windowResult, batchesResult] =
+    const [profileResult, parentNamesResult, parentEmailsResult, windowResult, batchesResult] =
       await Promise.all([
       supabase
         .from('profiles')
@@ -70,6 +69,7 @@ function TeacherAideDashboard() {
         .eq('id', user.id)
         .single(),
       supabase.rpc('get_staff_parent_names'),
+      supabase.rpc('get_staff_parent_emails'),
       getEnrollmentWindow(),
       supabase
         .from('enrollment_batches')
@@ -89,7 +89,7 @@ function TeacherAideDashboard() {
     const enrollmentResult = viewedBatchId
       ? await supabase
         .from('enrollments')
-        .select('id, batch_id, parent_id, child_first_name, child_middle_name, child_last_name, child_suffix, birth_date, sex, place_of_birth, is_registered, mother_tongue, other_dialect, status, reference_code, submitted_at, reviewed_at')
+        .select('id, batch_id, parent_id, child_first_name, child_middle_name, child_last_name, child_suffix, birth_date, sex, place_of_birth, is_registered, mother_tongue, other_dialect, status, student_state, reference_code, submitted_at, resubmitted_at, reviewed_at, review_reason')
         .eq('batch_id', viewedBatchId)
         .order('submitted_at', { ascending: false })
       : { data: [], error: null }
@@ -109,17 +109,28 @@ function TeacherAideDashboard() {
           parent.parent_full_name,
         ]),
       )
+      const parentEmails = new Map(
+        (parentEmailsResult.data || []).map((parent) => [
+          parent.parent_id,
+          parent.parent_email,
+        ]),
+      )
 
       setEnrollments(
         (enrollmentResult.data || []).map((enrollment) => ({
           ...enrollment,
           parent_full_name: parentNames.get(enrollment.parent_id) || null,
+          parent_email: parentEmails.get(enrollment.parent_id) || null,
         })),
       )
     }
 
     if (parentNamesResult.error) {
       console.error('Unable to load parent names:', parentNamesResult.error)
+    }
+
+    if (parentEmailsResult.error) {
+      console.error('Unable to load parent emails:', parentEmailsResult.error)
     }
 
     if (batchesResult.error) {
@@ -133,34 +144,6 @@ function TeacherAideDashboard() {
     setLoading(false)
   }, [navigate, selectedBatchId])
 
-  function getChildName(enrollment) {
-    return [
-      enrollment.child_first_name,
-      enrollment.child_last_name,
-      enrollment.child_suffix,
-    ]
-      .filter(Boolean)
-      .join(' ')
-  }
-
-  function calculateAge(birthDate) {
-    if (!birthDate) return 'Not provided'
-
-    const today = new Date()
-    const birth = new Date(`${birthDate}T00:00:00`)
-    let age = today.getFullYear() - birth.getFullYear()
-    const monthDifference = today.getMonth() - birth.getMonth()
-
-    if (
-      monthDifference < 0 ||
-      (monthDifference === 0 && today.getDate() < birth.getDate())
-    ) {
-      age -= 1
-    }
-
-    return age
-  }
-
   useEffect(() => {
     const loadTimer = window.setTimeout(() => loadDashboard(), 0)
     return () => window.clearTimeout(loadTimer)
@@ -171,22 +154,8 @@ function TeacherAideDashboard() {
     tables: ['profiles', 'enrollments', 'enrollment_settings', 'enrollment_batches'],
   })
 
-  function formatSex(sex) {
-    if (!sex) return 'Not specified'
-    return sex.charAt(0).toUpperCase() + sex.slice(1)
-  }
-
   const pendingEnrollments = enrollments.filter((enrollment) => enrollment.status === 'pending')
-  const studentDirectoryRecords = enrollments.filter((enrollment) => enrollment.status !== 'pending')
-  const studentSearchTerm = studentSearch.trim().toLocaleLowerCase()
-  const filteredStudents = studentFilter === 'all' ? studentDirectoryRecords : studentDirectoryRecords.filter((enrollment) => enrollment.status === studentFilter)
-  const visibleStudents = studentSearchTerm
-    ? filteredStudents.filter((enrollment) => [getChildName(enrollment), enrollment.parent_full_name, enrollment.reference_code].some((value) => String(value || '').toLocaleLowerCase().includes(studentSearchTerm)))
-    : filteredStudents
-  const requestSearchTerm = requestSearch.trim().toLocaleLowerCase()
-  const visibleRequests = requestSearchTerm
-    ? pendingEnrollments.filter((enrollment) => [getChildName(enrollment), enrollment.parent_full_name, enrollment.reference_code].some((value) => String(value || '').toLocaleLowerCase().includes(requestSearchTerm)))
-    : pendingEnrollments
+  const studentDirectoryRecords = enrollments.filter((enrollment) => enrollment.status === 'approved')
 
   if (loading) {
     return <DashboardLoadingShell label="Loading teacher aide dashboard..." />
@@ -196,6 +165,7 @@ function TeacherAideDashboard() {
     <div className="teacher-dashboard-page teacher-aide-dashboard-page">
       <AppHeader />
       <AuthToast message={notice} onDismiss={() => setNotice('')} duration={5000} variant="success" />
+      {reportEnrollmentId && <StudentReportPanel enrollments={enrollments.filter((enrollment) => enrollment.id === reportEnrollmentId)} onClose={() => setReportEnrollmentId(null)} />}
 
       <main className="teacher-dashboard-scroll">
         <div className="teacher-dashboard-content">
@@ -247,37 +217,14 @@ function TeacherAideDashboard() {
 
             {activeTab === 'health-growth' ? (
               <HealthGrowthPanel enrollments={enrollments} canManage />
-            ) : activeTab === 'student-report' ? (
-              <StudentReportPanel enrollments={enrollments.filter((enrollment) => enrollment.id === reportEnrollmentId)} onBack={() => { setReportEnrollmentId(null); setActiveTab('students') }} />
             ) : activeTab === 'calendar' ? (
               <CalendarPanel canManage listView />
             ) : activeTab === 'announcements' ? (
               <AnnouncementsPanel canManage />
             ) : activeTab === 'attendance' ? (
-              <AttendanceRoster enrollments={enrollments} loading={loading} attendanceDate={attendanceDate} onDateChange={setAttendanceDate} canEdit />
+              <AttendanceRoster enrollments={enrollments} loading={loading} attendanceDate={attendanceDate} onDateChange={setAttendanceDate} batch={batches.find((batch) => batch.id === selectedBatchId) || null} canEdit />
             ) : activeTab === 'students' ? (
-              <section className="pending-approvals-panel student-records-panel">
-                <div className="pending-approvals-header"><div><h2>Enrolled Students</h2></div><span className="waiting-badge">{visibleStudents.length} records</span></div>
-                <div className="student-status-filters" aria-label="Filter student records by status">
-                  {[['all', 'All'], ['approved', 'Enrolled'], ['rejected', 'Rejected']].map(([value, label]) => <button type="button" key={value} className={studentFilter === value ? 'active' : ''} onClick={() => setStudentFilter(value)}>{label}</button>)}
-                </div>
-                <label className="dashboard-search"><span className="visually-hidden">Search student records</span><input type="search" value={studentSearch} onChange={(event) => setStudentSearch(event.target.value)} placeholder="Search student, parent, or reference code" /></label>
-                {message && <p className="teacher-dashboard-message" role="status">{message}</p>}
-                {loading ? <p className="teacher-empty-state app-loading" role="status">Loading student records...</p> : visibleStudents.length === 0 ? <p className="teacher-empty-state">{studentSearchTerm ? 'No students match your search.' : `No ${studentFilter === 'all' ? '' : studentFilter} student records found.`}</p> : <div className="records-table-shell">
-                  <table className="records-table student-records-table">
-                    <caption className="visually-hidden">Student enrollment records</caption>
-                    <thead><tr><th scope="col">Student</th><th scope="col">Age</th><th scope="col">Sex</th><th scope="col">Parent</th><th scope="col">Status</th><th scope="col">Student Report</th></tr></thead>
-                    <tbody>{visibleStudents.map((enrollment) => <tr key={enrollment.id}>
-                      <td data-label="Student"><strong className="records-student-name">{getChildName(enrollment)}</strong></td>
-                      <td data-label="Age">{calculateAge(enrollment.birth_date)}</td>
-                      <td data-label="Sex">{formatSex(enrollment.sex)}</td>
-                      <td data-label="Parent">{enrollment.parent_full_name || 'Not provided'}</td>
-                      <td data-label="Status"><span className={`enrollment-status ${enrollment.status}`}>{enrollment.status === 'approved' ? 'accepted' : enrollment.status}</span></td>
-                      <td className="records-report-cell" data-label="Student Report">{enrollment.status === 'approved' ? <button type="button" className="student-report-link" onClick={() => { setReportEnrollmentId(enrollment.id); setActiveTab('student-report') }}>View report</button> : <span aria-hidden="true">—</span>}</td>
-                    </tr>)}</tbody>
-                  </table>
-                </div>}
-              </section>
+              <StudentReportsDirectory enrollments={enrollments} onOpenReport={setReportEnrollmentId} />
             ) : activeTab === 'enrollment-window' ? (
               <section className="pending-approvals-panel enrollment-window-panel">
                 <div className="pending-approvals-header"><div><h2>School Year &amp; Enrollment</h2></div></div>
@@ -292,25 +239,12 @@ function TeacherAideDashboard() {
                 />
                 {message && <p className="teacher-dashboard-message" role="status">{message}</p>}
               </section>
-            ) : <section className="pending-approvals-panel">
-              <div className="pending-approvals-header"><div><h2>Enrollment Requests</h2></div><span className="waiting-badge">{pendingEnrollments.length} waiting</span></div>
-              <p className="enrollment-window-note">Teacher aides can inspect requests, but only teachers can accept or reject them.</p>
-              <label className="dashboard-search"><span className="visually-hidden">Search enrollment requests</span><input type="search" value={requestSearch} onChange={(event) => setRequestSearch(event.target.value)} placeholder="Search student, parent, or reference code" /></label>
-              {message && <p className="teacher-dashboard-message" role="status">{message}</p>}
-              {loading ? <p className="teacher-empty-state app-loading" role="status">Loading applications...</p> : visibleRequests.length === 0 ? <p className="teacher-empty-state">{requestSearchTerm ? 'No requests match your search.' : 'No pending applications.'}</p> : <div className="records-table-shell">
-                <table className="records-table approvals-table">
-                  <caption className="visually-hidden">Pending enrollment requests</caption>
-                  <thead><tr><th scope="col">Student</th><th scope="col">Age</th><th scope="col">Sex</th><th scope="col">Parent</th><th scope="col">Status</th></tr></thead>
-                  <tbody>{visibleRequests.map((enrollment) => <tr key={enrollment.id}>
-                    <td data-label="Student"><strong className="records-student-name">{getChildName(enrollment)}</strong></td>
-                    <td data-label="Age">{calculateAge(enrollment.birth_date)}</td>
-                    <td data-label="Sex">{formatSex(enrollment.sex)}</td>
-                    <td data-label="Parent">{enrollment.parent_full_name || 'Not provided'}</td>
-                    <td data-label="Status"><span className="enrollment-status pending">pending</span></td>
-                  </tr>)}</tbody>
-                </table>
-              </div>}
-            </section>}
+            ) : (
+              <div className="enrollment-requests-view">
+                {message && <p className="teacher-dashboard-message" role="status">{message}</p>}
+                <EnrollmentRequestsDirectory enrollments={pendingEnrollments} />
+              </div>
+            )}
           </div>
         </div>
       </main>

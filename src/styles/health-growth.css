@@ -96,8 +96,10 @@
 .growth-records-table td,.growth-history-table td { color:var(--color-text); font-family:inherit; font-size:11.5px; font-style:normal; font-weight:500; }
 .growth-records-table .records-student-name { min-width:0; font-family:inherit; font-size:11.5px; font-style:normal; font-weight:700; }
 .growth-table-bmi,.growth-table-classification { color:inherit; font:inherit; }
-.growth-student-row { cursor:pointer; }
-.growth-student-row:focus-visible { position:relative; outline:3px solid color-mix(in srgb,var(--color-primary) 38%,transparent); outline-offset:-3px; }
+.growth-student-row.interactive { cursor:pointer; }
+.growth-student-row.interactive:focus-visible { position:relative; outline:3px solid color-mix(in srgb,var(--color-primary) 38%,transparent); outline-offset:-3px; }
+.growth-student-row.readonly { cursor:default; }
+.growth-student-row.readonly:hover { background:transparent; }
 .growth-record-delete { display:grid; width:30px; height:30px; margin-inline:auto; place-items:center; padding:0; border:0; border-radius:50%; background:transparent; color:var(--color-muted); cursor:pointer; transition:background-color .2s ease,color .2s ease; }
 .growth-record-delete:hover:not(:disabled) { background:var(--color-accent-soft); color:var(--color-accent-ink); }
 .growth-record-delete .app-icon { width:15px; height:15px; flex-basis:15px; }

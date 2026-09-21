@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import AppHeader from '../components/AppHeader'
 import AuthToast from '../components/AuthToast'
-import ConfirmDialog from '../components/ConfirmDialog'
 import AttendanceRoster from '../components/AttendanceRoster'
 import AnnouncementsPanel from '../components/AnnouncementsPanel'
 import CalendarPanel from '../components/CalendarPanel'
 import HealthGrowthPanel from '../components/HealthGrowthDirectory'
 import StudentReportPanel from '../components/StudentReportPanel'
+import StudentReportsDirectory from '../components/StudentReportsDirectory'
+import EnrollmentRequestsDirectory from '../components/EnrollmentRequestsDirectory'
 import DashboardLoadingShell from '../components/DashboardLoadingShell'
 import EnrollmentBatchControls from '../components/EnrollmentBatchControls'
 import { getEnrollmentWindow } from '../lib/enrollmentWindow'
@@ -19,23 +20,18 @@ function TeacherDashboard() {
 
   const [enrollments, setEnrollments] = useState([])
   const [studentRecords, setStudentRecords] = useState([])
-  const [selectedRejectedIds, setSelectedRejectedIds] = useState([])
   const [teacherName, setTeacherName] = useState('Teacher')
   const [message, setMessage] = useState('')
   const [reviewNotice, setReviewNotice] = useState('')
   const [loading, setLoading] = useState(true)
   const [reviewingId, setReviewingId] = useState(null)
+  const [updatingStudentStateId, setUpdatingStudentStateId] = useState(null)
   const [activeTab, setActiveTab] = useState(() => {
     const requestedTab = new URLSearchParams(window.location.search).get('tab')
     if (requestedTab === 'student-report') return 'students'
     return ['approvals', 'students', 'enrollment-window', 'health-growth', 'attendance', 'announcements', 'calendar'].includes(requestedTab) ? requestedTab : 'approvals'
   })
   const [reportEnrollmentId, setReportEnrollmentId] = useState(null)
-  const [deletingRejected, setDeletingRejected] = useState(false)
-  const [studentFilter, setStudentFilter] = useState('all')
-  const [studentSearch, setStudentSearch] = useState('')
-  const [requestSearch, setRequestSearch] = useState('')
-  const [pendingRejectedDelete, setPendingRejectedDelete] = useState([])
   const [batches, setBatches] = useState([])
   const [currentBatchId, setCurrentBatchId] = useState('')
   const [selectedBatchId, setSelectedBatchId] = useState('')
@@ -68,7 +64,7 @@ function TeacherDashboard() {
       return
     }
 
-    const [profileResult, parentNamesResult, windowResult, batchesResult] =
+    const [profileResult, parentNamesResult, parentEmailsResult, windowResult, batchesResult] =
       await Promise.all([
       supabase
         .from('profiles')
@@ -76,6 +72,7 @@ function TeacherDashboard() {
         .eq('id', user.id)
         .single(),
       supabase.rpc('get_staff_parent_names'),
+      supabase.rpc('get_staff_parent_emails'),
       getEnrollmentWindow(),
       supabase
         .from('enrollment_batches')
@@ -95,7 +92,7 @@ function TeacherDashboard() {
     const enrollmentResult = viewedBatchId
       ? await supabase
         .from('enrollments')
-        .select('id, batch_id, parent_id, child_first_name, child_middle_name, child_last_name, child_suffix, birth_date, sex, place_of_birth, is_registered, mother_tongue, other_dialect, status, reference_code, submitted_at, reviewed_at, reviewed_by')
+        .select('id, batch_id, parent_id, child_first_name, child_middle_name, child_last_name, child_suffix, birth_date, sex, place_of_birth, is_registered, mother_tongue, other_dialect, status, student_state, reference_code, submitted_at, resubmitted_at, reviewed_at, reviewed_by, review_reason')
         .eq('batch_id', viewedBatchId)
         .order('submitted_at', { ascending: false })
       : { data: [], error: null }
@@ -115,10 +112,17 @@ function TeacherDashboard() {
           parent.parent_full_name,
         ]),
       )
+      const parentEmails = new Map(
+        (parentEmailsResult.data || []).map((parent) => [
+          parent.parent_id,
+          parent.parent_email,
+        ]),
+      )
 
       const attachParentName = (enrollment) => ({
           ...enrollment,
           parent_full_name: parentNames.get(enrollment.parent_id) || null,
+          parent_email: parentEmails.get(enrollment.parent_id) || null,
         })
       const records = (enrollmentResult.data || []).map(attachParentName)
       setStudentRecords(records)
@@ -127,6 +131,10 @@ function TeacherDashboard() {
 
     if (parentNamesResult.error) {
       console.error('Unable to load parent names:', parentNamesResult.error)
+    }
+
+    if (parentEmailsResult.error) {
+      console.error('Unable to load parent emails:', parentEmailsResult.error)
     }
 
     if (batchesResult.error) {
@@ -150,7 +158,7 @@ function TeacherDashboard() {
     tables: ['profiles', 'enrollments', 'enrollment_settings', 'enrollment_batches'],
   })
 
-  async function updateStatus(id, status) {
+  async function updateStatus(id, status, reviewReason = '') {
     setMessage('')
     setReviewNotice('')
     setReviewingId(id)
@@ -169,6 +177,7 @@ function TeacherDashboard() {
       .from('enrollments')
       .update({
         status,
+        review_reason: status === 'rejected' ? reviewReason.trim() : null,
         reviewed_at: new Date().toISOString(),
         reviewed_by: user.id,
       })
@@ -184,97 +193,40 @@ function TeacherDashboard() {
     setStudentRecords((current) => current.map((enrollment) => enrollment.id === id
       ? { ...enrollment, status, reviewed_at: new Date().toISOString(), reviewed_by: user.id }
       : enrollment))
-    setReviewNotice(`Enrollment ${status}.`)
+    setReviewNotice(status === 'approved' ? 'Enrollment approved.' : 'Resubmission requested from the parent.')
     setReviewingId(null)
   }
 
-  function getChildName(enrollment) {
-    return [
-      enrollment.child_first_name,
-      enrollment.child_last_name,
-      enrollment.child_suffix,
-    ]
-      .filter(Boolean)
-      .join(' ')
-  }
-
-  function calculateAge(birthDate) {
-    if (!birthDate) return 'Not provided'
-
-    const today = new Date()
-    const birth = new Date(`${birthDate}T00:00:00`)
-    let age = today.getFullYear() - birth.getFullYear()
-    const monthDifference = today.getMonth() - birth.getMonth()
-
-    if (
-      monthDifference < 0 ||
-      (monthDifference === 0 && today.getDate() < birth.getDate())
-    ) {
-      age -= 1
-    }
-
-    return age
-  }
-
-  function formatSex(sex) {
-    if (!sex) return 'Not specified'
-    return sex.charAt(0).toUpperCase() + sex.slice(1)
-  }
-
-  function toggleRejectedSelection(id) {
-    setSelectedRejectedIds((current) => current.includes(id)
-      ? current.filter((selectedId) => selectedId !== id)
-      : [...current, id])
-  }
-
-  async function deleteRejected() {
-    const ids = pendingRejectedDelete
-    if (!ids.length) return
-    setDeletingRejected(true)
-    setMessage('')
-    setReviewNotice('')
-    const { error } = await supabase
-      .from('enrollments')
-      .delete()
-      .eq('status', 'rejected')
-      .in('id', ids)
-
-    setDeletingRejected(false)
-    if (error) {
-      setMessage(error.message)
-      return
-    }
-
-    setStudentRecords((current) => current.filter((item) => !ids.includes(item.id)))
-    setSelectedRejectedIds((current) => current.filter((id) => !ids.includes(id)))
-    setReviewNotice(ids.length === 1 ? 'Rejected application deleted.' : 'Selected rejected applications deleted.')
-    setPendingRejectedDelete([])
-  }
-
-  const studentDirectoryRecords = studentRecords.filter((enrollment) => enrollment.status !== 'pending')
-  const filteredStudentRecords = studentFilter === 'all'
-    ? studentDirectoryRecords
-    : studentDirectoryRecords.filter((enrollment) => enrollment.status === studentFilter)
-  const studentSearchTerm = studentSearch.trim().toLocaleLowerCase()
-  const visibleStudentRecords = studentSearchTerm
-    ? filteredStudentRecords.filter((enrollment) => [getChildName(enrollment), enrollment.parent_full_name, enrollment.reference_code].some((value) => String(value || '').toLocaleLowerCase().includes(studentSearchTerm)))
-    : filteredStudentRecords
-  const requestSearchTerm = requestSearch.trim().toLocaleLowerCase()
-  const visibleRequests = requestSearchTerm
-    ? enrollments.filter((enrollment) => [getChildName(enrollment), enrollment.parent_full_name, enrollment.reference_code].some((value) => String(value || '').toLocaleLowerCase().includes(requestSearchTerm)))
-    : enrollments
-  const rejectedStudentRecords = studentDirectoryRecords.filter((enrollment) => enrollment.status === 'rejected')
-  const visibleRejectedStudentRecords = visibleStudentRecords.filter((enrollment) => enrollment.status === 'rejected')
-
+  const studentDirectoryRecords = studentRecords.filter((enrollment) => enrollment.status === 'approved')
   if (loading) {
     return <DashboardLoadingShell label="Loading teacher dashboard..." />
+  }
+
+  async function updateStudentState(id, studentState) {
+    setMessage('')
+    setUpdatingStudentStateId(id)
+
+    const { error } = await supabase
+      .from('enrollments')
+      .update({ student_state: studentState })
+      .eq('id', id)
+      .eq('status', 'approved')
+
+    if (error) {
+      setMessage(error.message)
+    } else {
+      setStudentRecords((current) => current.map((student) => student.id === id ? { ...student, student_state: studentState } : student))
+      setReviewNotice(`Student status changed to ${studentState}.`)
+    }
+
+    setUpdatingStudentStateId(null)
   }
 
   return (
     <div className="teacher-dashboard-page teacher-aide-dashboard-page">
       <AppHeader />
       <AuthToast message={reviewNotice} onDismiss={() => setReviewNotice('')} duration={5000} variant="success" />
-      {pendingRejectedDelete.length > 0 && <ConfirmDialog title={pendingRejectedDelete.length === 1 ? 'Delete rejected application?' : `Delete ${pendingRejectedDelete.length} rejected applications?`} message="The selected enrollment records will be permanently removed. This action cannot be undone." confirmLabel="Delete" busy={deletingRejected} onConfirm={deleteRejected} onCancel={() => setPendingRejectedDelete([])} />}
+      {reportEnrollmentId && <StudentReportPanel enrollments={studentRecords.filter((enrollment) => enrollment.id === reportEnrollmentId)} onClose={() => setReportEnrollmentId(null)} canManageStatus updatingStatusId={updatingStudentStateId} onStatusChange={updateStudentState} />}
 
       <main className="teacher-dashboard-scroll">
         <div className="teacher-dashboard-content">
@@ -326,49 +278,14 @@ function TeacherDashboard() {
 
             {activeTab === 'health-growth' ? (
               <HealthGrowthPanel enrollments={studentRecords} canManage />
-            ) : activeTab === 'student-report' ? (
-              <StudentReportPanel enrollments={studentRecords.filter((enrollment) => enrollment.id === reportEnrollmentId)} onBack={() => { setReportEnrollmentId(null); setActiveTab('students') }} />
             ) : activeTab === 'calendar' ? (
               <CalendarPanel canManage listView />
             ) : activeTab === 'announcements' ? (
               <AnnouncementsPanel canManage />
             ) : activeTab === 'attendance' ? (
-              <AttendanceRoster enrollments={studentRecords} loading={loading} attendanceDate={attendanceDate} onDateChange={setAttendanceDate} canEdit />
+              <AttendanceRoster enrollments={studentRecords} loading={loading} attendanceDate={attendanceDate} onDateChange={setAttendanceDate} batch={batches.find((batch) => batch.id === selectedBatchId) || null} canEdit />
             ) : activeTab === 'students' ? (
-              <section className="pending-approvals-panel student-records-panel">
-                <div className="pending-approvals-header">
-                  <div><h2>Enrolled Students</h2></div>
-                  <span className="waiting-badge">{visibleStudentRecords.length} records</span>
-                </div>
-                <div className="student-status-filters" aria-label="Filter student records by status">
-                  {[['all', 'All'], ['approved', 'Enrolled'], ['rejected', 'Rejected']].map(([value, label]) => <button type="button" key={value} className={studentFilter === value ? 'active' : ''} onClick={() => { setStudentFilter(value); if (value !== 'rejected') setSelectedRejectedIds([]) }}>{label}</button>)}
-                </div>
-                <label className="dashboard-search"><span className="visually-hidden">Search student records</span><input type="search" value={studentSearch} onChange={(event) => { setStudentSearch(event.target.value); setSelectedRejectedIds([]) }} placeholder="Search student, parent, or reference code" /></label>
-                {message && <p className="teacher-dashboard-message" role="status">{message}</p>}
-                {!loading && studentFilter === 'rejected' && rejectedStudentRecords.length > 0 && <div className="rejected-toolbar compact-rejected-toolbar">
-                  <label><input type="checkbox" checked={visibleRejectedStudentRecords.length > 0 && visibleRejectedStudentRecords.every((item) => selectedRejectedIds.includes(item.id))} disabled={visibleRejectedStudentRecords.length === 0} onChange={(event) => setSelectedRejectedIds(event.target.checked ? [...new Set([...selectedRejectedIds, ...visibleRejectedStudentRecords.map((item) => item.id)])] : selectedRejectedIds.filter((id) => !visibleRejectedStudentRecords.some((item) => item.id === id)))} /> Select visible</label>
-                  <button type="button" className="bulk-delete-button" disabled={!selectedRejectedIds.length || deletingRejected} onClick={() => setPendingRejectedDelete(selectedRejectedIds)} aria-label={`Delete ${selectedRejectedIds.length} selected records`} title={`Delete selected (${selectedRejectedIds.length})`}><i className="app-icon app-icon-trash" aria-hidden="true" /></button>
-                </div>}
-                {loading ? <p className="teacher-empty-state app-loading" role="status">Loading student records...</p> : visibleStudentRecords.length === 0 ? <p className="teacher-empty-state">{studentSearchTerm ? 'No students match your search.' : `No ${studentFilter === 'all' ? '' : studentFilter} student records found.`}</p> : <div className="records-table-shell">
-                  <table className="records-table student-records-table">
-                    <caption className="visually-hidden">Student enrollment records</caption>
-                    <thead><tr>
-                      {studentFilter === 'rejected' && <th className="records-select-column" scope="col"><span className="visually-hidden">Select</span></th>}
-                      <th scope="col">Student</th><th scope="col">Age</th><th scope="col">Sex</th><th scope="col">Parent</th><th scope="col">Status</th><th scope="col">Student Report</th><th scope="col" className="records-actions-column"><span className="visually-hidden">Actions</span></th>
-                    </tr></thead>
-                    <tbody>{visibleStudentRecords.map((enrollment) => <tr key={enrollment.id}>
-                      {studentFilter === 'rejected' && <td className="records-select-column" data-label="Select"><label className="rejected-select"><input type="checkbox" checked={selectedRejectedIds.includes(enrollment.id)} onChange={() => toggleRejectedSelection(enrollment.id)} /><span className="visually-hidden">Select {getChildName(enrollment)}</span></label></td>}
-                      <td data-label="Student"><strong className="records-student-name">{getChildName(enrollment)}</strong></td>
-                      <td data-label="Age">{calculateAge(enrollment.birth_date)}</td>
-                      <td data-label="Sex">{formatSex(enrollment.sex)}</td>
-                      <td data-label="Parent">{enrollment.parent_full_name || 'Not provided'}</td>
-                      <td data-label="Status"><span className={`enrollment-status ${enrollment.status}`}>{enrollment.status === 'approved' ? 'accepted' : enrollment.status}</span></td>
-                      <td className="records-report-cell" data-label="Student Report">{enrollment.status === 'approved' ? <button type="button" className="student-report-link" onClick={() => { setReportEnrollmentId(enrollment.id); setActiveTab('student-report') }}>View report</button> : <span aria-hidden="true">—</span>}</td>
-                      <td className="records-actions-column" data-label="Actions">{enrollment.status === 'rejected' && <button type="button" className="delete-record-button" disabled={deletingRejected} onClick={() => setPendingRejectedDelete([enrollment.id])} aria-label={`Delete rejected record for ${getChildName(enrollment)}`} title="Delete rejected record"><i className="app-icon app-icon-trash" aria-hidden="true" /></button>}</td>
-                    </tr>)}</tbody>
-                  </table>
-                </div>}
-              </section>
+              <StudentReportsDirectory enrollments={studentRecords} onOpenReport={setReportEnrollmentId} />
             ) : activeTab === 'enrollment-window' ? (
               <section className="pending-approvals-panel enrollment-window-panel">
                 <div className="pending-approvals-header">
@@ -382,47 +299,16 @@ function TeacherDashboard() {
                   onChanged={setSelectedBatchId}
                   onNotice={setReviewNotice}
                   onError={setMessage}
+                  canDelete
                 />
                 {message && <p className="teacher-dashboard-message" role="status">{message}</p>}
               </section>
-            ) : <section className="pending-approvals-panel">
-            <div className="pending-approvals-header">
-              <div><h2>Enrollment Requests</h2></div>
-              <div className="requests-header-actions">
-                <span className="waiting-badge">
-                  {enrollments.length} waiting
-                </span>
-              </div>
-            </div>
-
-            {message && <p className="teacher-dashboard-message" role="status">{message}</p>}
-            <label className="dashboard-search"><span className="visually-hidden">Search enrollment requests</span><input type="search" value={requestSearch} onChange={(event) => setRequestSearch(event.target.value)} placeholder="Search student, parent, or reference code" /></label>
-
-            {loading ? (
-              <p className="teacher-empty-state app-loading" role="status">Loading applications...</p>
-            ) : visibleRequests.length === 0 ? (
-              <p className="teacher-empty-state">{requestSearchTerm ? 'No requests match your search.' : 'No pending applications.'}</p>
             ) : (
-              <div className="records-table-shell">
-                <table className="records-table approvals-table">
-                  <caption className="visually-hidden">Pending enrollment requests</caption>
-                  <thead><tr><th scope="col">Student</th><th scope="col">Age</th><th scope="col">Sex</th><th scope="col">Parent</th><th scope="col">Review</th></tr></thead>
-                  <tbody>{visibleRequests.map((enrollment) => (
-                    <tr key={enrollment.id}>
-                      <td data-label="Student"><strong className="records-student-name">{getChildName(enrollment)}</strong></td>
-                      <td data-label="Age">{calculateAge(enrollment.birth_date)}</td>
-                      <td data-label="Sex">{formatSex(enrollment.sex)}</td>
-                      <td data-label="Parent">{enrollment.parent_full_name || 'Not provided'}</td>
-                      <td data-label="Review"><div className="review-actions">
-                        <button type="button" className="approve-button" disabled={reviewingId === enrollment.id} onClick={() => updateStatus(enrollment.id, 'approved')}>Accept</button>
-                        <button type="button" className="reject-button" disabled={reviewingId === enrollment.id} onClick={() => updateStatus(enrollment.id, 'rejected')}>Reject</button>
-                      </div></td>
-                    </tr>
-                  ))}</tbody>
-                </table>
+              <div className="enrollment-requests-view">
+                {message && <p className="teacher-dashboard-message" role="status">{message}</p>}
+                <EnrollmentRequestsDirectory enrollments={enrollments} canReview reviewingId={reviewingId} onReview={updateStatus} />
               </div>
             )}
-            </section>}
           </div>
         </div>
       </main>

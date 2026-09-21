@@ -85,10 +85,14 @@ function paginationItems(currentPage, totalPages) {
   return [1, 'start-ellipsis', currentPage, 'end-ellipsis', totalPages]
 }
 
-function HealthGrowthDirectory({ enrollments, canManage = false }) {
+function HealthGrowthDirectory({ enrollments, canManage = false, rowsClickable = true }) {
   const students = useMemo(
     () => enrollments.filter((item) => item.status === 'approved'),
     [enrollments],
+  )
+  const activeStudents = useMemo(
+    () => students.filter((student) => (student.student_state || 'enrolled') === 'enrolled'),
+    [students],
   )
   const [latestMeasurements, setLatestMeasurements] = useState({})
   const [search, setSearch] = useState('')
@@ -220,13 +224,13 @@ function HealthGrowthDirectory({ enrollments, canManage = false }) {
   const visibleRows = sortedRows.slice(firstIndex, firstIndex + PAGE_SIZE)
   const shownStart = filteredRows.length === 0 ? 0 : firstIndex + 1
   const shownEnd = Math.min(firstIndex + PAGE_SIZE, filteredRows.length)
-  const selectedStudent = students.find((student) => student.id === selectedStudentId) || null
+  const selectedStudent = activeStudents.find((student) => student.id === selectedStudentId) || null
   const updateSuggestions = useMemo(() => {
     const term = updateSearch.trim().toLocaleLowerCase()
-    return students.filter((student) => !term || [childName(student), student.reference_code, student.parent_full_name]
+    return activeStudents.filter((student) => !term || [childName(student), student.reference_code, student.parent_full_name]
       .some((value) => String(value || '').toLocaleLowerCase().includes(term)))
       .slice(0, 5)
-  }, [students, updateSearch])
+  }, [activeStudents, updateSearch])
 
   function changeSort(key) {
     setSortConfig((current) => ({
@@ -429,7 +433,7 @@ function HealthGrowthDirectory({ enrollments, canManage = false }) {
                     <td data-label="Weight (kg)">{Number(record.weight_kg).toFixed(1)}</td>
                     <td data-label="BMI">{calculateBmi(record.height_cm, record.weight_kg)}</td>
                     <td data-label="Classification">{classification?.label || 'Unavailable'}</td>
-                    <td data-label="Actions" className="records-actions-column"><button type="button" className="growth-record-delete" disabled={deleting} onClick={() => setPendingDelete({ student: historyStudent, record })} aria-label={`Delete health record from ${formatDate(record.measured_on)}`} title="Delete health record"><i className="app-icon app-icon-trash" aria-hidden="true" /></button></td>
+                    <td data-label="Actions" className="records-actions-column"><button type="button" className="growth-record-delete icon-delete-button" disabled={deleting} onClick={() => setPendingDelete({ student: historyStudent, record })} aria-label={`Delete health record from ${formatDate(record.measured_on)}`} title="Delete health record"><i className="app-icon app-icon-trash" aria-hidden="true" /></button></td>
                   </tr>
                 })}</tbody>
               </table>
@@ -438,13 +442,13 @@ function HealthGrowthDirectory({ enrollments, canManage = false }) {
         </section>
       </div>}
 
-      <header className="growth-header"><h2>Student Health &amp; Growth</h2></header>
+      <header className="growth-header"><h2>Health &amp; Growth</h2></header>
 
       <div className="growth-directory-heading">
         <span>Latest Records</span>
         <strong>{filteredRows.length} students</strong>
       </div>
-      <p className="growth-directory-instruction">Click a student row to view their complete health history.</p>
+      {rowsClickable && <p className="growth-directory-instruction">Click a student row to view their complete health history.</p>}
 
       <div className="growth-directory-toolbar">
         <label className="growth-directory-search">
@@ -454,7 +458,7 @@ function HealthGrowthDirectory({ enrollments, canManage = false }) {
         <div className="growth-directory-filter">
           <PaginatedDropdown options={CLASSIFICATION_OPTIONS} value={classificationFilter} onChange={(value) => { setClassificationFilter(value); setCurrentPage(1) }} ariaLabel="BMI classification" pageSize={10} />
         </div>
-        {canManage && <button type="button" className="growth-update-button" onClick={openUpdateDialog} disabled={students.length === 0}>Add Record</button>}
+        {canManage && <button type="button" className="growth-update-button" onClick={openUpdateDialog} disabled={activeStudents.length === 0}>Add Record</button>}
       </div>
 
       {message && <p className="growth-message" role="status">{message}</p>}
@@ -465,8 +469,8 @@ function HealthGrowthDirectory({ enrollments, canManage = false }) {
             <caption className="visually-hidden">Latest student health and growth records</caption>
             <thead><tr>{sortableHeading('name', 'Name')}{sortableHeading('age', 'Age')}{sortableHeading('gender', 'Gender')}{sortableHeading('height', 'Height (cm)')}{sortableHeading('weight', 'Weight (kg)')}{sortableHeading('bmi', 'BMI')}{sortableHeading('classification', 'Classification')}{sortableHeading('date', 'Date Recorded')}</tr></thead>
             <tbody>{visibleRows.length === 0 ? (
-              <tr className="growth-table-empty-row"><td colSpan="7">No health and growth records match this filter.</td></tr>
-            ) : visibleRows.map(({ student, measurement, bmi, classification }) => <tr key={student.id} className="growth-student-row" tabIndex="0" aria-label={`View health history for ${childName(student)}`} onClick={() => openStudentHistory(student)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openStudentHistory(student) } }}>
+              <tr className="growth-table-empty-row"><td colSpan="8">No health and growth records match this filter.</td></tr>
+            ) : visibleRows.map(({ student, measurement, bmi, classification }) => <tr key={student.id} className={`growth-student-row ${rowsClickable ? 'interactive' : 'readonly'}`} tabIndex={rowsClickable ? 0 : undefined} aria-label={rowsClickable ? `View health history for ${childName(student)}` : undefined} onClick={rowsClickable ? () => openStudentHistory(student) : undefined} onKeyDown={rowsClickable ? (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openStudentHistory(student) } } : undefined}>
               <td data-label="Name"><strong className="records-student-name">{childName(student)}</strong></td>
               <td data-label="Age">{calculateAge(student.birth_date)}</td>
               <td data-label="Gender">{formatGender(student.sex)}</td>

@@ -44,7 +44,7 @@ function HomePage() {
     if (profile.role === 'parent') {
       const { data } = await supabase
         .from('enrollments')
-        .select('id, child_first_name, child_last_name, status, reference_code, submitted_at')
+        .select('id, child_first_name, child_last_name, status, reference_code, submitted_at, review_reason')
         .eq('parent_id', currentUser.id)
         .eq('batch_id', enrollmentWindow?.current_batch_id)
         .order('submitted_at', { ascending: false })

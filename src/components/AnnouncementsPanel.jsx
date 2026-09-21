@@ -143,7 +143,7 @@ function AnnouncementsPanel({ canManage = false }) {
                   <h3>{announcement.title}</h3>
                   <time dateTime={announcement.published_at}>{formatDate(announcement.published_at)}</time>
                 </div>
-                {canManage && <button type="button" disabled={deletingId === announcement.id} onClick={() => setPendingDelete(announcement)} aria-label={`Delete announcement: ${announcement.title}`} title="Delete announcement"><i className="app-icon app-icon-trash" aria-hidden="true" /></button>}
+                {canManage && <button type="button" className="icon-delete-button" disabled={deletingId === announcement.id} onClick={() => setPendingDelete(announcement)} aria-label={`Delete announcement: ${announcement.title}`} title="Delete announcement"><i className="app-icon app-icon-trash" aria-hidden="true" /></button>}
               </div>
               <p>{announcement.body}</p>
             </article>

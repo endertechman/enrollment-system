@@ -86,7 +86,7 @@ function AppHeader({ loggedOutAction = 'home' }) {
           {!loading && (user ? (
             <div className="signed-in-header-actions">
             {showHomeAction && <button type="button" className="nav-home-action" onClick={() => navigate('/')} aria-label="Home" title="Home"><span className="header-icon-slot"><i className="app-icon app-icon-home" aria-hidden="true" /></span></button>}
-            {['parent', 'teacher', 'teacher_aide'].includes(role) && <NotificationsMenu user={user} role={role} />}
+            {['parent', 'teacher', 'teacher_aide'].includes(role) && <NotificationsMenu key={`${user.id}:${role}`} user={user} role={role} />}
             <div className="account-menu" ref={menuRef}>
               <button type="button" className="account-menu-toggle" aria-label="Open account menu" aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}>
                 <span className="header-icon-slot"><i className="app-icon app-icon-menu" aria-hidden="true" /></span>

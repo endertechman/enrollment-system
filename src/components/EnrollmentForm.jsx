@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import AppHeader from './AppHeader'
+import ConfirmDialog from './ConfirmDialog'
 import { getEnrollmentWindow, isEnrollmentOpen } from '../lib/enrollmentWindow'
 import { getAgeInYears, getPhilippineDateValue } from '../lib/philippineDate'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
@@ -33,7 +34,7 @@ function EnrollmentForm() {
   const [submitting, setSubmitting] = useState(false)
   const [currentStep, setCurrentStep] = useState(1)
   const [resubmissionId, setResubmissionId] = useState(null)
-  const [resubmissionReason, setResubmissionReason] = useState('')
+  const [confirmSubmit, setConfirmSubmit] = useState(false)
 
   const getEnrollmentCount = useCallback(async (parentId, batchId) => {
     return supabase
@@ -72,7 +73,7 @@ function EnrollmentForm() {
       setEnrollmentOpen(true)
       const { data: rejectedEnrollment, error: rejectedError } = await supabase
         .from('enrollments')
-        .select('id, child_first_name, child_middle_name, child_last_name, child_suffix, birth_date, sex, place_of_birth, birth_order, is_registered, mother_tongue, other_dialect, review_reason')
+        .select('id, child_first_name, child_middle_name, child_last_name, child_suffix, birth_date, sex, place_of_birth, birth_order, is_registered, mother_tongue, other_dialect')
         .eq('id', requestedResubmissionId)
         .eq('parent_id', user.id)
         .eq('status', 'rejected')
@@ -96,7 +97,6 @@ function EnrollmentForm() {
       setIsRegistered(rejectedEnrollment.is_registered ? 'yes' : 'no')
       setMotherTongue(rejectedEnrollment.mother_tongue || '')
       setOtherDialect(rejectedEnrollment.other_dialect || '')
-      setResubmissionReason(rejectedEnrollment.review_reason || '')
       setResubmissionId(rejectedEnrollment.id)
       setParentEmail(user.email || '')
       setLoading(false)
@@ -173,9 +173,17 @@ function EnrollmentForm() {
     setCurrentStep((step) => Math.min(step + 1, 2))
   }
 
-  async function handleSubmit(e) {
+  function handleSubmit(e) {
     e.preventDefault()
+    if (currentStep < 2) {
+      goToNextStep()
+      return
+    }
+    if (!formRef.current?.reportValidity()) return
+    setConfirmSubmit(true)
+  }
 
+  async function submitEnrollment() {
     if (submitting) return
 
     setMessage('')
@@ -195,6 +203,7 @@ function EnrollmentForm() {
     if (windowResult.error || !windowResult.data?.current_batch_id) {
       setMessage('Unable to verify the enrollment schedule right now. Please try again.')
       setSubmitting(false)
+      setConfirmSubmit(false)
       return
     }
 
@@ -230,6 +239,7 @@ function EnrollmentForm() {
       if (countError) {
         setMessage('Unable to verify your enrollments right now.')
         setSubmitting(false)
+        setConfirmSubmit(false)
         return
       }
 
@@ -258,6 +268,7 @@ function EnrollmentForm() {
             : error.message,
       )
       setSubmitting(false)
+      setConfirmSubmit(false)
       return
     }
 
@@ -312,6 +323,16 @@ function EnrollmentForm() {
   return (
     <div className="landing-page">
       <AppHeader />
+      {confirmSubmit && <ConfirmDialog
+        title={resubmissionId ? 'Resubmit this application?' : 'Submit this enrollment?'}
+        message={resubmissionId ? 'Your updated child information will be sent to BCDC for another review.' : 'Please confirm that the child information is accurate before sending it to BCDC.'}
+        confirmLabel={resubmissionId ? 'Resubmit Application' : 'Submit Enrollment'}
+        tone="primary"
+        iconClass="app-icon-clipboard"
+        busy={submitting}
+        onConfirm={submitEnrollment}
+        onCancel={() => setConfirmSubmit(false)}
+      />}
 
       <div className="landing-scroll">
         <main className="enrollment-page">
@@ -330,21 +351,6 @@ function EnrollmentForm() {
             className="enrollment-form"
             onSubmit={handleSubmit}
           >
-            {resubmissionId && <div className="enrollment-resubmission-note"><span>Teacher&apos;s reason for resubmission</span><p>{resubmissionReason || 'Please review and correct the application information.'}</p></div>}
-            <div className="enrollment-progress" role="list" aria-label={`Form section ${currentStep} of 2`}>
-              {[1, 2].map((step) => (
-                <div
-                  key={step}
-                  role="listitem"
-                  aria-label={`${['Child Details', 'Registration and Language'][step - 1]}${step === currentStep ? ', current section' : step < currentStep ? ', completed' : ''}`}
-                  aria-current={step === currentStep ? 'step' : undefined}
-                  className={`enrollment-progress-step${step === currentStep ? ' active' : ''}${step < currentStep ? ' complete' : ''}`}
-                >
-                  <span>{step < currentStep ? '✓' : step}</span>
-                </div>
-              ))}
-            </div>
-
             {currentStep === 1 && <section className="enrollment-section" data-step="1">
               <div className="enrollment-section-heading"><h2>Child Details</h2><p>Enter the child&apos;s identity and basic information.</p></div>
 
@@ -511,7 +517,23 @@ function EnrollmentForm() {
 
             <div className="enrollment-step-actions">
               {currentStep > 1 && <button type="button" className="enrollment-previous" onClick={() => setCurrentStep((step) => step - 1)}>Previous</button>}
-              {currentStep < 2 ? <button type="button" className="enrollment-next" onClick={goToNextStep}>Next</button> : <button type="submit" className="enrollment-submit" disabled={submitting}>{resubmissionId ? 'Resubmit Application' : 'Submit Enrollment'}</button>}
+              {currentStep < 2 ? (
+                <button
+                  key="next"
+                  type="button"
+                  className="enrollment-next"
+                  onClick={(event) => {
+                    // This button is replaced by a submit button after the step changes.
+                    // Cancel this click's default action before React updates the DOM.
+                    event.preventDefault()
+                    goToNextStep()
+                  }}
+                >Next</button>
+              ) : (
+                <button key="submit" type="submit" className="enrollment-submit" disabled={submitting}>
+                  {resubmissionId ? 'Resubmit Application' : 'Submit Enrollment'}
+                </button>
+              )}
             </div>
           </form>
         </main>

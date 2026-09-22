@@ -19,6 +19,8 @@ The system allows students or guardians to submit enrollment applications online
 
 This project is currently under development. Additional features, security improvements, testing, and UI/UX revisions will be implemented as development continues.
 
+For the latest executed checks and remaining acceptance cases, see [UAT.md](UAT.md). Notification audiences and destinations are documented in [NOTIFICATIONS.md](NOTIFICATIONS.md). Verified and unverified Supabase metadata is summarized in [supabase/reference/README.md](supabase/reference/README.md); the reference SQL there must not be applied as migrations.
+
 ## Purpose
 
 The goal of this project is to provide a more convenient and organized enrollment process by reducing manual paperwork and allowing enrollment applications to be submitted and reviewed online.

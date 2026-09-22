@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "test:uat-smoke": "node --test tests/uat-smoke.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

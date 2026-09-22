@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { getPhilippineDateValue } from '../lib/philippineDate'
 import ConfirmDialog from './ConfirmDialog'
 import PaginatedDropdown from './PaginatedDropdown'
 import AuthToast from './AuthToast'
@@ -15,7 +16,7 @@ function formatSchedule(value) {
   const date = new Date(value)
   return {
     date: date.toLocaleDateString('en-PH', { dateStyle: 'long', timeZone: 'Asia/Manila' }),
-    time: `${date.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' })} PHT`,
+    time: date.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' }),
   }
 }
 
@@ -38,11 +39,7 @@ function EnrollmentBatchControls({ batches, currentBatchId, selectedBatchId, onS
   const isCurrent = selectedBatch?.id === currentBatchId
   const openingSchedule = formatSchedule(selectedBatch?.opens_at)
   const closingSchedule = formatSchedule(selectedBatch?.closes_at)
-  const today = useMemo(() => {
-    const now = new Date()
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
-    return now.toISOString().slice(0, 10)
-  }, [])
+  const today = getPhilippineDateValue()
 
   function openCreateDialog() {
     setSemester({ ...emptySemester, name: 'S.Y. 20XX' })
@@ -145,7 +142,7 @@ function EnrollmentBatchControls({ batches, currentBatchId, selectedBatchId, onS
             <label className="semester-name-field"><span>Semester name</span><input type="text" value={semester.name} minLength="2" maxLength="20" onChange={(event) => updateSemester('name', event.target.value)} placeholder="S.Y. 20XX" required /><small>Use a clear name, up to 20 characters. {semester.name.length} of 20 characters used.</small></label>
             <fieldset className="semester-form-section"><legend>Semester dates</legend><p>The period when classes and student records belong to this semester.</p><div className="semester-date-fields"><label><span>Semester starts</span><input type="date" value={semester.startsOn} min={dialogMode === 'create' ? today : undefined} onChange={(event) => updateSemester('startsOn', event.target.value)} required /></label><label><span>Semester ends</span><input type="date" value={semester.endsOn} min={semester.startsOn || (dialogMode === 'create' ? today : undefined)} onChange={(event) => updateSemester('endsOn', event.target.value)} required /></label></div></fieldset>
             <fieldset className="semester-form-section"><legend>Enrollment window</legend><p>When students can submit enrollment requests. These dates are independent of semester dates.</p><div className="semester-window-fields"><label><span>Enrollment opens</span><input type="date" value={semester.opensDate} min={dialogMode === 'create' ? today : undefined} onChange={(event) => updateSemester('opensDate', event.target.value)} required /></label><label><span>Time</span><input type="time" value={semester.opensTime} onChange={(event) => updateSemester('opensTime', event.target.value)} required /></label><label><span>Enrollment closes</span><input type="date" value={semester.closesDate} min={semester.opensDate || (dialogMode === 'create' ? today : undefined)} onChange={(event) => updateSemester('closesDate', event.target.value)} required /></label><label><span>Time</span><input type="time" value={semester.closesTime} onChange={(event) => updateSemester('closesTime', event.target.value)} required /></label></div></fieldset>
-            <p className="semester-time-note"><i className="app-icon app-icon-clock" aria-hidden="true" /> Enrollment may remain open after the semester starts. All times use Philippine Time (PHT).</p>
+            <p className="semester-time-note"><i className="app-icon app-icon-clock" aria-hidden="true" /> Enrollment may remain open after the semester starts.</p>
             <div className="semester-dialog-actions"><button type="button" className="button-secondary" onClick={() => setDialogMode('')} disabled={working}>Cancel</button><button type="submit" className="approve-button" disabled={working}>{dialogMode === 'update' ? 'Edit Semester' : 'Create Semester'}</button></div>
           </form>
         </section>
@@ -153,7 +150,7 @@ function EnrollmentBatchControls({ batches, currentBatchId, selectedBatchId, onS
 
       <div className="semester-schedule-layout">
         <section className="semester-management" aria-label="Student semester">
-          <div className="semester-copy"><span>Student semester</span><strong>{selectedBatch ? `${selectedBatch.name} · ${isCurrent ? 'Active' : 'Archived'}` : 'Semester unavailable'}</strong><p>Choose a semester to view its requests, students, attendance, and health records.</p></div>
+          <div className="semester-copy"><span>Student Semester</span><strong>{selectedBatch ? `${selectedBatch.name} · ${isCurrent ? 'Active' : 'Archived'}` : 'Semester unavailable'}</strong><p>Choose a semester to view its requests, students, attendance, and health records.</p></div>
           <div className="semester-picker-row"><PaginatedDropdown options={batches.map((batch) => ({ value: batch.id, label: batch.name }))} value={selectedBatchId} onChange={onSelect} disabled={working || batches.length === 0} ariaLabel="View semester" pageSize={10} /><button type="button" className="semester-create-button" onClick={openCreateDialog} disabled={working}>Create New</button></div>
           <div className="semester-management-actions"><button type="button" className="semester-update-button" onClick={openUpdateDialog} disabled={working || !selectedBatch}>Edit Semester</button><button type="button" className="semester-activate-button" onClick={() => setConfirmation('active')} disabled={working || !selectedBatch || isCurrent}>{isCurrent ? 'Currently Active' : 'Set as Active'}</button>{canDelete && <button type="button" className="batch-delete-button" onClick={() => setConfirmation('delete')} disabled={working || !selectedBatch || isCurrent}>{isCurrent ? 'Delete Locked' : 'Delete Selected'}</button>}</div>
         </section>

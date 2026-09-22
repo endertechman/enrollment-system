@@ -1052,57 +1052,6 @@
   }
 }
 
-.child-picker-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-  background: rgba(48, 42, 50, 0.52);
-  backdrop-filter: blur(5px);
-  animation: child-overlay-in 0.2s ease;
-}
-
-.child-picker-dialog {
-  position: relative;
-  width: min(560px, 100%);
-  padding: 30px;
-  border-radius: 24px;
-  background: #fff;
-  text-align: center;
-  box-shadow: 0 24px 70px rgba(48, 42, 50, 0.24);
-}
-
-.child-picker-close {
-  position: absolute;
-  top: 14px;
-  right: 16px;
-  width: 34px;
-  height: 34px;
-  border: 0;
-  border-radius: 50%;
-  background: #f8e8ef;
-  color: #705864;
-  font-size: 22px;
-  cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.child-picker-close:hover { background: #efb6cd; color: #553943; }
-
-.child-picker-dialog h2 { margin: 0; color: #302a32; }
-.child-picker-dialog > p { margin: 8px 0 0; color: #75707a; }
-
-@keyframes child-overlay-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .child-picker-overlay { animation: none; }
-}
-
 /* Compact application scale */
 .landing-nav { height: 68px; min-height: 68px; }
 .landing-logo { width: 44px; height: 44px; }
@@ -1117,7 +1066,6 @@
 .secondary-cta { padding: 12px 20px; font-size: 14px; }
 .hero-card { padding: 26px; border-radius: 22px; }
 .home-child-avatar { width: 58px; height: 58px; font-size: 19px; }
-.child-picker-dialog { padding: 26px; }
 
 @media (max-width: 900px) {
   .hero-content h1 { font-size: 46px; }
@@ -1133,6 +1081,22 @@
 }
 .hero-label.enrollment-window-scheduled { background: color-mix(in srgb, var(--color-accent) 16%, var(--color-surface)); color: var(--color-accent); }
 .hero-label.enrollment-window-closed { background: color-mix(in srgb, var(--color-accent) 16%, var(--color-surface)); color: var(--color-accent); }
+
+.home-schedule-card { max-width: 460px; padding: 0; overflow: hidden; }
+.home-schedule-header { padding: 22px 24px 19px; background: linear-gradient(105deg, var(--color-accent-soft), var(--color-primary-soft)); }
+.home-schedule-header > span { color: var(--color-primary-ink); font-size: 10px; font-weight: 750; letter-spacing: .06em; text-transform: uppercase; }
+.home-schedule-header h2 { margin: 5px 0 0; color: var(--color-text); font-family: var(--font-display); font-size: 22px; font-weight: 750; letter-spacing: -.025em; line-height: 1.25; overflow-wrap: anywhere; }
+.home-schedule-header p { margin: 5px 0 0; color: var(--color-muted); font-size: 12px; line-height: 1.45; }
+.home-schedule-dates { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 20px 24px 24px; }
+.home-schedule-dates > div { display: grid; align-content: start; gap: 6px; min-width: 0; padding: 12px 13px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); }
+.home-schedule-dates > div > span { color: var(--color-muted); font-size: 10px; font-weight: 720; letter-spacing: .035em; text-transform: uppercase; }
+.home-schedule-dates > div > strong { color: var(--color-text); font-size: 13px; font-weight: 680; line-height: 1.4; overflow-wrap: anywhere; }
+@media (max-width: 480px) {
+  .home-schedule-header { padding: 19px 20px 17px; }
+  .home-schedule-dates { gap: 9px; padding: 16px 20px 20px; }
+  .home-schedule-dates > div { padding: 10px; }
+  .home-schedule-dates > div > strong { font-size: 12px; }
+}
 
 /* Give the logged-out home page its own balanced, intentional hero layout. */
 .landing-hero-public {

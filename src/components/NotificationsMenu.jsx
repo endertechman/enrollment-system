@@ -2,13 +2,8 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { getEnrollmentWindow } from '../lib/enrollmentWindow'
+import { getPhilippineDateValue as localDateValue } from '../lib/philippineDate'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
-
-function localDateValue() {
-  const now = new Date()
-  now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
-  return now.toISOString().slice(0, 10)
-}
 
 function getChildName(enrollment) {
   return [enrollment?.child_first_name, enrollment?.child_last_name].filter(Boolean).join(' ') || 'a student'

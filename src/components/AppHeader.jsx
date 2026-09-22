@@ -110,7 +110,7 @@ function AppHeader({ loggedOutAction = 'home' }) {
         </div>
       </div>
     </nav>
-    {user && settingsOpen && <AccountSettingsDialog user={user} fullName={fullName} role={role} onClose={() => setSettingsOpen(false)} />}
+    {user && settingsOpen && <AccountSettingsDialog user={user} fullName={fullName} role={role} onNameUpdated={(name) => { setFullName(name); window.dispatchEvent(new CustomEvent('bcdc:account-name-updated', { detail: { name } })) }} onClose={() => setSettingsOpen(false)} />}
     {role === 'teacher' && roleManagerOpen && <RoleManagerDialog onClose={() => setRoleManagerOpen(false)} />}
     </>
   )

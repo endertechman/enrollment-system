@@ -1,0 +1,13 @@
+.parent-health-panel .student-report-header { background:linear-gradient(100deg,var(--color-accent-soft),var(--color-primary-soft)); }
+.parent-health-panel .student-report-identity { margin-top:16px; }
+.parent-health-panel .student-report-body { min-width:0; }
+.parent-health-history { min-width:0; }
+.parent-health-history .student-report-section-heading { margin-bottom:12px; }
+.parent-health-table-shell { margin-top:0; }
+.parent-health-table { width:100%; min-width:620px; }
+.parent-health-table tbody tr:hover { background:transparent; }
+.parent-health-history .growth-table-footer { padding:0 4px; }
+
+@media(max-width:620px) {
+  .parent-health-table { min-width:0; }
+}

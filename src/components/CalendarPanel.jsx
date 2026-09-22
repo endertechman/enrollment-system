@@ -6,8 +6,33 @@ import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 import { getEnrollmentWindow } from '../lib/enrollmentWindow'
 
 const TITLE_LIMIT = 100
-const DESCRIPTION_LIMIT = 500
+const MAX_EVENTS_PER_DAY = 5
+const DEFAULT_EVENT_COLOR = '#35c8d0'
+const EVENT_COLORS = [
+  { name: 'Aqua', hex: '#35c8d0' },
+  { name: 'Pink', hex: '#ef92b3' },
+  { name: 'Purple', hex: '#8d75c8' },
+  { name: 'Orange', hex: '#de9b55' },
+  { name: 'Blue', hex: '#5d9dda' },
+  { name: 'Green', hex: '#62ae83' },
+  { name: 'Red', hex: '#d95864' },
+  { name: 'Slate', hex: '#78889d' },
+]
+const MILESTONE_COLORS = {
+  opens: '#35c8d0',
+  closes: '#ef92b3',
+  starts: '#8d75c8',
+  ends: '#de9b55',
+}
 const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+function eventColor(item) {
+  return /^#[0-9a-f]{6}$/i.test(item?.color_hex || '') ? item.color_hex : DEFAULT_EVENT_COLOR
+}
+
+function isMissingColorColumn(error) {
+  return error?.code === '42703' || error?.code === 'PGRST204'
+}
 
 function toDateValue(date) {
   const year = date.getFullYear()
@@ -27,12 +52,12 @@ function toPhilippineDateValue(value) {
 
 function formatPhilippineTime(value) {
   if (!value) return ''
-  return `${new Date(value).toLocaleTimeString('en-PH', {
+  return new Date(value).toLocaleTimeString('en-PH', {
     hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila',
-  })} PHT`
+  })
 }
 
-function CalendarPanel({ canManage = false, listView = false, showEnrollmentMilestones = false }) {
+function CalendarPanel({ canManage = false, showEnrollmentMilestones = true }) {
   const today = toDateValue(new Date())
   const [visibleMonth, setVisibleMonth] = useState(() => {
     const now = new Date()
@@ -42,14 +67,15 @@ function CalendarPanel({ canManage = false, listView = false, showEnrollmentMile
   const [events, setEvents] = useState([])
   const [enrollmentMilestones, setEnrollmentMilestones] = useState([])
   const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
+  const [eventColorHex, setEventColorHex] = useState(DEFAULT_EVENT_COLOR)
+  const [colorPaletteOpen, setColorPaletteOpen] = useState(false)
+  const [customColorsAvailable, setCustomColorsAvailable] = useState(true)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState(null)
   const [message, setMessage] = useState('')
   const [notice, setNotice] = useState('')
   const [pendingDelete, setPendingDelete] = useState(null)
-  const [calendarVisible, setCalendarVisible] = useState(!listView)
 
   const monthKey = `${visibleMonth.getFullYear()}-${String(visibleMonth.getMonth() + 1).padStart(2, '0')}`
 
@@ -60,19 +86,28 @@ function CalendarPanel({ canManage = false, listView = false, showEnrollmentMile
     }
     const firstDay = `${monthKey}-01`
     const lastDay = toDateValue(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 0))
-    const { data, error } = await supabase
+    const colorResult = await supabase
       .from('calendar_events')
-      .select('id, title, description, event_date, created_at')
+      .select('id, title, event_date, created_at, color_hex')
       .gte('event_date', firstDay)
       .lte('event_date', lastDay)
       .order('event_date', { ascending: true })
       .order('created_at', { ascending: true })
+    const result = isMissingColorColumn(colorResult.error)
+      ? await supabase.from('calendar_events')
+        .select('id, title, event_date, created_at')
+        .gte('event_date', firstDay)
+        .lte('event_date', lastDay)
+        .order('event_date', { ascending: true })
+        .order('created_at', { ascending: true })
+      : colorResult
+    setCustomColorsAvailable(!isMissingColorColumn(colorResult.error))
 
-    if (error) {
+    if (result.error) {
       setEvents([])
-      setMessage('School calendar events are unavailable until the Supabase migration is applied.')
+      setMessage('School calendar events are temporarily unavailable.')
     } else {
-      setEvents(data || [])
+      setEvents(result.data || [])
     }
 
     if (showEnrollmentMilestones) {
@@ -89,10 +124,10 @@ function CalendarPanel({ canManage = false, listView = false, showEnrollmentMile
       if (!windowResult.error && !batchResult.error && batchResult.data) {
         const batch = batchResult.data
         const milestones = [
-          { id: `semester-${batch.id}-opens`, title: 'Enrollment opens', description: `${batch.name} enrollment opens at ${formatPhilippineTime(batch.opens_at)}.`, event_date: toPhilippineDateValue(batch.opens_at), system: true },
-          { id: `semester-${batch.id}-closes`, title: 'Enrollment closes', description: `${batch.name} enrollment closes at ${formatPhilippineTime(batch.closes_at)}.`, event_date: toPhilippineDateValue(batch.closes_at), system: true },
-          { id: `semester-${batch.id}-starts`, title: 'Semester starts', description: `${batch.name} begins.`, event_date: batch.starts_on, system: true },
-          { id: `semester-${batch.id}-ends`, title: 'Semester ends', description: `${batch.name} ends.`, event_date: batch.ends_on, system: true },
+          { id: `semester-${batch.id}-opens`, title: 'Enrollment opens', description: formatPhilippineTime(batch.opens_at), event_date: toPhilippineDateValue(batch.opens_at), color_hex: MILESTONE_COLORS.opens, system: true },
+          { id: `semester-${batch.id}-closes`, title: 'Enrollment closes', description: formatPhilippineTime(batch.closes_at), event_date: toPhilippineDateValue(batch.closes_at), color_hex: MILESTONE_COLORS.closes, system: true },
+          { id: `semester-${batch.id}-starts`, title: `${batch.name} begins`, event_date: batch.starts_on, color_hex: MILESTONE_COLORS.starts, system: true },
+          { id: `semester-${batch.id}-ends`, title: `${batch.name} ends`, event_date: batch.ends_on, color_hex: MILESTONE_COLORS.ends, system: true },
         ].filter((item) => item.event_date)
         setEnrollmentMilestones(milestones)
       } else {
@@ -123,8 +158,11 @@ function CalendarPanel({ canManage = false, listView = false, showEnrollmentMile
   async function createEvent(event) {
     event.preventDefault()
     const cleanTitle = title.trim()
-    const cleanDescription = description.trim()
     if (!cleanTitle || !selectedDate) return
+    if (events.filter((item) => item.event_date === selectedDate).length >= MAX_EVENTS_PER_DAY) {
+      setMessage(`A maximum of ${MAX_EVENTS_PER_DAY} events can be added to one day.`)
+      return
+    }
 
     setSaving(true)
     setMessage('')
@@ -136,15 +174,16 @@ function CalendarPanel({ canManage = false, listView = false, showEnrollmentMile
       return
     }
 
+    const payload = {
+      title: cleanTitle,
+      event_date: selectedDate,
+      created_by: user.id,
+      ...(customColorsAvailable ? { color_hex: eventColorHex } : {}),
+    }
     const { data, error } = await supabase
       .from('calendar_events')
-      .insert({
-        title: cleanTitle,
-        description: cleanDescription || null,
-        event_date: selectedDate,
-        created_by: user.id,
-      })
-      .select('id, title, description, event_date, created_at')
+      .insert(payload)
+      .select(customColorsAvailable ? 'id, title, event_date, created_at, color_hex' : 'id, title, event_date, created_at')
       .single()
 
     if (error) {
@@ -152,7 +191,6 @@ function CalendarPanel({ canManage = false, listView = false, showEnrollmentMile
     } else {
       setEvents((current) => [...current, data].sort((a, b) => a.event_date.localeCompare(b.event_date)))
       setTitle('')
-      setDescription('')
       setNotice('School calendar event added.')
     }
     setSaving(false)
@@ -185,22 +223,31 @@ function CalendarPanel({ canManage = false, listView = false, showEnrollmentMile
   ]
   const displayedEvents = [...events, ...enrollmentMilestones].sort((a, b) => a.event_date.localeCompare(b.event_date))
   const selectedEvents = displayedEvents.filter((item) => item.event_date === selectedDate)
-  const visibleEvents = listView && !calendarVisible
-    ? displayedEvents.filter((item) => item.event_date.startsWith(monthKey))
-    : selectedEvents
+  const visibleEvents = selectedEvents
+  const selectedCreatedEventCount = events.filter((item) => item.event_date === selectedDate).length
+  const selectedDayIsFull = selectedCreatedEventCount >= MAX_EVENTS_PER_DAY
+  const eventsByDate = displayedEvents.reduce((groups, item) => {
+    if (!groups.has(item.event_date)) groups.set(item.event_date, [])
+    groups.get(item.event_date).push(item)
+    return groups
+  }, new Map())
 
   return (
-    <section className={`calendar-panel${listView ? ' calendar-list-view' : ''}`}>
+    <section className="calendar-panel">
       <AuthToast message={notice} onDismiss={() => setNotice('')} duration={5000} variant="success" />
       {pendingDelete && <ConfirmDialog title="Delete school calendar event?" message={`“${pendingDelete.title}” will be permanently removed from the school calendar.`} confirmLabel="Delete" busy={deletingId === pendingDelete.id} onConfirm={deleteEvent} onCancel={() => setPendingDelete(null)} />}
       <header className="calendar-header">
         <h2>School Calendar</h2>
-        <span className="dashboard-header-detail">{displayedEvents.filter((item) => item.event_date.startsWith(monthKey)).length} events</span>
       </header>
-      {listView && <div className="calendar-toolbar"><button type="button" className="calendar-view-toggle" aria-expanded={calendarVisible} onClick={() => setCalendarVisible((visible) => !visible)}>{calendarVisible ? 'Hide calendar' : 'Show calendar'}</button></div>}
+      <div className="calendar-directory-heading">
+        <div><span>BCDC Event Calendar</span><p>Select a date to view school activities and important events.</p></div>
+        <div className="calendar-directory-actions">
+          <strong>{displayedEvents.filter((item) => item.event_date.startsWith(monthKey)).length} events</strong>
+        </div>
+      </div>
 
       <div className="calendar-layout">
-        {(!listView || calendarVisible) && <div className="calendar-main">
+        <div className="calendar-main">
           <div className="calendar-month-controls">
             <button type="button" onClick={() => changeMonth(-1)} aria-label="Previous month">‹</button>
             <h3>{visibleMonth.toLocaleDateString('en-PH', { month: 'long', year: 'numeric' })}</h3>
@@ -212,35 +259,41 @@ function CalendarPanel({ canManage = false, listView = false, showEnrollmentMile
               <button
                 type="button"
                 key={cell.key}
-                className={`${cell.value === selectedDate ? 'selected ' : ''}${cell.value === today ? 'today ' : ''}${displayedEvents.some((item) => item.event_date === cell.value) ? 'has-event' : ''}`.trim()}
+                className={`${cell.value === selectedDate ? 'selected ' : ''}${eventsByDate.has(cell.value) ? 'has-event' : ''}`.trim()}
                 onClick={() => setSelectedDate(cell.value)}
-                aria-label={new Date(`${cell.value}T00:00:00`).toLocaleDateString('en-PH', { dateStyle: 'full' })}
-              >{cell.day}</button>
+                aria-label={`${new Date(`${cell.value}T00:00:00`).toLocaleDateString('en-PH', { dateStyle: 'full' })}, ${eventsByDate.get(cell.value)?.length || 0} events`}
+              ><span className="calendar-day-number">{cell.day}</span>{eventsByDate.has(cell.value) && <span className="calendar-date-markers" aria-hidden="true">{eventsByDate.get(cell.value).map((item) => <span key={item.id} style={{ '--event-color': eventColor(item) }} />)}</span>}</button>
             ) : <span key={cell.key} />)}
           </div>
-        </div>}
+        </div>
 
         <aside className="calendar-day-panel">
-          {listView && !calendarVisible ? <div className="calendar-list-month-controls">
-            <button type="button" onClick={() => changeMonth(-1)} aria-label="Previous month">‹</button>
-            <div><span>Events in</span><strong>{visibleMonth.toLocaleDateString('en-PH', { month: 'long', year: 'numeric' })}</strong></div>
-            <button type="button" onClick={() => changeMonth(1)} aria-label="Next month">›</button>
-          </div> : <div className="calendar-selected-heading">
+          <div className="calendar-selected-heading">
             <div><span>Selected day</span><strong>{new Date(`${selectedDate}T00:00:00`).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' })}</strong></div>
-          </div>}
+            {canManage && <small>{selectedCreatedEventCount}/{MAX_EVENTS_PER_DAY} events</small>}
+          </div>
 
           {canManage && (
             <form className="calendar-event-form" onSubmit={createEvent}>
-              {listView && !calendarVisible && <label>Event date<input type="date" value={selectedDate} min={`${monthKey}-01`} max={toDateValue(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 0))} onChange={(event) => setSelectedDate(event.target.value)} required /></label>}
-              <label>Event title<input value={title} onChange={(event) => setTitle(event.target.value)} maxLength={TITLE_LIMIT} placeholder="School event" required /><small>{title.length}/{TITLE_LIMIT}</small></label>
-              <label>Details <span>(optional)</span><textarea value={description} onChange={(event) => setDescription(event.target.value)} maxLength={DESCRIPTION_LIMIT} rows="3" placeholder="Add helpful details." /><small>{description.length}/{DESCRIPTION_LIMIT}</small></label>
-              <button type="submit" disabled={saving || !title.trim()}>Add Event</button>
+              <div className="calendar-event-title">
+                <label htmlFor="calendar-event-title-input">Event title</label>
+                <small>{title.length}/{TITLE_LIMIT}</small>
+                <div className="calendar-event-input-row">
+                  <input id="calendar-event-title-input" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={TITLE_LIMIT} placeholder="Name of the event" required />
+                  <div className="calendar-color-control" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setColorPaletteOpen(false) }} onKeyDown={(event) => { if (event.key === 'Escape') setColorPaletteOpen(false) }}>
+                    <button type="button" className="calendar-color-trigger" onClick={() => setColorPaletteOpen((open) => !open)} disabled={!customColorsAvailable} aria-label="Choose event color" aria-expanded={colorPaletteOpen} title={customColorsAvailable ? 'Choose event color' : 'Apply the calendar color migration to enable custom colors'}><span style={{ backgroundColor: eventColorHex }} /></button>
+                    {colorPaletteOpen && <div className="calendar-color-palette" role="group" aria-label="Event colors">{EVENT_COLORS.map((color) => <button key={color.hex} type="button" className={eventColorHex === color.hex ? 'selected' : ''} style={{ '--swatch-color': color.hex }} onClick={() => { setEventColorHex(color.hex); setColorPaletteOpen(false) }} aria-label={color.name} aria-pressed={eventColorHex === color.hex} title={color.name}><span /></button>)}</div>}
+                  </div>
+                </div>
+              </div>
+              <button type="submit" className="calendar-submit-event" disabled={saving || !title.trim() || selectedDayIsFull}>Add Event</button>
             </form>
           )}
 
+          {canManage && !customColorsAvailable && <p className="calendar-color-note">Apply the calendar color migration to enable custom event colors.</p>}
           {message && <p className="calendar-message">{message}</p>}
-          {loading ? <p className="calendar-empty app-loading" role="status">Loading events...</p> : visibleEvents.length === 0 ? <p className="calendar-empty">{listView && !calendarVisible ? 'No events this month.' : 'No events for this day.'}</p> : <div className="calendar-event-list">
-            {visibleEvents.map((item) => <article key={item.id} className={item.system ? 'calendar-system-event' : undefined}><div>{listView && !calendarVisible && <time dateTime={item.event_date}>{new Date(`${item.event_date}T00:00:00`).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}</time>}<h4>{item.title}</h4>{item.description && <p>{item.description}</p>}</div>{canManage && !item.system && <button type="button" className="icon-delete-button" disabled={deletingId === item.id} onClick={() => setPendingDelete(item)} aria-label={`Delete school calendar event: ${item.title}`} title="Delete school calendar event"><i className="app-icon app-icon-trash" aria-hidden="true" /></button>}</article>)}
+          {loading ? <p className="calendar-empty app-loading" role="status">Loading events...</p> : visibleEvents.length === 0 ? <p className="calendar-empty">No events for this day.</p> : <div className="calendar-event-list">
+            {visibleEvents.map((item) => <article key={item.id} className={item.system ? 'calendar-system-event' : undefined} style={{ '--event-color': eventColor(item) }}><div><h4>{item.title}</h4>{item.description && <p>{item.description}</p>}</div>{canManage && !item.system && <button type="button" className="icon-delete-button" disabled={deletingId === item.id} onClick={() => setPendingDelete(item)} aria-label={`Delete school calendar event: ${item.title}`} title="Delete school calendar event"><i className="app-icon app-icon-trash" aria-hidden="true" /></button>}</article>)}
           </div>}
         </aside>
       </div>

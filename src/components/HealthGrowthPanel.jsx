@@ -3,12 +3,7 @@ import { supabase } from '../lib/supabase'
 import AuthToast from './AuthToast'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 import { classifyChildBmi } from '../lib/bmiClassification'
-
-function localDateValue() {
-  const now = new Date()
-  now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
-  return now.toISOString().slice(0, 10)
-}
+import { getPhilippineDateValue as localDateValue } from '../lib/philippineDate'
 
 function childName(student) {
   return [student.child_first_name, student.child_last_name, student.child_suffix]

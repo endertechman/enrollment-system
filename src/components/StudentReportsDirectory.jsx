@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import PaginatedDropdown from './PaginatedDropdown'
 import TablePagination from './TablePagination'
+import { getAgeInYears } from '../lib/philippineDate'
 
 const PAGE_SIZE = 10
 
@@ -16,14 +17,7 @@ function formatStudentName(student) {
 }
 
 function calculateAge(birthDate) {
-  if (!birthDate) return null
-  const birth = new Date(`${birthDate}T00:00:00`)
-  if (Number.isNaN(birth.getTime())) return null
-  const today = new Date()
-  let age = today.getFullYear() - birth.getFullYear()
-  const monthDifference = today.getMonth() - birth.getMonth()
-  if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birth.getDate())) age -= 1
-  return Math.max(age, 0)
+  return getAgeInYears(birthDate)
 }
 
 function formatGender(value) {

@@ -389,9 +389,6 @@
   text-transform: uppercase;
 }
 .parent-card-heading > div > h2 { margin-top: 4px; overflow-wrap: anywhere; }
-.parent-reference-value { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.parent-reference-value span { min-width: 0; overflow-wrap: anywhere; }
-.parent-reference-value button,
 .parent-inline-link {
   border: 0;
   border-radius: 9px;
@@ -403,9 +400,7 @@
   cursor: pointer;
   transition: background-color .2s ease, color .2s ease;
 }
-.parent-reference-value button { flex: 0 0 auto; padding: 7px 10px; }
 .parent-inline-link { margin-top: 20px; padding: 8px 10px; }
-.parent-reference-value button:hover,
 .parent-inline-link:hover { background: var(--color-primary-soft); color: var(--color-primary-ink); }
 .parent-inline-link span { margin-left: 4px; }
 

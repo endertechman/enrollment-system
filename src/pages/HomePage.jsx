@@ -12,6 +12,7 @@ function HomePage() {
     role: null,
     enrollments: [],
     enrollmentWindow: undefined,
+    enrollmentBatch: null,
   })
 
   const loadHome = useCallback(async ({ silent = false } = {}) => {
@@ -25,7 +26,7 @@ function HomePage() {
     const currentUser = userResult.data.user
 
     if (!currentUser) {
-      setHomeState({ status: 'guest', user: null, role: null, enrollments: [], enrollmentWindow })
+      setHomeState({ status: 'guest', user: null, role: null, enrollments: [], enrollmentWindow, enrollmentBatch: null })
       return
     }
 
@@ -36,19 +37,29 @@ function HomePage() {
       .single()
 
     if (profileError || !profile?.role) {
-      setHomeState({ status: 'guest', user: null, role: null, enrollments: [], enrollmentWindow })
+      setHomeState({ status: 'guest', user: null, role: null, enrollments: [], enrollmentWindow, enrollmentBatch: null })
       return
     }
 
     let enrollments = []
+    let enrollmentBatch = null
     if (profile.role === 'parent') {
-      const { data } = await supabase
-        .from('enrollments')
-        .select('id, child_first_name, child_last_name, status, reference_code, submitted_at, review_reason')
-        .eq('parent_id', currentUser.id)
-        .eq('batch_id', enrollmentWindow?.current_batch_id)
-        .order('submitted_at', { ascending: false })
-      enrollments = data || []
+      if (enrollmentWindow?.current_batch_id) {
+        const [enrollmentResult, batchResult] = await Promise.all([
+          supabase
+            .from('enrollments')
+            .select('id')
+            .eq('parent_id', currentUser.id)
+            .eq('batch_id', enrollmentWindow.current_batch_id),
+          supabase
+            .from('enrollment_batches')
+            .select('name, starts_on, ends_on')
+            .eq('id', enrollmentWindow.current_batch_id)
+            .maybeSingle(),
+        ])
+        enrollments = enrollmentResult.data || []
+        enrollmentBatch = batchResult.data || null
+      }
     }
 
     setHomeState({
@@ -57,6 +68,7 @@ function HomePage() {
       role: profile.role,
       enrollments,
       enrollmentWindow,
+      enrollmentBatch,
     })
   }, [])
 
@@ -88,6 +100,7 @@ function HomePage() {
       role={homeState.role}
       enrollments={homeState.enrollments}
       enrollmentWindow={homeState.enrollmentWindow}
+      enrollmentBatch={homeState.enrollmentBatch}
     />
   )
 }

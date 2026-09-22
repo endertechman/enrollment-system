@@ -129,6 +129,10 @@
 .attendance-checkbox:has(input:disabled) { opacity:.55; cursor:not-allowed; }
 .attendance-checkbox input:disabled { cursor:not-allowed; }
 .attendance-readonly-checkbox { width:17px; height:17px; margin:0; accent-color:var(--color-primary); }
+.attendance-student-row { cursor:pointer; }
+.attendance-student-row:focus-visible { position:relative; outline:3px solid color-mix(in srgb,var(--color-primary) 32%,transparent); outline-offset:-3px; }
+.semester-dialog.student-report-dialog.attendance-summary-dialog { width:min(520px,100%); height:auto; max-height:min(440px,calc(100dvh - 48px)); }
+.student-report-dialog-body.attendance-summary-body { padding:15px; overflow:visible; }
 .attendance-note { margin:16px 0 0; color:var(--color-muted); font-size:10.5px; line-height:1.45; }
 
 @media(max-width:800px) {
@@ -232,7 +236,7 @@
 }
 
 .records-table tbody tr:hover {
-  background: var(--color-accent-soft);
+  background: color-mix(in srgb, var(--color-primary-soft) 34%, var(--color-surface));
 }
 
 .records-student-name {
@@ -561,16 +565,16 @@
   align-items: center;
   gap: 20px;
   padding: clamp(18px, 2.5vw, 24px);
-  border: 1px solid var(--aide-line);
+  border: 1px solid var(--color-border);
   border-radius: 18px;
-  background: linear-gradient(105deg, var(--color-surface) 18%, var(--aide-pink-soft) 70%, var(--aide-aqua-soft) 100%);
+  background: linear-gradient(105deg, var(--color-surface) 15%, var(--color-accent-soft) 58%, var(--color-primary-soft));
 }
 
 .aide-intro-copy { min-width: 0; }
 
 .aide-context-label {
   margin: 0 0 6px;
-  color: var(--aide-pink);
+  color: var(--color-accent-ink);
   font-size: 0.75rem;
   font-weight: 750;
 }
@@ -578,7 +582,7 @@
 .aide-intro-copy h1 {
   max-width: 720px;
   margin: 0;
-  color: var(--aide-ink);
+  color: var(--color-text);
   font-size: clamp(1.5rem, 3vw, 2rem);
   font-weight: 720;
   letter-spacing: -0.025em;
@@ -589,7 +593,7 @@
 .aide-intro-copy > p:last-child {
   max-width: 620px;
   margin: 8px 0 0;
-  color: var(--aide-muted);
+  color: var(--color-muted);
   font-size: 0.9rem;
   line-height: 1.5;
 }
@@ -599,9 +603,9 @@
   min-width: 300px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   margin: 0;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 34%, var(--color-surface));
+  border: 1px solid var(--color-border);
   border-radius: 6px 14px 14px 14px;
-  background: var(--aide-aqua-soft);
+  background: var(--color-surface);
 }
 
 .aide-workload-summary > div {
@@ -609,10 +613,10 @@
   padding: 12px 14px;
 }
 
-.aide-workload-summary > div + div { border-left: 1px solid color-mix(in srgb, var(--color-primary) 34%, var(--color-surface)); }
+.aide-workload-summary > div + div { border-left: 1px solid var(--color-border); }
 
 .aide-workload-summary dt {
-  color: var(--aide-muted);
+  color: var(--color-muted);
   font-size: 0.72rem;
   font-weight: 680;
   line-height: 1.35;
@@ -620,7 +624,7 @@
 
 .aide-workload-summary dd {
   margin: 5px 0 0;
-  color: var(--aide-aqua);
+  color: var(--color-text);
   font-size: 1.25rem;
   font-weight: 760;
   line-height: 1;
@@ -833,7 +837,7 @@
 @media (max-width: 460px) {
   .teacher-aide-dashboard-page .teacher-dashboard-content { width: calc(100% - 22px); }
   .aide-workload-summary { grid-template-columns: 1fr; }
-  .aide-workload-summary > div + div { border-top: 1px solid color-mix(in srgb, var(--color-primary) 34%, var(--color-surface)); border-left: 0; }
+  .aide-workload-summary > div + div { border-top: 1px solid var(--color-border); border-left: 0; }
 }
 
 @media (max-width: 620px) {

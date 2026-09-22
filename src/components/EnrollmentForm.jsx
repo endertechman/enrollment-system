@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import AppHeader from './AppHeader'
 import { getEnrollmentWindow, isEnrollmentOpen } from '../lib/enrollmentWindow'
+import { getAgeInYears, getPhilippineDateValue } from '../lib/philippineDate'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 
 function EnrollmentForm() {
@@ -143,25 +144,7 @@ function EnrollmentForm() {
   })
 
   function calculateAge() {
-    if (!birthDate) return ''
-
-    const today = new Date()
-    const birth = new Date(`${birthDate}T00:00:00`)
-
-    let age = today.getFullYear() - birth.getFullYear()
-
-    const monthDifference =
-      today.getMonth() - birth.getMonth()
-
-    if (
-      monthDifference < 0 ||
-      (monthDifference === 0 &&
-        today.getDate() < birth.getDate())
-    ) {
-      age--
-    }
-
-    return age >= 0 ? age : ''
+    return getAgeInYears(birthDate) ?? ''
   }
 
   function generateReferenceCode() {
@@ -170,7 +153,7 @@ function EnrollmentForm() {
       .substring(2, 8)
       .toUpperCase()
 
-    return `ENR-${new Date().getFullYear()}-${randomPart}`
+    return `ENR-${getPhilippineDateValue().slice(0, 4)}-${randomPart}`
   }
 
   function goToNextStep() {
@@ -425,7 +408,7 @@ function EnrollmentForm() {
                     type="date"
                     value={birthDate}
                     onChange={(e) => setBirthDate(e.target.value)}
-                    max={new Date().toISOString().split('T')[0]}
+                    max={getPhilippineDateValue()}
                     required
                   />
                 </div>

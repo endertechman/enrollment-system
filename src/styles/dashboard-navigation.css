@@ -107,7 +107,7 @@
 
 @media (max-width: 700px) {
   .teacher-dashboard-page .teacher-tabs,
-  .parent-workspace-tabs {
+  .parent-dashboard-page .parent-workspace-tabs {
     position:static;
     display:flex;
     width:100%;
@@ -123,23 +123,23 @@
     -webkit-overflow-scrolling:touch;
   }
   .teacher-dashboard-page .teacher-tabs::-webkit-scrollbar,
-  .parent-workspace-tabs::-webkit-scrollbar { display:none; }
+  .parent-dashboard-page .parent-workspace-tabs::-webkit-scrollbar { display:none; }
   .teacher-dashboard-page .teacher-tabs::before,
   .teacher-dashboard-page .teacher-tabs::after,
-  .parent-workspace-tabs::before,
-  .parent-workspace-tabs::after { content:""; min-width:0; flex:1 0 0; }
+  .parent-dashboard-page .parent-workspace-tabs::before,
+  .parent-dashboard-page .parent-workspace-tabs::after { content:""; min-width:0; flex:1 0 0; }
   .teacher-dashboard-page .teacher-tab-group,
-  .parent-workspace-tabs .parent-tab-group { display:flex; flex:0 0 auto; align-items:center; justify-content:center; flex-wrap:nowrap; gap:4px; padding:0; background:transparent; }
+  .parent-dashboard-page .parent-workspace-tabs .parent-tab-group { display:flex; flex:0 0 auto; align-items:center; justify-content:center; flex-wrap:nowrap; gap:4px; padding:0; background:transparent; }
   .teacher-dashboard-page .teacher-tab-group-title,
-  .parent-workspace-tabs .parent-tab-group-title { display:none; }
+  .parent-dashboard-page .parent-workspace-tabs .parent-tab-group-title { display:none; }
   .teacher-dashboard-page .aide-tab-group-center,
-  .parent-workspace-tabs .parent-tab-group-center { padding:0 0 0 5px; border-top:0; border-left:1px solid var(--color-border); }
+  .parent-dashboard-page .parent-workspace-tabs .parent-tab-group-center { padding:0 0 0 5px; border-top:0; border-left:1px solid var(--color-border); }
   .teacher-dashboard-page .teacher-tab,
-  .parent-workspace-tabs .parent-sidebar-tab { display:grid; width:42px; min-width:42px; height:42px; min-height:42px; flex:0 0 42px; align-items:center; justify-content:center; gap:0; padding:0; place-items:center; border-radius:9px; line-height:0; }
+  .parent-dashboard-page .parent-workspace-tabs .parent-sidebar-tab { display:grid; width:42px; min-width:42px; height:42px; min-height:42px; flex:0 0 42px; align-items:center; justify-content:center; gap:0; padding:0; place-items:center; border-radius:9px; line-height:0; }
   .teacher-dashboard-page .teacher-tab > span,
-  .parent-workspace-tabs .parent-sidebar-tab > span { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+  .parent-dashboard-page .parent-workspace-tabs .parent-sidebar-tab > span { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
   .teacher-dashboard-page .teacher-tab .app-icon,
-  .parent-workspace-tabs .parent-sidebar-tab .app-icon { width:18px; height:18px; margin:0; flex-basis:18px; }
-  .parent-workspace-tabs .parent-sidebar-tab.active,
+  .parent-dashboard-page .parent-workspace-tabs .parent-sidebar-tab .app-icon { width:18px; height:18px; margin:0; flex-basis:18px; }
+  .parent-dashboard-page .parent-workspace-tabs .parent-sidebar-tab.active,
   .teacher-dashboard-page .teacher-tab.active { box-shadow:inset 0 -3px 0 var(--color-accent); }
 }

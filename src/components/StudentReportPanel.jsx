@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 import { classifyChildBmi } from '../lib/bmiClassification'
+import { getAgeInYears } from '../lib/philippineDate'
 import ConfirmDialog from './ConfirmDialog'
 
 function childName(student) {
@@ -15,14 +16,7 @@ function childName(student) {
 }
 
 function calculateAge(birthDate) {
-  if (!birthDate) return '—'
-  const birth = new Date(`${birthDate}T00:00:00`)
-  if (Number.isNaN(birth.getTime())) return '—'
-  const today = new Date()
-  let age = today.getFullYear() - birth.getFullYear()
-  const monthDifference = today.getMonth() - birth.getMonth()
-  if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birth.getDate())) age -= 1
-  return Math.max(age, 0)
+  return getAgeInYears(birthDate) ?? '—'
 }
 
 function calculateBmi(heightCm, weightKg) {
@@ -48,19 +42,21 @@ function formatPlaceOfBirth(value) {
   return String(value).replace(/,\s*Philippines\s*$/i, '').trim()
 }
 
-function StudentReportPanel({ enrollments, allowStudentSelection = false, parentName = '', parentEmail = '', onBack = null, onClose = null, canManageStatus = false, updatingStatusId = null, onStatusChange = null }) {
+function StudentReportPanel({ enrollments, allowStudentSelection = false, includeUnapproved = false, parentName = '', parentEmail = '', title = 'Student Report', onBack = null, onClose = null, canManageStatus = false, updatingStatusId = null, onStatusChange = null }) {
   const students = useMemo(
-    () => enrollments.filter((item) => item.status === 'approved'),
-    [enrollments],
+    () => enrollments.filter((item) => includeUnapproved || item.status === 'approved'),
+    [enrollments, includeUnapproved],
   )
   const [selectedEnrollmentId, setSelectedEnrollmentId] = useState(null)
   const [studentSearch, setStudentSearch] = useState('')
   const [pickerOpen, setPickerOpen] = useState(false)
   const [attendance, setAttendance] = useState([])
+  const [attendanceUnavailable, setAttendanceUnavailable] = useState(false)
   const [growthRecords, setGrowthRecords] = useState([])
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [pendingStatus, setPendingStatus] = useState('')
+  const reportRequestId = useRef(0)
 
   const activeEnrollmentId = useMemo(
     () => students.some((item) => item.id === selectedEnrollmentId)
@@ -85,9 +81,12 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, parent
   }
 
   const loadReport = useCallback(async ({ silent = false } = {}) => {
-    if (!activeEnrollmentId) {
+    const requestId = ++reportRequestId.current
+    if (!activeEnrollmentId || student?.status !== 'approved') {
       setAttendance([])
+      setAttendanceUnavailable(false)
       setGrowthRecords([])
+      setMessage('')
       setLoading(false)
       return
     }
@@ -116,8 +115,12 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, parent
         : Promise.resolve({ data: [], error: null }),
     ])
 
+    if (requestId !== reportRequestId.current) return
+
+    const attendanceFailed = Boolean(attendanceResult.error || nonSchoolResult.error)
     const excludedDates = new Set((nonSchoolResult.data || []).map((row) => row.attendance_date))
-    setAttendance((attendanceResult.data || []).filter((record) => !excludedDates.has(record.attendance_date)))
+    setAttendance(attendanceFailed ? [] : (attendanceResult.data || []).filter((record) => !excludedDates.has(record.attendance_date)))
+    setAttendanceUnavailable(attendanceFailed)
     setGrowthRecords(growthResult.data || [])
     if (attendanceResult.error || growthResult.error || nonSchoolResult.error) {
       setMessage('Some report details are temporarily unavailable.')
@@ -129,7 +132,10 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, parent
 
   useEffect(() => {
     const loadTimer = window.setTimeout(loadReport, 0)
-    return () => window.clearTimeout(loadTimer)
+    return () => {
+      window.clearTimeout(loadTimer)
+      reportRequestId.current += 1
+    }
   }, [loadReport])
 
   useEffect(() => {
@@ -144,7 +150,7 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, parent
   useRealtimeRefresh(() => loadReport({ silent: true }), {
     channelName: `student-report-${activeEnrollmentId || 'none'}`,
     tables: ['attendance_records', 'attendance_non_school_days', 'growth_records'],
-    enabled: Boolean(activeEnrollmentId),
+    enabled: Boolean(activeEnrollmentId && student?.status === 'approved'),
   })
 
   const attendanceCounts = attendance.reduce((counts, record) => {
@@ -167,6 +173,9 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, parent
     measuredAt: latestGrowth?.measured_on ?? student?.submitted_at ?? new Date(),
   })
   const currentStudentStatus = student?.student_state || 'enrolled'
+  const studentBadgeTone = student?.status === 'approved' && ['withdrawn', 'dropped'].includes(student?.student_state)
+    ? student.student_state
+    : student?.status || 'pending'
 
   async function confirmStatusChange() {
     if (!student || !pendingStatus || !onStatusChange) return
@@ -193,7 +202,7 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, parent
   const reportPanel = (
     <section className={onClose ? 'semester-dialog student-report-dialog' : 'student-report-panel'} role={onClose ? 'dialog' : undefined} aria-modal={onClose ? 'true' : undefined} aria-labelledby="student-report-title">
       <header className={onClose ? 'semester-dialog-header' : 'student-report-header'}>
-        <div><h2 id="student-report-title">{onClose ? 'Full Details' : 'Student Report'}</h2>{onClose && <p>Complete student information and latest records.</p>}</div>
+        <div><h2 id="student-report-title">{onClose ? 'Full Details' : title}</h2>{onClose && <p>Complete student information and latest records.</p>}</div>
         {onClose ? <button type="button" className="popup-close-button" onClick={onClose} aria-label="Close student report"><i className="app-icon app-icon-close" aria-hidden="true" /></button> : onBack && <button type="button" className="student-report-back" onClick={onBack}>Back to students</button>}
       </header>
 
@@ -284,7 +293,7 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, parent
               <h3>{childName(student)}</h3>
               <p>{formatValue(student?.reference_code)}</p>
             </div>
-            <span className="enrollment-status approved">enrolled</span>
+            <span className={`enrollment-status ${studentBadgeTone}`}>{student?.status === 'approved' ? student.student_state || 'enrolled' : student?.status === 'rejected' ? 'needs changes' : 'pending review'}</span>
           </div>}
 
           {message && <p className="student-report-message">{message}</p>}
@@ -302,7 +311,7 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, parent
                   <div><dt>Age</dt><dd>{calculateAge(student?.birth_date)}</dd></div>
                   <div><dt>Date of Birth</dt><dd>{formatDate(student?.birth_date)}</dd></div>
                   <div><dt>Gender</dt><dd>{student?.sex ? `${student.sex.charAt(0).toUpperCase()}${student.sex.slice(1)}` : '—'}</dd></div>
-                  <div><dt>Student Status</dt><dd>{student?.student_state ? `${student.student_state.charAt(0).toUpperCase()}${student.student_state.slice(1)}` : 'Enrolled'}</dd></div>
+                  <div><dt>Student Status</dt><dd>{student?.status === 'approved' ? student?.student_state ? `${student.student_state.charAt(0).toUpperCase()}${student.student_state.slice(1)}` : 'Enrolled' : student?.status === 'rejected' ? 'Needs changes' : 'Pending review'}</dd></div>
                   <div><dt>Parent / Guardian</dt><dd>{student?.parent_full_name || parentName || '—'}</dd></div>
                   <div><dt>Parent Email</dt><dd>{student?.parent_email || parentEmail || '—'}</dd></div>
                   <div><dt>Place of Birth</dt><dd>{formatPlaceOfBirth(student?.place_of_birth)}</dd></div>
@@ -318,7 +327,7 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, parent
                 </div>}
               </section>
 
-              <section className="student-report-section">
+              {student?.status === 'approved' && <section className="student-report-section">
                 <div className="student-report-section-heading">
                   <h3>Health &amp; Growth</h3>
                   <span>{latestGrowth ? `Updated ${formatDate(latestGrowth.measured_on)}` : 'Enrollment measurement'}</span>
@@ -330,20 +339,20 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, parent
                   <div><dt>Measurements</dt><dd>{growthRecords.length}</dd></div>
                 </dl>
                 <p className="student-report-health-note">BMI-for-age is a screening classification based on Philippine use of WHO child growth standards.</p>
-              </section>
+              </section>}
 
-              <section className="student-report-section">
+              {student?.status === 'approved' && <section className="student-report-section">
                 <div className="student-report-section-heading">
                   <h3>Attendance Summary</h3>
-                  <span>{totalAttendanceDays} recorded days</span>
+                  <span>{attendanceUnavailable ? 'Unavailable' : `${totalAttendanceDays} school days`}</span>
                 </div>
-                <dl className="student-report-metrics attendance">
+                {attendanceUnavailable ? <p className="student-report-empty">Attendance totals are temporarily unavailable.</p> : <dl className="student-report-metrics attendance">
                   <div><dt>Present</dt><dd>{attendanceCounts.present}</dd></div>
                   <div><dt>Absent</dt><dd>{attendanceCounts.absent}</dd></div>
-                  <div><dt>Total Days Recorded</dt><dd>{totalAttendanceDays}</dd></div>
+                  <div><dt>Total Days</dt><dd>{totalAttendanceDays}</dd></div>
                   <div><dt>Present / Total</dt><dd>{presentAttendanceFraction}</dd></div>
-                </dl>
-              </section>
+                </dl>}
+              </section>}
             </div>
           )}
         </>

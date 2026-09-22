@@ -16,3 +16,5 @@
 @import './styles/parent-dashboard.css';
 @import './styles/dashboard-navigation.css';
 @import './styles/paginated-dropdown.css';
+@import './styles/parent-health-growth.css';
+@import './styles/parent-attendance.css';

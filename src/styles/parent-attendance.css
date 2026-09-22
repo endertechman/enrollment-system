@@ -1,0 +1,10 @@
+.parent-attendance-panel .student-report-header { background:linear-gradient(100deg,var(--color-accent-soft),var(--color-primary-soft)); }
+.parent-attendance-panel .student-report-identity { margin-top:16px; }
+.parent-attendance-panel .student-report-body { min-width:0; }
+.parent-attendance-history { min-width:0; }
+.parent-attendance-history .student-report-section-heading { margin-bottom:12px; }
+.parent-attendance-table-shell { margin-top:0; }
+.parent-attendance-table { width:100%; min-width:0; table-layout:fixed; }
+.parent-attendance-table th:first-child { width:65%; }
+.parent-attendance-table tbody tr:hover { background:transparent; }
+.parent-attendance-history .growth-table-footer { padding:0 4px; }

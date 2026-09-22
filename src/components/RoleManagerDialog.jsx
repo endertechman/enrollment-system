@@ -33,13 +33,14 @@ function RoleManagerDialog({ onClose }) {
     setSearching(true)
     setAccount(null)
     setMessage('')
-    const { data, error } = await supabase
-      .rpc('find_account_by_email', { p_email: cleanEmail })
-      .maybeSingle()
+    const [{ data, error }, { data: authData }] = await Promise.all([
+      supabase.rpc('find_account_by_email', { p_email: cleanEmail }).maybeSingle(),
+      supabase.auth.getUser(),
+    ])
 
     if (error) setMessage(error.message)
     else if (!data) setMessage('No account was found with that exact email address.')
-    else setAccount(data)
+    else setAccount({ ...data, is_self: data.user_id === authData.user?.id })
     setSearching(false)
   }
 
@@ -62,11 +63,15 @@ function RoleManagerDialog({ onClose }) {
     setPendingRole('')
   }
 
-  const availableRoles = account?.account_role === 'parent'
+  const availableRoles = account?.is_self
+    ? []
+    : account?.account_role === 'parent'
     ? [['teacher_aide', 'Make Teacher Aide'], ['teacher', 'Make Teacher']]
     : account?.account_role === 'teacher_aide'
       ? [['parent', 'Return to Parent'], ['teacher', 'Make Teacher']]
-      : []
+      : account?.account_role === 'teacher'
+        ? [['teacher_aide', 'Demote to Teacher Aide'], ['parent', 'Demote to Parent']]
+        : []
 
   return (
     <div className="role-manager-overlay" role="dialog" aria-modal="true" aria-labelledby="role-manager-title" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
@@ -91,10 +96,10 @@ function RoleManagerDialog({ onClose }) {
           {account && <article className="role-manager-result">
             <div className="role-manager-account"><i className="app-icon app-icon-user-list" aria-hidden="true" /><div><span>Account</span><strong>{account.full_name}</strong></div></div>
             <div><span>Current role</span><strong>{formatRole(account.account_role)}</strong></div>
-            {account.account_role === 'teacher' ? <p>Teacher accounts are protected and cannot be changed here.</p> : <div className="role-manager-actions">{availableRoles.map(([role, label]) => <button type="button" key={role} disabled={Boolean(updatingRole)} onClick={() => setPendingRole(role)}>{label}</button>)}</div>}
+            {account.is_self ? <p>Your own teacher role cannot be changed here.</p> : <div className="role-manager-actions">{availableRoles.map(([role, label]) => <button type="button" key={role} disabled={Boolean(updatingRole)} onClick={() => setPendingRole(role)}>{label}</button>)}</div>}
           </article>}
 
-          <p className="role-manager-note">Teacher accounts cannot be changed or demoted here.</p>
+          <p className="role-manager-note">You may change another teacher&apos;s role, but you cannot change your own role.</p>
         </div>
       </section>
     </div>

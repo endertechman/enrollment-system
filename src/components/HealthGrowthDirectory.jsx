@@ -5,6 +5,7 @@ import ConfirmDialog from './ConfirmDialog'
 import PaginatedDropdown from './PaginatedDropdown'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 import { classifyChildBmi } from '../lib/bmiClassification'
+import { getAgeInYears, getPhilippineDateValue as localDateValue } from '../lib/philippineDate'
 
 const PAGE_SIZE = 10
 const CLASSIFICATION_OPTIONS = [
@@ -15,12 +16,6 @@ const CLASSIFICATION_OPTIONS = [
   { value: 'obese', label: 'Obese' },
   { value: 'not recorded', label: 'Not recorded' },
 ]
-
-function localDateValue() {
-  const now = new Date()
-  now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
-  return now.toISOString().slice(0, 10)
-}
 
 function childName(student) {
   const lastName = String(student?.child_last_name || '').trim()
@@ -41,14 +36,7 @@ function calculateBmi(heightCm, weightKg) {
 }
 
 function calculateAge(birthDate) {
-  if (!birthDate) return '—'
-  const birth = new Date(`${birthDate}T00:00:00`)
-  if (Number.isNaN(birth.getTime())) return '—'
-  const today = new Date()
-  let age = today.getFullYear() - birth.getFullYear()
-  const monthDifference = today.getMonth() - birth.getMonth()
-  if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birth.getDate())) age -= 1
-  return Math.max(age, 0)
+  return getAgeInYears(birthDate) ?? '—'
 }
 
 function formatGender(value) {

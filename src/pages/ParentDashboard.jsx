@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import AppHeader from '../components/AppHeader'
 import AnnouncementsPanel from '../components/AnnouncementsPanel'
 import CalendarPanel from '../components/CalendarPanel'
-import HealthGrowthPanel from '../components/HealthGrowthDirectory'
+import ParentHealthGrowthPanel from '../components/ParentHealthGrowthPanel'
+import ParentAttendancePanel from '../components/ParentAttendancePanel'
 import StudentReportPanel from '../components/StudentReportPanel'
 import AuthToast from '../components/AuthToast'
 import DashboardLoadingShell from '../components/DashboardLoadingShell'
@@ -29,19 +30,48 @@ function ParentDashboard() {
   const [dashboardAllowed, setDashboardAllowed] = useState(null)
   const [activeTab, setActiveTab] = useState(() => {
     const requestedTab = searchParams.get('tab')
-    return ['overview', 'information', 'student-report', 'health-growth', 'announcements', 'calendar'].includes(requestedTab) ? requestedTab : 'overview'
+    const tab = requestedTab === 'student-report' ? 'information' : requestedTab
+    return ['overview', 'information', 'health-growth', 'attendance', 'announcements', 'calendar'].includes(tab) ? tab : 'overview'
   })
   const [selectedEnrollmentId, setSelectedEnrollmentId] = useState(null)
+  const [childMenuOpen, setChildMenuOpen] = useState(false)
+  const childMenuRef = useRef(null)
+
+  useEffect(() => {
+    if (!childMenuOpen) return undefined
+
+    function closeOnOutsideClick(event) {
+      if (!childMenuRef.current?.contains(event.target)) setChildMenuOpen(false)
+    }
+
+    function closeOnEscape(event) {
+      if (event.key === 'Escape') setChildMenuOpen(false)
+    }
+
+    document.addEventListener('pointerdown', closeOnOutsideClick)
+    document.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsideClick)
+      document.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [childMenuOpen])
 
   useEffect(() => {
     function openNotificationTab(event) {
       if (event.detail?.dashboard !== 'parent') return
-      if (['overview', 'information', 'student-report', 'health-growth', 'announcements', 'calendar'].includes(event.detail.tab)) setActiveTab(event.detail.tab)
+      const tab = event.detail.tab === 'student-report' ? 'information' : event.detail.tab
+      if (['overview', 'information', 'health-growth', 'attendance', 'announcements', 'calendar'].includes(tab)) setActiveTab(tab)
       if (event.detail.childId) setSelectedEnrollmentId(event.detail.childId)
     }
 
     window.addEventListener('bcdc:notification-navigation', openNotificationTab)
     return () => window.removeEventListener('bcdc:notification-navigation', openNotificationTab)
+  }, [])
+
+  useEffect(() => {
+    const updateName = (event) => { if (event.detail?.name) setParentName(event.detail.name) }
+    window.addEventListener('bcdc:account-name-updated', updateName)
+    return () => window.removeEventListener('bcdc:account-name-updated', updateName)
   }, [])
 
   const loadDashboard = useCallback(async ({ silent = false } = {}) => {
@@ -81,6 +111,7 @@ function ParentDashboard() {
         .from('enrollments')
         .select(`
           id,
+          batch_id,
           child_first_name,
           child_middle_name,
           child_last_name,
@@ -93,11 +124,11 @@ function ParentDashboard() {
           other_dialect,
           status,
           student_state,
+          review_reason,
           submitted_at,
           reference_code
         `)
         .eq('parent_id', user.id)
-        .eq('status', 'approved')
         .eq('batch_id', windowResult.data?.current_batch_id)
         .order('submitted_at', { ascending: false }),
     ])
@@ -152,16 +183,6 @@ function ParentDashboard() {
     tables: ['profiles', 'enrollments', 'enrollment_settings', 'enrollment_batches'],
   })
 
-  function formatDate(date) {
-    if (!date) return 'Not provided'
-
-    return new Date(`${date}T00:00:00`).toLocaleDateString('en-PH', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
-  }
-
   function formatSubmittedDate(date) {
     if (!date) return 'Not provided'
 
@@ -172,43 +193,47 @@ function ParentDashboard() {
     })
   }
 
-  function formatValue(value) {
-    if (value === null || value === undefined || value === '') return 'Not provided'
-    return String(value)
-  }
-
-  function formatPlaceOfBirth(value) {
-    if (value === null || value === undefined || value === '') return 'Not provided'
-    return String(value).replace(/,\s*Philippines\s*$/i, '').trim()
-  }
-
-  function formatSex(sex) {
-    if (!sex) return 'Not provided'
-    return sex.charAt(0).toUpperCase() + sex.slice(1)
-  }
-
-  function getChildName(enrollment, includeMiddleName = false) {
+  function getChildName(enrollment) {
     return [
       enrollment?.child_first_name,
-      includeMiddleName ? enrollment?.child_middle_name : null,
       enrollment?.child_last_name,
       enrollment?.child_suffix,
     ].filter(Boolean).join(' ')
   }
 
-  function getStatusMessage(status) {
-    if (status === 'approved') return 'BCDC approved this enrollment application.'
-    if (status === 'rejected') return 'Application needs changes before it can be reviewed again.'
-    return 'Application is being reviewed.'
+  function getChildSelectorName(enrollment) {
+    return [enrollment?.child_last_name, enrollment?.child_first_name].filter(Boolean).join(', ') || 'Child record'
   }
 
-  async function copyReferenceCode(code) {
-    try {
-      await navigator.clipboard.writeText(code)
-      setNotice('Reference code copied.')
-    } catch {
-      setMessage('Unable to copy automatically. Please select the reference code instead.')
+  function getChildInitials(enrollment) {
+    return `${enrollment?.child_first_name?.[0] || ''}${enrollment?.child_last_name?.[0] || ''}`.toUpperCase() || 'C'
+  }
+
+  function getChildStatus(enrollment) {
+    if (enrollment?.status === 'rejected') return {
+      label: 'Needs changes', tone: 'rejected', title: 'Application needs changes',
+      message: 'Review the teacher’s note and update the application so it can be reviewed again.',
     }
+    if (enrollment?.status !== 'approved') return {
+      label: 'Pending review', tone: 'pending', title: 'Application under review',
+      message: 'BCDC has received this child’s application. You can check here for a decision.',
+    }
+    if (enrollment.student_state === 'withdrawn') return {
+      label: 'Withdrawn', tone: 'withdrawn', title: 'Child withdrawn',
+      message: 'This child is no longer actively enrolled. Their existing records remain available.',
+    }
+    if (enrollment.student_state === 'dropped') return {
+      label: 'Dropped', tone: 'dropped', title: 'Child dropped',
+      message: 'This child is no longer actively enrolled. Their existing records remain available.',
+    }
+    return {
+      label: 'Enrolled', tone: 'approved', title: 'Child enrolled',
+      message: 'BCDC approved this application. Your child’s records and center updates are available here.',
+    }
+  }
+
+  function getChildRecordLabel(enrollment) {
+    return enrollment?.status === 'rejected' ? 'Resubmission needed' : getChildStatus(enrollment).label
   }
 
   const selectedEnrollment =
@@ -216,6 +241,8 @@ function ParentDashboard() {
     enrollments[0] ||
     null
   const hasApprovedSelection = selectedEnrollment?.status === 'approved'
+  const childStatus = getChildStatus(selectedEnrollment)
+  const currentTab = hasApprovedSelection || ['overview', 'information'].includes(activeTab) ? activeTab : 'overview'
 
   if (loading) {
     return <DashboardLoadingShell role="parent" label="Checking dashboard access..." />
@@ -241,9 +268,9 @@ function ParentDashboard() {
         <AppHeader />
         <main className="parent-dashboard-state" aria-labelledby="parent-empty-title">
           <p className="parent-state-label">Parent dashboard</p>
-          <h1 id="parent-empty-title">No approved child record yet</h1>
-          <p>When BCDC approves an enrollment, the child record will appear here. You can check the application status from your home page.</p>
-          <button type="button" onClick={() => navigate('/')}>Check enrollment status</button>
+          <h1 id="parent-empty-title">No child application yet</h1>
+          <p>Submit an enrollment application to see your child’s status and information here.</p>
+          <button type="button" onClick={() => navigate('/enroll')}>Start Enrollment</button>
         </main>
       </div>
     )
@@ -265,27 +292,41 @@ function ParentDashboard() {
 
             <div className="parent-child-context" aria-label="Child record being viewed">
               <span>Viewing record for</span>
-              {enrollments.length > 1 ? (
-                <div className="parent-child-options">
-                  {enrollments.map((enrollment) => (
+              <div className="parent-child-picker" ref={childMenuRef}>
+                <span className="parent-child-avatar" aria-hidden="true">{getChildInitials(selectedEnrollment)}</span>
+                <strong>{getChildSelectorName(selectedEnrollment)}</strong>
+                {enrollments.length > 1 && <button
+                  type="button"
+                  className="parent-child-switch"
+                  aria-label="Switch child record"
+                  aria-expanded={childMenuOpen}
+                  aria-controls="parent-child-menu"
+                  onClick={() => setChildMenuOpen((open) => !open)}
+                >
+                  <i className="app-icon app-icon-swap" aria-hidden="true" />
+                </button>}
+                {childMenuOpen && enrollments.length > 1 && <div className="parent-child-menu" id="parent-child-menu" aria-label="Other child records">
+                  {enrollments.filter((enrollment) => enrollment.id !== selectedEnrollment?.id).map((enrollment) => (
                     <button
                       type="button"
                       key={enrollment.id}
-                      className={enrollment.id === selectedEnrollmentId ? 'active' : ''}
-                      aria-pressed={enrollment.id === selectedEnrollmentId}
                       onClick={() => {
                         setSelectedEnrollmentId(enrollment.id)
                         setActiveTab('overview')
+                        setChildMenuOpen(false)
                       }}
                     >
-                      <span aria-hidden="true">{enrollment.child_first_name?.charAt(0) || 'C'}</span>
-                      {enrollment.child_first_name}
+                      <span className="parent-child-avatar" aria-hidden="true">{getChildInitials(enrollment)}</span>
+                      <span className="parent-child-menu-copy">
+                        <strong>{getChildSelectorName(enrollment)}</strong>
+                        <span className={`parent-child-state ${getChildStatus(enrollment).tone}`}>{getChildRecordLabel(enrollment)}</span>
+                      </span>
                     </button>
                   ))}
                 </div>
-              ) : (
-                <strong>{getChildName(selectedEnrollment)}</strong>
-              )}
+                }
+              </div>
+              <span className={`parent-child-state ${childStatus.tone}`} aria-live="polite">{getChildRecordLabel(selectedEnrollment)}</span>
             </div>
           </section>
 
@@ -302,24 +343,24 @@ function ParentDashboard() {
               aria-label="Parent dashboard sections"
             >
               <div className="parent-tab-group">
-                <span className="parent-tab-group-title">Child record</span>
-                <button type="button" className={`parent-sidebar-tab${activeTab === 'overview' ? ' active' : ''}`} aria-pressed={activeTab === 'overview'} onClick={() => setActiveTab('overview')}>
+                <span className="parent-tab-group-title">Child records</span>
+                <button type="button" className={`parent-sidebar-tab${currentTab === 'overview' ? ' active' : ''}`} aria-pressed={currentTab === 'overview'} onClick={() => setActiveTab('overview')}>
                   <i className="app-icon app-icon-clipboard" aria-hidden="true" /><span>Enrollment</span>
                 </button>
-                <button type="button" className={`parent-sidebar-tab${activeTab === 'information' ? ' active' : ''}`} aria-pressed={activeTab === 'information'} onClick={() => setActiveTab('information')}>
-                  <i className="app-icon app-icon-profile" aria-hidden="true" /><span>Child Information</span>
+                <button type="button" className={`parent-sidebar-tab${currentTab === 'information' ? ' active' : ''}`} aria-pressed={currentTab === 'information'} onClick={() => setActiveTab('information')}>
+                  <i className="app-icon app-icon-profile" aria-hidden="true" /><span>Child Summary</span>
                 </button>
-                {hasApprovedSelection && <button type="button" className={`parent-sidebar-tab${activeTab === 'student-report' ? ' active' : ''}`} aria-pressed={activeTab === 'student-report'} onClick={() => setActiveTab('student-report')}>
-                  <i className="app-icon app-icon-file-document" aria-hidden="true" /><span>Student Report</span>
-                </button>}
-                {hasApprovedSelection && <button type="button" className={`parent-sidebar-tab${activeTab === 'health-growth' ? ' active' : ''}`} aria-pressed={activeTab === 'health-growth'} onClick={() => setActiveTab('health-growth')}>
-                  <i className="app-icon app-icon-heart" aria-hidden="true" /><span>Health &amp; Growth</span>
-                </button>}
               </div>
               {hasApprovedSelection && <div className="parent-tab-group parent-tab-group-center">
-                <span className="parent-tab-group-title">From the center</span>
+                <span className="parent-tab-group-title">Center updates</span>
+                <button type="button" className={`parent-sidebar-tab${activeTab === 'health-growth' ? ' active' : ''}`} aria-pressed={activeTab === 'health-growth'} onClick={() => setActiveTab('health-growth')}>
+                  <i className="app-icon app-icon-heart" aria-hidden="true" /><span>Health &amp; Growth</span>
+                </button>
+                <button type="button" className={`parent-sidebar-tab${activeTab === 'attendance' ? ' active' : ''}`} aria-pressed={activeTab === 'attendance'} onClick={() => setActiveTab('attendance')}>
+                  <i className="app-icon app-icon-check-o" aria-hidden="true" /><span>Attendance</span>
+                </button>
                 <button type="button" className={`parent-sidebar-tab${activeTab === 'announcements' ? ' active' : ''}`} aria-pressed={activeTab === 'announcements'} onClick={() => setActiveTab('announcements')}>
-                  <i className="app-icon app-icon-bell" aria-hidden="true" /><span>Announcements</span>
+                  <i className="app-icon app-icon-mail" aria-hidden="true" /><span>Announcements</span>
                 </button>
                 <button type="button" className={`parent-sidebar-tab${activeTab === 'calendar' ? ' active' : ''}`} aria-pressed={activeTab === 'calendar'} onClick={() => setActiveTab('calendar')}>
                   <i className="app-icon app-icon-calendar-dates" aria-hidden="true" /><span>School Calendar</span>
@@ -328,49 +369,16 @@ function ParentDashboard() {
             </nav>
 
             <div className="parent-tab-content">
-              {activeTab === 'health-growth' ? (
-                <HealthGrowthPanel enrollments={selectedEnrollment ? [selectedEnrollment] : []} rowsClickable={false} />
-              ) : activeTab === 'student-report' ? (
-                <StudentReportPanel enrollments={selectedEnrollment ? [selectedEnrollment] : []} parentName={parentName} parentEmail={parentEmail} />
-              ) : activeTab === 'calendar' ? (
-                <CalendarPanel listView showEnrollmentMilestones />
-              ) : activeTab === 'announcements' ? (
+              {currentTab === 'health-growth' ? (
+                <ParentHealthGrowthPanel key={selectedEnrollment.id} student={selectedEnrollment} />
+              ) : currentTab === 'attendance' ? (
+                <ParentAttendancePanel key={selectedEnrollment.id} student={selectedEnrollment} />
+              ) : currentTab === 'calendar' ? (
+                <CalendarPanel showEnrollmentMilestones />
+              ) : currentTab === 'announcements' ? (
                 <AnnouncementsPanel />
-              ) : activeTab === 'information' ? (
-                <div className="parent-enrollment-card-list">
-                    <section className="parent-dashboard-card" key={selectedEnrollment.id}>
-                      <div className="parent-section-heading">
-                        <h2>Child information</h2>
-                      </div>
-                      <div className="parent-panel-meta"><strong>{getChildName(selectedEnrollment, true)}</strong></div>
-                      <dl className="parent-information-grid">
-                        <div>
-                          <dt>Date of Birth</dt>
-                          <dd>{formatDate(selectedEnrollment.birth_date)}</dd>
-                        </div>
-                        <div>
-                          <dt>Gender</dt>
-                          <dd>{formatSex(selectedEnrollment.sex)}</dd>
-                        </div>
-                        <div>
-                          <dt>Place of Birth</dt>
-                          <dd>{formatPlaceOfBirth(selectedEnrollment.place_of_birth)}</dd>
-                        </div>
-                        <div>
-                          <dt>Registered</dt>
-                          <dd>{selectedEnrollment.is_registered ? 'Yes' : 'No'}</dd>
-                        </div>
-                        <div>
-                          <dt>Mother Tongue</dt>
-                          <dd>{formatValue(selectedEnrollment.mother_tongue)}</dd>
-                        </div>
-                        <div>
-                          <dt>Other Dialect</dt>
-                          <dd>{formatValue(selectedEnrollment.other_dialect)}</dd>
-                        </div>
-                      </dl>
-                    </section>
-                </div>
+              ) : currentTab === 'information' ? (
+                <StudentReportPanel enrollments={selectedEnrollment ? [selectedEnrollment] : []} includeUnapproved parentName={parentName} parentEmail={parentEmail} title="Child Summary" />
               ) : (
                 <div className="parent-enrollment-card-list">
                     <section className="parent-dashboard-card" key={selectedEnrollment.id}>
@@ -379,35 +387,33 @@ function ParentDashboard() {
                       </div>
                       <div className="parent-panel-meta">
                         <strong>{getChildName(selectedEnrollment)}</strong>
-                        <span className={`enrollment-status ${selectedEnrollment.status}`}>
-                          {selectedEnrollment.status}
+                        <span className={`enrollment-status ${childStatus.tone}`}>
+                          {childStatus.label}
                         </span>
                       </div>
 
                       <div className="parent-status-summary">
-                        <p className="parent-status-kicker">Application decision</p>
-                        <p className="parent-status-title">Enrollment approved</p>
-                        <p className="parent-status-message">{getStatusMessage(selectedEnrollment.status)} You can now open the child record and center updates from this dashboard.</p>
+                        <p className="parent-status-kicker">Current child status</p>
+                        <p className="parent-status-title">{childStatus.title}</p>
+                        <p className="parent-status-message">{childStatus.message}</p>
                       </div>
+                      {selectedEnrollment.status === 'rejected' && selectedEnrollment.review_reason && <div className="parent-review-note"><strong>Teacher’s note</strong><p>{selectedEnrollment.review_reason}</p></div>}
+                      {selectedEnrollment.status === 'rejected' && <button type="button" className="parent-primary-action parent-resubmit-action" onClick={() => navigate(`/enroll?resubmit=${selectedEnrollment.id}`)}>Update &amp; Resubmit</button>}
 
                       <dl className="parent-overview-grid">
                         <div>
-                          <dt>Enrollment status</dt>
-                          <dd>Approved</dd>
+                          <dt>Current status</dt>
+                          <dd>{childStatus.label}</dd>
                         </div>
                         <div>
                           <dt>Reference Code</dt>
-                          <dd className="parent-reference-value"><span>{selectedEnrollment.reference_code}</span><button type="button" onClick={() => copyReferenceCode(selectedEnrollment.reference_code)} aria-label="Copy reference code">Copy</button></dd>
+                          <dd>{selectedEnrollment.reference_code || '—'}</dd>
                         </div>
                         <div>
                           <dt>Submitted</dt>
                           <dd>{formatSubmittedDate(selectedEnrollment.submitted_at)}</dd>
                         </div>
                       </dl>
-                      <div className="parent-card-actions">
-                        <button type="button" className="parent-primary-action" onClick={() => setActiveTab('information')}>Open child information</button>
-                        <button type="button" className="parent-secondary-action" onClick={() => setActiveTab('student-report')}>Open student report</button>
-                      </div>
                     </section>
                 </div>
               )}

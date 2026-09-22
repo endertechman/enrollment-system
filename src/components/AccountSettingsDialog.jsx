@@ -8,9 +8,12 @@ function formatRole(role) {
   return role ? role[0].toUpperCase() + role.slice(1) : 'Account user'
 }
 
-function AccountSettingsDialog({ user, fullName, role, onClose }) {
+function AccountSettingsDialog({ user, fullName, role, onClose, onNameUpdated }) {
   const dialogRef = useRef(null)
   const closeButtonRef = useRef(null)
+  const [currentFullName, setCurrentFullName] = useState(fullName || '')
+  const [editedName, setEditedName] = useState(fullName || '')
+  const [savingName, setSavingName] = useState(false)
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -21,6 +24,32 @@ function AccountSettingsDialog({ user, fullName, role, onClose }) {
   })
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
+
+  async function updateName(event) {
+    event.preventDefault()
+    const cleanName = editedName.trim().replace(/\s+/g, ' ')
+    if (cleanName.length < 2 || cleanName.length > 100) {
+      setMessage('Name must be between 2 and 100 characters.')
+      return
+    }
+    if (cleanName === currentFullName) return
+
+    setSavingName(true)
+    setMessage('')
+    const { data, error } = await supabase.rpc('update_own_full_name', { p_full_name: cleanName })
+    setSavingName(false)
+    if (error) {
+      setMessage(error.code === '42883' || error.code === 'PGRST202'
+        ? 'Name editing is not available until the Supabase migration is applied.'
+        : error.message)
+      return
+    }
+
+    setCurrentFullName(data)
+    setEditedName(data)
+    onNameUpdated?.(data)
+    setMessage('Name updated successfully.')
+  }
 
   function togglePasswordVisibility(field) {
     setVisiblePasswords((current) => ({
@@ -129,19 +158,26 @@ function AccountSettingsDialog({ user, fullName, role, onClose }) {
           </button>
           <span>Account</span>
           <h2 id="account-settings-title">Settings</h2>
-          <p id="account-settings-description" className="visually-hidden">Review your account details and update your password.</p>
+          <p id="account-settings-description" className="visually-hidden">Review your account details, edit your name, and update your password.</p>
         </header>
 
         <div className="settings-body">
           <section className="settings-profile" aria-labelledby="settings-profile-title">
             <div className="settings-profile-icon" aria-hidden="true"><i className="app-icon app-icon-profile" /></div>
             <div className="settings-profile-copy">
-              <h3 id="settings-profile-title">{fullName || 'User'}</h3>
+              <h3 id="settings-profile-title">{currentFullName || 'User'}</h3>
               <p>{user.email || 'Email unavailable'}</p>
             </div>
             <dl><div><dt>Account role</dt><dd>{formatRole(role)}</dd></div></dl>
-            <p className="settings-profile-note">Your registered name and email are fixed account details.</p>
+            <p className="settings-profile-note">Your email is fixed. Name changes also update how your account appears in center records.</p>
           </section>
+
+          <form className="settings-name-form" onSubmit={updateName}>
+            <div className="settings-section-heading"><h3>Edit Name</h3></div>
+            <label htmlFor="settings-full-name">Full name</label>
+            <input id="settings-full-name" type="text" value={editedName} onChange={(event) => setEditedName(event.target.value)} maxLength={100} autoComplete="name" required />
+            <button type="submit" className="settings-submit" disabled={savingName || editedName.trim().replace(/\s+/g, ' ') === currentFullName}>Save Name</button>
+          </form>
 
           <form className="settings-password-form" onSubmit={updatePassword}>
             <div className="settings-section-heading">

@@ -13,6 +13,7 @@ import EnrollmentRequestsDirectory from '../components/EnrollmentRequestsDirecto
 import DashboardLoadingShell from '../components/DashboardLoadingShell'
 import EnrollmentBatchControls from '../components/EnrollmentBatchControls'
 import { getEnrollmentWindow } from '../lib/enrollmentWindow'
+import { getPhilippineDateValue } from '../lib/philippineDate'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 
 function TeacherDashboard() {
@@ -35,11 +36,7 @@ function TeacherDashboard() {
   const [batches, setBatches] = useState([])
   const [currentBatchId, setCurrentBatchId] = useState('')
   const [selectedBatchId, setSelectedBatchId] = useState('')
-  const [attendanceDate, setAttendanceDate] = useState(() => {
-    const now = new Date()
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
-    return now.toISOString().slice(0, 10)
-  })
+  const [attendanceDate, setAttendanceDate] = useState(getPhilippineDateValue)
 
   useEffect(() => {
     function openNotificationTab(event) {
@@ -50,6 +47,12 @@ function TeacherDashboard() {
 
     window.addEventListener('bcdc:notification-navigation', openNotificationTab)
     return () => window.removeEventListener('bcdc:notification-navigation', openNotificationTab)
+  }, [])
+
+  useEffect(() => {
+    const updateName = (event) => { if (event.detail?.name) setTeacherName(event.detail.name) }
+    window.addEventListener('bcdc:account-name-updated', updateName)
+    return () => window.removeEventListener('bcdc:account-name-updated', updateName)
   }, [])
 
   const loadDashboard = useCallback(async ({ silent = false } = {}) => {
@@ -268,7 +271,7 @@ function TeacherDashboard() {
                   <i className="app-icon app-icon-check-o" aria-hidden="true" /><span>Attendance</span>
                 </button>
                 <button type="button" className={`teacher-tab${activeTab === 'announcements' ? ' active' : ''}`} aria-pressed={activeTab === 'announcements'} onClick={() => setActiveTab('announcements')}>
-                  <i className="app-icon app-icon-bell" aria-hidden="true" /><span>Announcements</span>
+                  <i className="app-icon app-icon-mail" aria-hidden="true" /><span>Announcements</span>
                 </button>
                 <button type="button" className={`teacher-tab${activeTab === 'calendar' ? ' active' : ''}`} aria-pressed={activeTab === 'calendar'} onClick={() => setActiveTab('calendar')}>
                   <i className="app-icon app-icon-calendar-dates" aria-hidden="true" /><span>School Calendar</span>

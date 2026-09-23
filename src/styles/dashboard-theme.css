@@ -300,9 +300,15 @@
 
 .approval-row,
 .announcement-card,
-.attendance-row,
+.attendance-row {
+  border-color: var(--color-border);
+  background: var(--color-surface);
+  box-shadow: none;
+}
+
 .calendar-event-list article {
   border-color: var(--color-border);
+  border-left-color: var(--event-color, var(--color-primary));
   background: var(--color-surface);
   box-shadow: none;
 }
@@ -611,7 +617,7 @@
 .delete-record-button:hover:not(:disabled),
 .announcement-card-heading button:hover:not(:disabled),
 .calendar-event-list button:hover:not(:disabled) {
-  background: var(--color-accent-soft);
+  background: transparent;
   color: var(--color-accent-ink);
 }
 
@@ -620,11 +626,11 @@
   border-radius: 50%;
   background: transparent;
   color: #d72f55;
-  transition: background-color .2s ease, color .2s ease;
+  transition: color .2s ease;
 }
 
 .icon-delete-button.icon-delete-button:hover:not(:disabled) {
-  background: #ffe2ea;
+  background: transparent;
   color: #a91f46;
 }
 

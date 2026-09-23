@@ -1,26 +1,30 @@
-# Enrollment System
+# BCDC Enrollment System
 
-A web-based enrollment system developed as a capstone project to simplify the student enrollment process.
+A responsive enrollment and student-records app for Binuangan Child Development Center. Parents can submit a separate application for each child and follow its progress; teachers and teacher aides use role-specific dashboards to manage the school year.
 
-The system allows students or guardians to submit enrollment applications online, while authorized school personnel can review and manage applications through a dedicated dashboard.
+## What the app includes
 
-## Features
+- Parent registration, email confirmation, sign-in, password reset, and account settings
+- Multi-child enrollment, duplicate-child warnings, application resubmission, and a three-child limit per semester
+- Teacher review of enrollment requests and read-only request review for teacher aides
+- Semester and enrollment-window setup, enrolled-student reports, attendance, and health and growth records
+- Announcements, school calendar, and role-aware notifications
+- Responsive layouts for parent, teacher, and teacher-aide dashboards
 
-- User registration and login
-- Online enrollment form
-- Enrollment application tracking
-- Teacher/Aide dashboard
-- Application review and status management
-- Role-based access control
-- Supabase authentication and database integration
-- Responsive web interface
+The frontend is built with React and Vite and uses Supabase for authentication, data, and realtime updates. Access rules also depend on the deployed Supabase schema, functions, and row-level security policies—not just the interface.
 
-## Project Status
+## Run locally
 
-This project is currently under development. Additional features, security improvements, testing, and UI/UX revisions will be implemented as development continues.
+Install dependencies with `npm install`, then run `npm run dev`. The app expects `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` in the local environment. Do not commit local environment files or secret credentials.
 
-For the latest executed checks and remaining acceptance cases, see [UAT.md](UAT.md). Notification audiences and destinations are documented in [NOTIFICATIONS.md](NOTIFICATIONS.md). Verified and unverified Supabase metadata is summarized in [supabase/reference/README.md](supabase/reference/README.md); the reference SQL there must not be applied as migrations.
+Available checks: `npm run lint`, `npm run build`, and `npm run test:uat-smoke`.
 
-## Purpose
+## Project status and documentation
 
-The goal of this project is to provide a more convenient and organized enrollment process by reducing manual paperwork and allowing enrollment applications to be submitted and reviewed online.
+The main features are implemented, but production acceptance is **not yet signed off**. Local build and smoke checks passed; authenticated, cross-role, and deployment-target tests remain listed in [UAT.md](UAT.md).
+
+- [Notification behavior](NOTIFICATIONS.md): who sees updates and where they lead
+- [Supabase reference](supabase/reference/README.md): verified remote facts, remaining unknowns, and documentation-only SQL
+- `supabase/migrations/`: migration files; reconcile these with the remote project before applying anything
+
+The files in `supabase/reference/` are not migrations. Do not run or push the historical baseline against the existing remote database.

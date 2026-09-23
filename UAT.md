@@ -42,12 +42,14 @@ Use a **staging/test Supabase project** or disposable test records, not live fam
 | UAT-14 | All roles | Edit own name and password. Teacher changes a test account's role; a newly changed role gets the correct menu and protected routes after refresh. | Not run |
 | UAT-15 | All roles | On a narrow phone viewport, check header menus, notification panel, tab navigation, tables, forms, dialogs, and keyboard focus. No horizontal page overflow or hidden action buttons. | Not run |
 | UAT-16 | Security tester | With ordinary user tokens in staging, attempt direct Supabase reads/writes outside each role's rights: parent reading another parent's child, aide updating enrollment status, parent changing protected role, and unroled account reading protected data. All must be denied by remote RLS/RPC permissions. | Not run |
+| UAT-17 | Teacher + aide + parent | From Enrolled Students, a teacher opens Full Details, edits child information with the pen control, cancels once, then saves with confirmation. The table and report show the saved values. Teacher aide and parent reports remain view-only, and reference code, parent identity, enrollment status, attendance, and growth data cannot be edited through this control. | Not run |
+| UAT-18 | Parent + teacher | In one active semester, submit a child, then start a new application using the same normalized full name and birth date. A duplicate warning appears before the normal submission confirmation. Cancel returns to the completed form without saving; Continue Anyway allows the request into the normal teacher review flow. A rejected application resubmission must not trigger this duplicate warning. | Not run |
 
 ## Preconditions for sign-off
 
 1. Verify the **actual deployed** Supabase migrations, functions, grants, triggers, and RLS policies against this repository. Local SQL files are not proof that remote changes were applied. Do not blindly reapply the documentation-only baseline.
 2. Prepare staging accounts for one parent with multiple child states, a second parent, a teacher, a teacher aide, and an unroled account. Avoid real personal information.
-3. Run UAT-01 through UAT-16 on the deployment target, record actual outcomes, and retest any fixes. For security checks, use staging rather than modifying production data.
+3. Run UAT-01 through UAT-17 on the deployment target, record actual outcomes, and retest any fixes. For security checks, use staging rather than modifying production data.
 4. Sign off only when all release-critical cases pass or an explicit risk acceptance is recorded.
 
 Notification visibility and destinations are documented separately in `NOTIFICATIONS.md`. The current notification feed is derived from source records; it is not a permanent audit log.

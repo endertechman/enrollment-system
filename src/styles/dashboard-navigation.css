@@ -143,3 +143,316 @@
   .parent-dashboard-page .parent-workspace-tabs .parent-sidebar-tab.active,
   .teacher-dashboard-page .teacher-tab.active { box-shadow:inset 0 -3px 0 var(--color-accent); }
 }
+
+/*
+ * Desktop dashboard shell
+ *
+ * Keep the application header and summary visible while only the active
+ * workspace scrolls. All three roles use the same proportions so moving
+ * between sections never shifts the page shell.
+ */
+@media (min-width: 701px) {
+  .teacher-dashboard-page .teacher-dashboard-scroll,
+  .parent-dashboard-page .parent-dashboard-scroll {
+    overflow: hidden;
+    scrollbar-gutter: auto;
+  }
+
+  .teacher-dashboard-page .teacher-dashboard-content,
+  .parent-dashboard-page .parent-dashboard-content {
+    display: flex;
+    width: min(1360px, calc(100% - 32px));
+    height: 100%;
+    min-height: 0;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px 0 18px;
+  }
+
+  .teacher-dashboard-page .aide-dashboard-intro,
+  .parent-dashboard-page .parent-dashboard-intro {
+    min-height: 96px;
+    flex: 0 0 auto;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, auto);
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    border-radius: 16px;
+  }
+
+  .teacher-dashboard-page .aide-workload-summary {
+    min-width: 280px;
+  }
+
+  .parent-dashboard-page .parent-child-context {
+    min-width: 260px;
+  }
+
+  .teacher-dashboard-page .staff-dashboard-layout,
+  .parent-dashboard-page .parent-dashboard-layout {
+    display: grid;
+    min-height: 0;
+    flex: 1 1 auto;
+    grid-template-columns: 200px minmax(0, 1fr);
+    align-items: stretch;
+    gap: 14px;
+    margin-top: 0;
+  }
+
+  .teacher-dashboard-page .teacher-tabs,
+  .parent-dashboard-page .parent-workspace-tabs {
+    position: static;
+    display: flex;
+    height: 100%;
+    min-height: 0;
+    align-self: stretch;
+    flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-color: var(--color-control-border) transparent;
+    scrollbar-width: thin;
+  }
+
+  .teacher-dashboard-page .teacher-tab-group,
+  .parent-dashboard-page .parent-tab-group {
+    display: grid;
+    flex: 0 0 auto;
+  }
+
+  .teacher-dashboard-page .teacher-tab,
+  .parent-dashboard-page .parent-sidebar-tab {
+    width: 100%;
+  }
+
+  .teacher-dashboard-page .aide-tab-group-center,
+  .parent-dashboard-page .parent-tab-group-center {
+    padding-top: 10px;
+    padding-left: 0;
+    border-top: 1px solid var(--color-border);
+    border-left: 0;
+  }
+
+  .teacher-dashboard-page .staff-dashboard-layout > :not(.teacher-tabs),
+  .parent-dashboard-page .parent-tab-content {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-gutter: stable;
+  }
+
+  .teacher-dashboard-page .staff-tab-content,
+  .parent-dashboard-page .parent-tab-content {
+    padding-right: 4px;
+    scrollbar-color: var(--color-control-border) transparent;
+    scrollbar-width: thin;
+  }
+
+  /* Keep each active panel at the shared workspace height while the neutral
+     wrapper owns the scrollbar outside of the panel's rounded edge. */
+  .teacher-dashboard-page .staff-tab-content > *,
+  .parent-dashboard-page .parent-tab-content > * {
+    min-height: 100%;
+  }
+
+  .teacher-dashboard-page .staff-tab-content::-webkit-scrollbar,
+  .parent-dashboard-page .parent-tab-content::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .teacher-dashboard-page .staff-tab-content::-webkit-scrollbar-track,
+  .parent-dashboard-page .parent-tab-content::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .teacher-dashboard-page .staff-tab-content::-webkit-scrollbar-thumb,
+  .parent-dashboard-page .parent-tab-content::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background: var(--color-control-border);
+    background-clip: padding-box;
+  }
+}
+
+@media (min-width: 701px) and (max-width: 900px) {
+  .teacher-dashboard-page .staff-dashboard-layout,
+  .parent-dashboard-page .parent-dashboard-layout {
+    grid-template-columns: 176px minmax(0, 1fr);
+  }
+
+  .teacher-dashboard-page .teacher-dashboard-content,
+  .parent-dashboard-page .parent-dashboard-content {
+    width: calc(100% - 24px);
+  }
+
+  .teacher-dashboard-page .aide-dashboard-intro,
+  .parent-dashboard-page .parent-dashboard-intro {
+    grid-template-columns: minmax(0, 1fr) minmax(240px, auto);
+  }
+
+  .teacher-dashboard-page .aide-workload-summary,
+  .parent-dashboard-page .parent-child-context {
+    min-width: 240px;
+  }
+}
+
+/* Mobile returns to normal page scrolling and the compact swipeable icon tabs. */
+@media (max-width: 700px) {
+  .teacher-dashboard-page .teacher-dashboard-scroll,
+  .parent-dashboard-page .parent-dashboard-scroll {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .teacher-dashboard-page .teacher-dashboard-content,
+  .parent-dashboard-page .parent-dashboard-content {
+    height: auto;
+  }
+
+  .teacher-dashboard-page .staff-dashboard-layout,
+  .parent-dashboard-page .parent-dashboard-layout {
+    height: auto;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .teacher-dashboard-page .staff-dashboard-layout > :not(.teacher-tabs),
+  .parent-dashboard-page .parent-tab-content {
+    height: auto;
+    overflow: visible;
+  }
+
+  .teacher-dashboard-page .staff-tab-content,
+  .parent-dashboard-page .parent-tab-content {
+    padding-right: 0;
+  }
+
+  .teacher-dashboard-page .staff-tab-content > *,
+  .parent-dashboard-page .parent-tab-content > * {
+    min-height: 0;
+  }
+}
+
+/* Shared collapsible summary header. */
+.teacher-dashboard-page .aide-dashboard-intro,
+.parent-dashboard-page .parent-dashboard-intro {
+  position: relative;
+}
+
+.dashboard-summary-toggle {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background: var(--color-surface);
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+}
+
+.dashboard-summary-toggle:hover {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-ink);
+}
+
+.dashboard-summary-toggle:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 55%, transparent);
+  outline-offset: 3px;
+}
+
+.dashboard-summary-chevron {
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(2px) rotate(225deg);
+  transition: transform .2s ease;
+}
+
+.teacher-dashboard-page .aide-dashboard-intro.is-collapsed,
+.parent-dashboard-page .parent-dashboard-intro.is-collapsed {
+  min-height: 58px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding-block: 10px;
+}
+
+.aide-dashboard-intro.is-collapsed .aide-context-label,
+.aide-dashboard-intro.is-collapsed .aide-intro-copy > p:last-child,
+.aide-dashboard-intro.is-collapsed .aide-workload-summary,
+.parent-dashboard-intro.is-collapsed .parent-context-label,
+.parent-dashboard-intro.is-collapsed .parent-intro-copy > p:last-child,
+.parent-dashboard-intro.is-collapsed .parent-child-context {
+  display: none;
+}
+
+.aide-dashboard-intro.is-collapsed .aide-intro-copy h1,
+.parent-dashboard-intro.is-collapsed .parent-intro-copy h1 {
+  font-size: 1.08rem;
+  line-height: 1.25;
+}
+
+.is-collapsed .dashboard-summary-chevron {
+  transform: translateY(-2px) rotate(45deg);
+}
+
+@media (min-width: 701px) {
+  .teacher-dashboard-page .aide-dashboard-intro {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, auto) auto;
+  }
+
+  .parent-dashboard-page .parent-dashboard-intro {
+    grid-template-columns: minmax(0, 1fr) minmax(260px, auto) auto;
+  }
+
+  .teacher-dashboard-page .teacher-tabs::-webkit-scrollbar,
+  .parent-dashboard-page .parent-workspace-tabs::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .teacher-dashboard-page .teacher-tabs::-webkit-scrollbar-thumb,
+  .parent-dashboard-page .parent-workspace-tabs::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: var(--color-control-border);
+  }
+}
+
+@media (min-width: 701px) and (max-width: 900px) {
+  .teacher-dashboard-page .aide-dashboard-intro {
+    grid-template-columns: minmax(0, 1fr) minmax(240px, auto) auto;
+  }
+
+  .parent-dashboard-page .parent-dashboard-intro {
+    grid-template-columns: minmax(0, 1fr) minmax(220px, auto) auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .teacher-dashboard-page .teacher-tabs,
+  .parent-dashboard-page .parent-workspace-tabs {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+  }
+
+  .teacher-dashboard-page .aide-dashboard-intro,
+  .parent-dashboard-page .parent-dashboard-intro,
+  .teacher-dashboard-page .aide-dashboard-intro.is-collapsed,
+  .parent-dashboard-page .parent-dashboard-intro.is-collapsed {
+    grid-template-columns: minmax(0, 1fr);
+    padding-right: 62px;
+  }
+
+  .dashboard-summary-toggle {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+  }
+}

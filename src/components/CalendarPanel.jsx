@@ -249,9 +249,9 @@ function CalendarPanel({ canManage = false, showEnrollmentMilestones = true }) {
       <div className="calendar-layout">
         <div className="calendar-main">
           <div className="calendar-month-controls">
-            <button type="button" onClick={() => changeMonth(-1)} aria-label="Previous month">‹</button>
+            <button type="button" onClick={() => changeMonth(-1)} aria-label="Previous month"><i className="app-icon app-icon-chevron-left" aria-hidden="true" /></button>
             <h3>{visibleMonth.toLocaleDateString('en-PH', { month: 'long', year: 'numeric' })}</h3>
-            <button type="button" onClick={() => changeMonth(1)} aria-label="Next month">›</button>
+            <button type="button" onClick={() => changeMonth(1)} aria-label="Next month"><i className="app-icon app-icon-chevron-right" aria-hidden="true" /></button>
           </div>
           <div className="calendar-weekdays">{weekdays.map((day) => <span key={day}>{day}</span>)}</div>
           <div className="calendar-grid">

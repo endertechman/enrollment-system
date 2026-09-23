@@ -34,6 +34,7 @@ function TeacherAideDashboard() {
   const [currentBatchId, setCurrentBatchId] = useState('')
   const [selectedBatchId, setSelectedBatchId] = useState('')
   const [attendanceDate, setAttendanceDate] = useState(getPhilippineDateValue)
+  const [headerCollapsed, setHeaderCollapsed] = useState(false)
 
   useEffect(() => {
     function openNotificationTab(event) {
@@ -172,7 +173,7 @@ function TeacherAideDashboard() {
 
       <main className="teacher-dashboard-scroll">
         <div className="teacher-dashboard-content">
-          <section className="aide-dashboard-intro" aria-labelledby="aide-dashboard-title">
+          <section className={`aide-dashboard-intro${headerCollapsed ? ' is-collapsed' : ''}`} aria-labelledby="aide-dashboard-title">
             <div className="aide-intro-copy">
               <p className="aide-context-label">Teacher aide workspace</p>
               <h1 id="aide-dashboard-title">Welcome, {aideName}</h1>
@@ -182,6 +183,15 @@ function TeacherAideDashboard() {
               <div><dt>Waiting for review</dt><dd>{pendingEnrollments.length}</dd></div>
               <div><dt>Student records</dt><dd>{studentDirectoryRecords.length}</dd></div>
             </dl>
+            <button
+              type="button"
+              className="dashboard-summary-toggle"
+              aria-label={headerCollapsed ? 'Expand dashboard header' : 'Collapse dashboard header'}
+              aria-expanded={!headerCollapsed}
+              onClick={() => setHeaderCollapsed((collapsed) => !collapsed)}
+            >
+              <span className="dashboard-summary-chevron" aria-hidden="true" />
+            </button>
           </section>
 
           <div className="staff-dashboard-layout">
@@ -218,36 +228,38 @@ function TeacherAideDashboard() {
               </div>
             </nav>
 
-            {activeTab === 'health-growth' ? (
-              <HealthGrowthPanel enrollments={enrollments} canManage />
-            ) : activeTab === 'calendar' ? (
-              <CalendarPanel canManage listView />
-            ) : activeTab === 'announcements' ? (
-              <AnnouncementsPanel canManage />
-            ) : activeTab === 'attendance' ? (
-              <AttendanceRoster enrollments={enrollments} loading={loading} attendanceDate={attendanceDate} onDateChange={setAttendanceDate} batch={batches.find((batch) => batch.id === selectedBatchId) || null} canEdit />
-            ) : activeTab === 'students' ? (
-              <StudentReportsDirectory enrollments={enrollments} onOpenReport={setReportEnrollmentId} />
-            ) : activeTab === 'enrollment-window' ? (
-              <section className="pending-approvals-panel enrollment-window-panel">
-                <div className="pending-approvals-header"><div><h2>School Year &amp; Enrollment</h2></div></div>
-                <EnrollmentBatchControls
-                  batches={batches}
-                  currentBatchId={currentBatchId}
-                  selectedBatchId={selectedBatchId}
-                  onSelect={setSelectedBatchId}
-                  onChanged={setSelectedBatchId}
-                  onNotice={setNotice}
-                  onError={setMessage}
-                />
-                {message && <p className="teacher-dashboard-message" role="status">{message}</p>}
-              </section>
-            ) : (
-              <div className="enrollment-requests-view">
-                {message && <p className="teacher-dashboard-message" role="status">{message}</p>}
-                <EnrollmentRequestsDirectory enrollments={pendingEnrollments} />
-              </div>
-            )}
+            <div className="staff-tab-content">
+              {activeTab === 'health-growth' ? (
+                <HealthGrowthPanel enrollments={enrollments} canManage />
+              ) : activeTab === 'calendar' ? (
+                <CalendarPanel canManage listView />
+              ) : activeTab === 'announcements' ? (
+                <AnnouncementsPanel canManage />
+              ) : activeTab === 'attendance' ? (
+                <AttendanceRoster enrollments={enrollments} loading={loading} attendanceDate={attendanceDate} onDateChange={setAttendanceDate} batch={batches.find((batch) => batch.id === selectedBatchId) || null} canEdit />
+              ) : activeTab === 'students' ? (
+                <StudentReportsDirectory enrollments={enrollments} onOpenReport={setReportEnrollmentId} />
+              ) : activeTab === 'enrollment-window' ? (
+                <section className="pending-approvals-panel enrollment-window-panel">
+                  <div className="pending-approvals-header"><div><h2>School Year &amp; Enrollment</h2></div></div>
+                  <EnrollmentBatchControls
+                    batches={batches}
+                    currentBatchId={currentBatchId}
+                    selectedBatchId={selectedBatchId}
+                    onSelect={setSelectedBatchId}
+                    onChanged={setSelectedBatchId}
+                    onNotice={setNotice}
+                    onError={setMessage}
+                  />
+                  {message && <p className="teacher-dashboard-message" role="status">{message}</p>}
+                </section>
+              ) : (
+                <div className="enrollment-requests-view">
+                  {message && <p className="teacher-dashboard-message" role="status">{message}</p>}
+                  <EnrollmentRequestsDirectory enrollments={pendingEnrollments} />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </main>

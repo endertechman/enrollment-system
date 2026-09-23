@@ -35,6 +35,7 @@ function ParentDashboard() {
   })
   const [selectedEnrollmentId, setSelectedEnrollmentId] = useState(null)
   const [childMenuOpen, setChildMenuOpen] = useState(false)
+  const [headerCollapsed, setHeaderCollapsed] = useState(false)
   const childMenuRef = useRef(null)
 
   useEffect(() => {
@@ -283,7 +284,7 @@ function ParentDashboard() {
 
       <main className="parent-dashboard-scroll">
         <div className="parent-dashboard-content">
-          <section className="parent-dashboard-intro" aria-labelledby="parent-dashboard-title">
+          <section className={`parent-dashboard-intro${headerCollapsed ? ' is-collapsed' : ''}`} aria-labelledby="parent-dashboard-title">
             <div className="parent-intro-copy">
               <p className="parent-context-label">Parent account</p>
               <h1 id="parent-dashboard-title">Welcome, {parentName}</h1>
@@ -328,6 +329,15 @@ function ParentDashboard() {
               </div>
               <span className={`parent-child-state ${childStatus.tone}`} aria-live="polite">{getChildRecordLabel(selectedEnrollment)}</span>
             </div>
+            <button
+              type="button"
+              className="dashboard-summary-toggle"
+              aria-label={headerCollapsed ? 'Expand dashboard header' : 'Collapse dashboard header'}
+              aria-expanded={!headerCollapsed}
+              onClick={() => setHeaderCollapsed((collapsed) => !collapsed)}
+            >
+              <span className="dashboard-summary-chevron" aria-hidden="true" />
+            </button>
           </section>
 
           {message && <p className="parent-dashboard-message" role="status">{message}</p>}
@@ -345,7 +355,7 @@ function ParentDashboard() {
               <div className="parent-tab-group">
                 <span className="parent-tab-group-title">Child records</span>
                 <button type="button" className={`parent-sidebar-tab${currentTab === 'overview' ? ' active' : ''}`} aria-pressed={currentTab === 'overview'} onClick={() => setActiveTab('overview')}>
-                  <i className="app-icon app-icon-clipboard" aria-hidden="true" /><span>Enrollment</span>
+                  <i className="app-icon app-icon-clipboard" aria-hidden="true" /><span>Enrollment Status</span>
                 </button>
                 <button type="button" className={`parent-sidebar-tab${currentTab === 'information' ? ' active' : ''}`} aria-pressed={currentTab === 'information'} onClick={() => setActiveTab('information')}>
                   <i className="app-icon app-icon-profile" aria-hidden="true" /><span>Child Summary</span>
@@ -381,37 +391,45 @@ function ParentDashboard() {
                 <StudentReportPanel enrollments={selectedEnrollment ? [selectedEnrollment] : []} includeUnapproved parentName={parentName} parentEmail={parentEmail} title="Child Summary" />
               ) : (
                 <div className="parent-enrollment-card-list">
-                    <section className="parent-dashboard-card" key={selectedEnrollment.id}>
+                    <section className="parent-dashboard-card parent-enrollment-panel" key={selectedEnrollment.id}>
                       <div className="parent-card-heading">
-                        <h2>Enrollment</h2>
+                        <h2>Enrollment Status</h2>
                       </div>
-                      <div className="parent-panel-meta">
-                        <strong>{getChildName(selectedEnrollment)}</strong>
-                        <span className={`enrollment-status ${childStatus.tone}`}>
-                          {childStatus.label}
+
+                      <div className={`parent-enrollment-status-card ${childStatus.tone}`}>
+                        <span className="parent-enrollment-status-icon" aria-hidden="true">
+                          <i className="app-icon app-icon-clipboard" />
                         </span>
-                      </div>
-
-                      <div className="parent-status-summary">
-                        <p className="parent-status-kicker">Current child status</p>
-                        <p className="parent-status-title">{childStatus.title}</p>
-                        <p className="parent-status-message">{childStatus.message}</p>
-                      </div>
-                      {selectedEnrollment.status === 'rejected' && selectedEnrollment.review_reason && <div className="parent-review-note"><strong>Teacher’s note</strong><p>{selectedEnrollment.review_reason}</p></div>}
-                      {selectedEnrollment.status === 'rejected' && <button type="button" className="parent-primary-action parent-resubmit-action" onClick={() => navigate(`/enroll?resubmit=${selectedEnrollment.id}`)}>Update &amp; Resubmit</button>}
-
-                      <dl className="parent-overview-grid">
                         <div>
-                          <dt>Current status</dt>
-                          <dd>{childStatus.label}</dd>
+                          <p>Latest application update</p>
+                          <h3>{childStatus.title}</h3>
+                          <span>{childStatus.message}</span>
                         </div>
-                        <div>
+                      </div>
+
+                      {selectedEnrollment.status === 'rejected' && <div className="parent-resubmission-card">
+                        {selectedEnrollment.review_reason && <div className="parent-review-note"><strong>Teacher’s note</strong><p>{selectedEnrollment.review_reason}</p></div>}
+                        <button type="button" className="parent-primary-action parent-resubmit-action" onClick={() => navigate(`/enroll?resubmit=${selectedEnrollment.id}`)}>Update &amp; Resubmit</button>
+                      </div>}
+
+                      <dl className="parent-enrollment-details">
+                        <div className="parent-enrollment-detail-card">
+                          <span className="parent-detail-icon" aria-hidden="true"><i className="app-icon app-icon-profile" /></span>
+                          <div><dt>Child</dt><dd>{getChildName(selectedEnrollment)}</dd></div>
+                        </div>
+                        <div className="parent-enrollment-detail-card">
+                          <span className="parent-detail-icon" aria-hidden="true"><i className="app-icon app-icon-file-document" /></span>
+                          <div>
                           <dt>Reference Code</dt>
                           <dd>{selectedEnrollment.reference_code || '—'}</dd>
+                          </div>
                         </div>
-                        <div>
+                        <div className="parent-enrollment-detail-card">
+                          <span className="parent-detail-icon" aria-hidden="true"><i className="app-icon app-icon-calendar-dates" /></span>
+                          <div>
                           <dt>Submitted</dt>
                           <dd>{formatSubmittedDate(selectedEnrollment.submitted_at)}</dd>
+                          </div>
                         </div>
                       </dl>
                     </section>

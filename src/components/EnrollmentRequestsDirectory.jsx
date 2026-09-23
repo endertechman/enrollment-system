@@ -60,7 +60,7 @@ function formatSex(value) {
 
 function formatPlaceOfBirth(value) {
   if (!value) return '—'
-  return String(value).replace(/,\s*Philippines\s*$/i, '').trim()
+  return String(value).trim()
 }
 
 function EnrollmentRequestsDirectory({ enrollments, canReview = false, reviewingId = null, onReview }) {

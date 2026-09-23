@@ -512,6 +512,188 @@
 .parent-dashboard-page .enrollment-status.withdrawn { background:var(--color-surface-soft); color:var(--color-muted); }
 .parent-dashboard-page .enrollment-status.dropped { background:var(--color-accent-soft); color:var(--color-accent-ink); }
 
+/* Parent enrollment overview */
+.parent-enrollment-card-list,
+.parent-enrollment-panel { min-height: 100%; }
+
+.parent-enrollment-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.parent-enrollment-status-card {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  gap: 15px;
+  margin-top: 16px;
+  padding: clamp(18px, 2.5vw, 24px);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, var(--color-border));
+  border-radius: 16px;
+  background: linear-gradient(130deg, var(--color-primary-soft), var(--color-surface));
+}
+
+.parent-enrollment-status-icon,
+.parent-detail-icon {
+  display: grid;
+  place-items: center;
+  color: var(--color-primary-ink);
+  background: var(--color-primary-soft);
+}
+
+.parent-enrollment-status-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+}
+
+.parent-enrollment-status-icon .app-icon {
+  width: 21px;
+  height: 21px;
+  flex-basis: 21px;
+}
+
+.parent-enrollment-status-card p {
+  margin: 0;
+  color: var(--color-primary-ink);
+  font-size: .7rem;
+  font-weight: 760;
+  letter-spacing: .045em;
+  text-transform: uppercase;
+}
+
+.parent-enrollment-status-card h3 {
+  margin: 4px 0 0;
+  color: var(--color-heading);
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 2.4vw, 1.65rem);
+  font-weight: 740;
+  letter-spacing: -.022em;
+  line-height: 1.2;
+}
+
+.parent-enrollment-status-card > div > span {
+  display: block;
+  max-width: 700px;
+  margin-top: 7px;
+  color: var(--color-text-soft);
+  font-size: .88rem;
+  line-height: 1.55;
+}
+
+.parent-enrollment-status-card.pending {
+  border-color: var(--color-border);
+  background: linear-gradient(130deg, var(--color-surface-soft), var(--color-surface));
+}
+
+.parent-enrollment-status-card.pending .parent-enrollment-status-icon {
+  color: var(--color-accent-ink);
+  background: var(--color-accent-soft);
+}
+
+.parent-enrollment-status-card.pending p { color: var(--color-accent-ink); }
+
+.parent-enrollment-status-card.rejected,
+.parent-enrollment-status-card.dropped {
+  border-color: color-mix(in srgb, var(--color-danger) 28%, var(--color-border));
+  background: linear-gradient(130deg, var(--color-danger-soft), var(--color-surface));
+}
+
+.parent-enrollment-status-card.rejected .parent-enrollment-status-icon,
+.parent-enrollment-status-card.dropped .parent-enrollment-status-icon {
+  color: var(--color-danger-ink);
+  background: var(--color-danger-soft);
+}
+
+.parent-enrollment-status-card.rejected p,
+.parent-enrollment-status-card.dropped p { color: var(--color-danger-ink); }
+
+.parent-enrollment-status-card.withdrawn {
+  border-color: var(--color-control-border);
+  background: linear-gradient(130deg, var(--color-surface-soft), var(--color-surface));
+}
+
+.parent-enrollment-status-card.withdrawn .parent-enrollment-status-icon {
+  color: var(--color-muted);
+  background: var(--color-border-soft);
+}
+
+.parent-enrollment-status-card.withdrawn p { color: var(--color-muted); }
+
+.parent-enrollment-details {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 16px 0 0;
+}
+
+.parent-enrollment-detail-card {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 11px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 13px;
+  background: var(--color-surface-soft);
+}
+
+.parent-detail-icon {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border-radius: 10px;
+}
+
+.parent-detail-icon .app-icon {
+  width: 17px;
+  height: 17px;
+  flex-basis: 17px;
+}
+
+.parent-enrollment-detail-card > div { min-width: 0; }
+
+.parent-enrollment-detail-card dt {
+  color: var(--color-muted);
+  font-size: .67rem;
+  font-weight: 750;
+  letter-spacing: .035em;
+  text-transform: uppercase;
+}
+
+.parent-enrollment-detail-card dd {
+  margin: 4px 0 0;
+  color: var(--color-text);
+  font-size: .82rem;
+  font-weight: 680;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.parent-resubmission-card {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 24%, var(--color-border));
+  border-radius: 13px;
+  background: var(--color-danger-soft);
+}
+
+.parent-resubmission-card .parent-review-note {
+  min-width: 0;
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.parent-resubmission-card .parent-resubmit-action {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
 .parent-card-actions {
   display: flex;
   flex-wrap: wrap;
@@ -635,6 +817,9 @@
   .parent-dashboard-page .parent-dashboard-card { border-radius: 15px 15px 5px 15px; }
   .parent-overview-grid { grid-template-columns: 1fr; }
   .parent-overview-grid > div + div { border-top: 1px solid var(--parent-line); border-left: 0; }
+  .parent-enrollment-details { grid-template-columns: minmax(0, 1fr); }
+  .parent-resubmission-card { align-items: stretch; flex-direction: column; }
+  .parent-resubmission-card .parent-resubmit-action { width: 100%; }
   .parent-information-grid { grid-template-columns: 1fr; }
   .parent-information-grid > div:nth-child(odd) { border-right: 0; }
 }

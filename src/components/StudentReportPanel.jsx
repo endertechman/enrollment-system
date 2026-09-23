@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 import { classifyChildBmi } from '../lib/bmiClassification'
-import { getAgeInYears } from '../lib/philippineDate'
+import { getAgeInYears, getPhilippineDateValue } from '../lib/philippineDate'
 import ConfirmDialog from './ConfirmDialog'
 
 function childName(student) {
@@ -39,10 +39,10 @@ function formatValue(value) {
 
 function formatPlaceOfBirth(value) {
   if (value === null || value === undefined || value === '') return '—'
-  return String(value).replace(/,\s*Philippines\s*$/i, '').trim()
+  return String(value).trim()
 }
 
-function StudentReportPanel({ enrollments, allowStudentSelection = false, includeUnapproved = false, parentName = '', parentEmail = '', title = 'Student Report', onBack = null, onClose = null, canManageStatus = false, updatingStatusId = null, onStatusChange = null }) {
+function StudentReportPanel({ enrollments, allowStudentSelection = false, includeUnapproved = false, parentName = '', parentEmail = '', title = 'Student Report', onBack = null, onClose = null, canManageStatus = false, updatingStatusId = null, onStatusChange = null, canEditStudentInfo = false, onStudentInfoUpdated = null }) {
   const students = useMemo(
     () => enrollments.filter((item) => includeUnapproved || item.status === 'approved'),
     [enrollments, includeUnapproved],
@@ -56,6 +56,11 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, includ
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [pendingStatus, setPendingStatus] = useState('')
+  const [editingStudentInfo, setEditingStudentInfo] = useState(false)
+  const [studentInfoDraft, setStudentInfoDraft] = useState(null)
+  const [confirmStudentInfo, setConfirmStudentInfo] = useState(false)
+  const [savingStudentInfo, setSavingStudentInfo] = useState(false)
+  const [studentInfoError, setStudentInfoError] = useState('')
   const reportRequestId = useRef(0)
 
   const activeEnrollmentId = useMemo(
@@ -65,6 +70,7 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, includ
     [selectedEnrollmentId, students],
   )
   const student = students.find((item) => item.id === activeEnrollmentId) || null
+
   const studentSuggestions = useMemo(() => {
     const searchTerm = studentSearch.trim().toLocaleLowerCase()
     const matches = searchTerm
@@ -78,6 +84,10 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, includ
     setSelectedEnrollmentId(item.id)
     setStudentSearch('')
     setPickerOpen(false)
+    setEditingStudentInfo(false)
+    setStudentInfoDraft(null)
+    setConfirmStudentInfo(false)
+    setStudentInfoError('')
   }
 
   const loadReport = useCallback(async ({ silent = false } = {}) => {
@@ -141,11 +151,11 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, includ
   useEffect(() => {
     if (!onClose) return undefined
     function closeOnEscape(event) {
-      if (event.key === 'Escape') onClose()
+      if (event.key === 'Escape' && !confirmStudentInfo && !pendingStatus && !savingStudentInfo) onClose()
     }
     document.addEventListener('keydown', closeOnEscape)
     return () => document.removeEventListener('keydown', closeOnEscape)
-  }, [onClose])
+  }, [confirmStudentInfo, onClose, pendingStatus, savingStudentInfo])
 
   useRealtimeRefresh(() => loadReport({ silent: true }), {
     channelName: `student-report-${activeEnrollmentId || 'none'}`,
@@ -183,6 +193,90 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, includ
     setPendingStatus('')
   }
 
+  function beginStudentInfoEdit() {
+    if (!student || !canEditStudentInfo) return
+    setStudentInfoDraft({
+      child_first_name: student.child_first_name || '',
+      child_middle_name: student.child_middle_name || '',
+      child_last_name: student.child_last_name || '',
+      child_suffix: student.child_suffix || '',
+      birth_date: student.birth_date || '',
+      sex: student.sex || '',
+      place_of_birth: formatPlaceOfBirth(student.place_of_birth) === '—' ? '' : formatPlaceOfBirth(student.place_of_birth),
+      is_registered: typeof student.is_registered === 'boolean' ? String(student.is_registered) : '',
+      mother_tongue: student.mother_tongue || '',
+      other_dialect: student.other_dialect || '',
+    })
+    setStudentInfoError('')
+    setEditingStudentInfo(true)
+  }
+
+  function updateStudentInfoDraft(field, value) {
+    setStudentInfoDraft((current) => ({ ...current, [field]: value }))
+  }
+
+  function requestStudentInfoSave() {
+    const requiredFields = [
+      ['child_first_name', 'First name'],
+      ['child_last_name', 'Last name'],
+      ['birth_date', 'Date of birth'],
+      ['sex', 'Gender'],
+      ['place_of_birth', 'Place of birth'],
+      ['is_registered', 'Registration status'],
+      ['mother_tongue', 'Mother tongue'],
+    ]
+    const missingField = requiredFields.find(([field]) => !String(studentInfoDraft?.[field] ?? '').trim())
+    if (missingField) {
+      setStudentInfoError(`${missingField[1]} is required.`)
+      return
+    }
+    if (studentInfoDraft.birth_date > getPhilippineDateValue()) {
+      setStudentInfoError('Date of birth cannot be in the future.')
+      return
+    }
+    setStudentInfoError('')
+    setConfirmStudentInfo(true)
+  }
+
+  async function saveStudentInfo() {
+    if (!student || !studentInfoDraft || savingStudentInfo) return
+    setSavingStudentInfo(true)
+
+    const updates = {
+      child_first_name: studentInfoDraft.child_first_name.trim(),
+      child_middle_name: studentInfoDraft.child_middle_name.trim() || null,
+      child_last_name: studentInfoDraft.child_last_name.trim(),
+      child_suffix: studentInfoDraft.child_suffix.trim() || null,
+      birth_date: studentInfoDraft.birth_date,
+      sex: studentInfoDraft.sex,
+      place_of_birth: studentInfoDraft.place_of_birth.trim(),
+      is_registered: studentInfoDraft.is_registered === 'true',
+      mother_tongue: studentInfoDraft.mother_tongue.trim(),
+      other_dialect: studentInfoDraft.other_dialect.trim() || null,
+    }
+
+    const { data, error } = await supabase
+      .from('enrollments')
+      .update(updates)
+      .eq('id', student.id)
+      .eq('status', 'approved')
+      .select('id, child_first_name, child_middle_name, child_last_name, child_suffix, birth_date, sex, place_of_birth, is_registered, mother_tongue, other_dialect')
+      .maybeSingle()
+
+    if (error || !data) {
+      setStudentInfoError(error?.message || 'Student information could not be updated.')
+      setConfirmStudentInfo(false)
+      setSavingStudentInfo(false)
+      return
+    }
+
+    onStudentInfoUpdated?.(student.id, data)
+    setEditingStudentInfo(false)
+    setStudentInfoDraft(null)
+    setConfirmStudentInfo(false)
+    setSavingStudentInfo(false)
+  }
+
   const pendingStatusCopy = pendingStatus === 'enrolled'
     ? {
         title: 'Enroll student again?',
@@ -195,7 +289,7 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, includ
         title: pendingStatus === 'withdrawn' ? 'Withdraw student?' : 'Drop student?',
         message: `${childName(student)} will be marked as ${pendingStatus || 'inactive'}. Their enrollment and historical records will not be deleted.`,
         label: pendingStatus === 'withdrawn' ? 'Withdraw Student' : 'Drop Student',
-        tone: 'danger',
+        tone: pendingStatus === 'withdrawn' ? 'primary' : 'danger',
         icon: 'app-icon-user-list',
       }
 
@@ -302,26 +396,34 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, includ
           ) : (
             <div className="student-report-body">
               <section className="student-report-section">
-                <div className="student-report-section-heading"><h3>Child Information</h3></div>
+                <div className="student-report-section-heading">
+                  <h3>Child Information</h3>
+                  {canEditStudentInfo && !editingStudentInfo && <button type="button" className="student-info-edit-button" onClick={beginStudentInfoEdit} aria-label="Edit student information"><i className="app-icon app-icon-pen" aria-hidden="true" /><span>Edit</span></button>}
+                </div>
                 <dl className="student-report-grid">
-                  <div><dt>Last Name</dt><dd>{formatValue(student?.child_last_name)}</dd></div>
-                  <div><dt>First Name</dt><dd>{formatValue(student?.child_first_name)}</dd></div>
-                  <div><dt>Middle Name</dt><dd>{formatValue(student?.child_middle_name)}</dd></div>
+                  <div><dt>Last Name</dt><dd>{editingStudentInfo ? <input value={studentInfoDraft?.child_last_name || ''} onChange={(event) => updateStudentInfoDraft('child_last_name', event.target.value)} maxLength="50" aria-label="Last name" /> : formatValue(student?.child_last_name)}</dd></div>
+                  <div><dt>First Name</dt><dd>{editingStudentInfo ? <input value={studentInfoDraft?.child_first_name || ''} onChange={(event) => updateStudentInfoDraft('child_first_name', event.target.value)} maxLength="50" aria-label="First name" /> : formatValue(student?.child_first_name)}</dd></div>
+                  <div><dt>Middle Name</dt><dd>{editingStudentInfo ? <input value={studentInfoDraft?.child_middle_name || ''} onChange={(event) => updateStudentInfoDraft('child_middle_name', event.target.value)} maxLength="50" aria-label="Middle name" /> : formatValue(student?.child_middle_name)}</dd></div>
+                  {editingStudentInfo && <div><dt>Suffix</dt><dd><input value={studentInfoDraft?.child_suffix || ''} onChange={(event) => updateStudentInfoDraft('child_suffix', event.target.value)} maxLength="20" aria-label="Suffix" /></dd></div>}
                   <div><dt>Reference Code</dt><dd>{formatValue(student?.reference_code)}</dd></div>
-                  <div><dt>Age</dt><dd>{calculateAge(student?.birth_date)}</dd></div>
-                  <div><dt>Date of Birth</dt><dd>{formatDate(student?.birth_date)}</dd></div>
-                  <div><dt>Gender</dt><dd>{student?.sex ? `${student.sex.charAt(0).toUpperCase()}${student.sex.slice(1)}` : '—'}</dd></div>
+                  <div><dt>Age</dt><dd>{calculateAge(editingStudentInfo ? studentInfoDraft?.birth_date : student?.birth_date)}</dd></div>
+                  <div><dt>Date of Birth</dt><dd>{editingStudentInfo ? <input type="date" value={studentInfoDraft?.birth_date || ''} max={getPhilippineDateValue()} onChange={(event) => updateStudentInfoDraft('birth_date', event.target.value)} aria-label="Date of birth" /> : formatDate(student?.birth_date)}</dd></div>
+                  <div><dt>Gender</dt><dd>{editingStudentInfo ? <select value={studentInfoDraft?.sex || ''} onChange={(event) => updateStudentInfoDraft('sex', event.target.value)} aria-label="Gender"><option value="">Select</option><option value="male">Male</option><option value="female">Female</option></select> : student?.sex ? `${student.sex.charAt(0).toUpperCase()}${student.sex.slice(1)}` : '—'}</dd></div>
                   <div><dt>Student Status</dt><dd>{student?.status === 'approved' ? student?.student_state ? `${student.student_state.charAt(0).toUpperCase()}${student.student_state.slice(1)}` : 'Enrolled' : student?.status === 'rejected' ? 'Needs changes' : 'Pending review'}</dd></div>
                   <div><dt>Parent / Guardian</dt><dd>{student?.parent_full_name || parentName || '—'}</dd></div>
                   <div><dt>Parent Email</dt><dd>{student?.parent_email || parentEmail || '—'}</dd></div>
-                  <div><dt>Place of Birth</dt><dd>{formatPlaceOfBirth(student?.place_of_birth)}</dd></div>
-                  <div><dt>Registered</dt><dd>{typeof student?.is_registered === 'boolean' ? (student.is_registered ? 'Yes' : 'No') : '—'}</dd></div>
-                  <div><dt>Mother Tongue</dt><dd>{formatValue(student?.mother_tongue)}</dd></div>
-                  <div><dt>Other Dialect</dt><dd>{formatValue(student?.other_dialect)}</dd></div>
+                  <div><dt>Place of Birth</dt><dd>{editingStudentInfo ? <input value={studentInfoDraft?.place_of_birth || ''} onChange={(event) => updateStudentInfoDraft('place_of_birth', event.target.value)} maxLength="100" aria-label="Place of birth" /> : formatPlaceOfBirth(student?.place_of_birth)}</dd></div>
+                  <div><dt>Registered</dt><dd>{editingStudentInfo ? <select value={studentInfoDraft?.is_registered || ''} onChange={(event) => updateStudentInfoDraft('is_registered', event.target.value)} aria-label="Registered"><option value="">Select</option><option value="true">Yes</option><option value="false">No</option></select> : typeof student?.is_registered === 'boolean' ? (student.is_registered ? 'Yes' : 'No') : '—'}</dd></div>
+                  <div><dt>Mother Tongue</dt><dd>{editingStudentInfo ? <input value={studentInfoDraft?.mother_tongue || ''} onChange={(event) => updateStudentInfoDraft('mother_tongue', event.target.value)} maxLength="50" aria-label="Mother tongue" /> : formatValue(student?.mother_tongue)}</dd></div>
+                  <div><dt>Other Dialect</dt><dd>{editingStudentInfo ? <input value={studentInfoDraft?.other_dialect || ''} onChange={(event) => updateStudentInfoDraft('other_dialect', event.target.value)} maxLength="50" aria-label="Other dialect" /> : formatValue(student?.other_dialect)}</dd></div>
                 </dl>
-                {canManageStatus && <div className="student-status-actions" aria-label="Update student status">
+                {editingStudentInfo && <div className="student-info-edit-footer">
+                  {studentInfoError && <p role="alert">{studentInfoError}</p>}
+                  <div><button type="button" className="student-info-cancel" onClick={() => { setEditingStudentInfo(false); setStudentInfoDraft(null); setStudentInfoError('') }}>Cancel</button><button type="button" className="student-info-save" onClick={requestStudentInfoSave}>Save Changes</button></div>
+                </div>}
+                {canManageStatus && !editingStudentInfo && <div className="student-status-actions" aria-label="Update student status">
                   {currentStudentStatus === 'enrolled' ? <>
-                    <button type="button" className="student-status-action danger" disabled={updatingStatusId === student?.id} onClick={() => setPendingStatus('withdrawn')}>Withdraw Student</button>
+                    <button type="button" className="student-status-action withdraw" disabled={updatingStatusId === student?.id} onClick={() => setPendingStatus('withdrawn')}>Withdraw Student</button>
                     <button type="button" className="student-status-action danger" disabled={updatingStatusId === student?.id} onClick={() => setPendingStatus('dropped')}>Drop Student</button>
                   </> : <button type="button" className="student-status-action primary" disabled={updatingStatusId === student?.id} onClick={() => setPendingStatus('enrolled')}>Enroll Student Again</button>}
                 </div>}
@@ -363,7 +465,7 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, includ
 
   if (!onClose) return reportPanel
 
-  return <div className="semester-dialog-overlay student-report-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>{reportPanel}{pendingStatus && <ConfirmDialog title={pendingStatusCopy.title} message={pendingStatusCopy.message} confirmLabel={pendingStatusCopy.label} tone={pendingStatusCopy.tone} iconClass={pendingStatusCopy.icon} busy={updatingStatusId === student?.id} onConfirm={confirmStatusChange} onCancel={() => setPendingStatus('')} />}</div>
+  return <div className="semester-dialog-overlay student-report-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !confirmStudentInfo) onClose() }}>{reportPanel}{pendingStatus && <ConfirmDialog title={pendingStatusCopy.title} message={pendingStatusCopy.message} confirmLabel={pendingStatusCopy.label} tone={pendingStatusCopy.tone} iconClass={pendingStatusCopy.icon} busy={updatingStatusId === student?.id} onConfirm={confirmStatusChange} onCancel={() => setPendingStatus('')} />}{confirmStudentInfo && <ConfirmDialog title="Save student information?" message={`Apply these changes to ${childName(student)}'s student record?`} confirmLabel="Save Changes" tone="primary" iconClass="app-icon-pen" busy={savingStudentInfo} onConfirm={saveStudentInfo} onCancel={() => { if (!savingStudentInfo) setConfirmStudentInfo(false) }} />}</div>
 }
 
 export default StudentReportPanel

@@ -11,18 +11,26 @@ function formatSemesterDate(value) {
   })
 }
 
-function formatEnrollmentDate(value) {
-  if (!value) return 'To be announced'
+function formatEnrollmentSchedule(value) {
+  if (!value) return { date: 'To be announced', time: 'Time unavailable' }
   const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? 'To be announced' : date.toLocaleString('en-PH', {
-    month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Manila',
-  })
+  if (Number.isNaN(date.getTime())) return { date: 'To be announced', time: 'Time unavailable' }
+  return {
+    date: date.toLocaleDateString('en-PH', {
+      month: 'long', day: 'numeric', year: 'numeric', timeZone: 'Asia/Manila',
+    }),
+    time: date.toLocaleTimeString('en-PH', {
+      hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila',
+    }),
+  }
 }
 
 function SignedInHomeView({ role, enrollments, enrollmentWindow, enrollmentBatch }) {
   const navigate = useNavigate()
   const windowStatus = enrollmentWindow === undefined ? 'unavailable' : getEnrollmentWindowStatus(enrollmentWindow)
   const windowLabel = windowStatus === 'open' ? 'Enrollment Ongoing' : windowStatus === 'scheduled' ? 'Enrollment Opens Soon' : windowStatus === 'unavailable' ? 'Schedule Unavailable' : 'Enrollment Closed'
+  const openingSchedule = formatEnrollmentSchedule(enrollmentWindow?.opens_at)
+  const closingSchedule = formatEnrollmentSchedule(enrollmentWindow?.closes_at)
 
   return (
     <div className="landing-page">
@@ -47,13 +55,24 @@ function SignedInHomeView({ role, enrollments, enrollmentWindow, enrollmentBatch
               <header className="home-schedule-header">
                 <span>School calendar</span>
                 <h2 id="home-schedule-title">{enrollmentBatch?.name || 'School Year & Enrollment'}</h2>
-                <p>Important dates for this semester</p>
               </header>
               <div className="home-schedule-dates">
-                <div><span>Enrollment opens</span><strong>{formatEnrollmentDate(enrollmentWindow?.opens_at)}</strong></div>
-                <div><span>Enrollment closes</span><strong>{formatEnrollmentDate(enrollmentWindow?.closes_at)}</strong></div>
-                <div><span>Semester starts</span><strong>{formatSemesterDate(enrollmentBatch?.starts_on)}</strong></div>
-                <div><span>Semester ends</span><strong>{formatSemesterDate(enrollmentBatch?.ends_on)}</strong></div>
+                <div className="home-schedule-date-card home-schedule-window-card">
+                  <span className="home-schedule-icon" aria-hidden="true"><i className="app-icon app-icon-clock" /></span>
+                  <div className="home-schedule-date-copy"><span>Enrollment opens</span><strong>{openingSchedule.date}</strong><time dateTime={enrollmentWindow?.opens_at || undefined}>{openingSchedule.time}</time></div>
+                </div>
+                <div className="home-schedule-date-card home-schedule-window-card">
+                  <span className="home-schedule-icon" aria-hidden="true"><i className="app-icon app-icon-clock" /></span>
+                  <div className="home-schedule-date-copy"><span>Enrollment closes</span><strong>{closingSchedule.date}</strong><time dateTime={enrollmentWindow?.closes_at || undefined}>{closingSchedule.time}</time></div>
+                </div>
+                <div className="home-schedule-date-card home-schedule-window-card">
+                  <span className="home-schedule-icon" aria-hidden="true"><i className="app-icon app-icon-calendar-due" /></span>
+                  <div className="home-schedule-date-copy"><span>Semester starts</span><strong>{formatSemesterDate(enrollmentBatch?.starts_on)}</strong></div>
+                </div>
+                <div className="home-schedule-date-card home-schedule-window-card">
+                  <span className="home-schedule-icon" aria-hidden="true"><i className="app-icon app-icon-calendar-due" /></span>
+                  <div className="home-schedule-date-copy"><span>Semester ends</span><strong>{formatSemesterDate(enrollmentBatch?.ends_on)}</strong></div>
+                </div>
               </div>
             </section> : <div className="hero-card"><StaffReferenceSearch /></div>}
           </div>

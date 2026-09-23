@@ -1,4 +1,4 @@
-.announcements-panel { min-width:0; padding:clamp(20px,3vw,28px); border:1px solid rgba(255,255,255,.78); border-radius:20px; background:rgba(255,255,255,.68); box-shadow:0 18px 45px rgba(116,87,105,.1); }
+.announcements-panel { min-width:0; padding:clamp(20px,3vw,28px); border:1px solid var(--color-surface-translucent); border-radius:20px; background:var(--color-surface-panel); box-shadow:0 18px 45px rgba(116,87,105,.1); }
 .announcements-header { display:flex; min-height:48px; align-items:center; padding:12px 18px; border:0; border-radius:14px; background:linear-gradient(100deg,var(--color-accent-soft),var(--color-primary-soft)); }
 .announcements-header h2 { margin:0; color:var(--color-text); font-size:18px; }
 .announcement-composer-bar { display:grid; gap:5px; margin-top:9px; }

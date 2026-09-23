@@ -7,6 +7,22 @@ import { getEnrollmentWindow, isEnrollmentOpen } from '../lib/enrollmentWindow'
 import { getAgeInYears, getPhilippineDateValue } from '../lib/philippineDate'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 
+function normalizeNamePart(value) {
+  return String(value || '')
+    .normalize('NFKC')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase('en-PH')
+}
+
+function childIdentityMatches(enrollment, child) {
+  return enrollment.birth_date === child.birthDate
+    && normalizeNamePart(enrollment.child_first_name) === normalizeNamePart(child.firstName)
+    && normalizeNamePart(enrollment.child_middle_name) === normalizeNamePart(child.middleName)
+    && normalizeNamePart(enrollment.child_last_name) === normalizeNamePart(child.lastName)
+    && normalizeNamePart(enrollment.child_suffix) === normalizeNamePart(child.suffix)
+}
+
 function EnrollmentForm() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -35,6 +51,8 @@ function EnrollmentForm() {
   const [currentStep, setCurrentStep] = useState(1)
   const [resubmissionId, setResubmissionId] = useState(null)
   const [confirmSubmit, setConfirmSubmit] = useState(false)
+  const [duplicateMatch, setDuplicateMatch] = useState(null)
+  const [checkingDuplicate, setCheckingDuplicate] = useState(false)
 
   const getEnrollmentCount = useCallback(async (parentId, batchId) => {
     return supabase
@@ -173,13 +191,67 @@ function EnrollmentForm() {
     setCurrentStep((step) => Math.min(step + 1, 2))
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
+    if (checkingDuplicate || submitting) return
     if (currentStep < 2) {
       goToNextStep()
       return
     }
     if (!formRef.current?.reportValidity()) return
+
+    if (resubmissionId) {
+      setConfirmSubmit(true)
+      return
+    }
+
+    setMessage('')
+    setCheckingDuplicate(true)
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      setCheckingDuplicate(false)
+      navigate('/login', { replace: true })
+      return
+    }
+
+    const windowResult = await getEnrollmentWindow()
+    if (windowResult.error || !windowResult.data?.current_batch_id) {
+      setMessage('Unable to verify the enrollment schedule right now. Please try again.')
+      setCheckingDuplicate(false)
+      return
+    }
+
+    const { data: existingEnrollments, error: duplicateCheckError } = await supabase
+      .from('enrollments')
+      .select('id, child_first_name, child_middle_name, child_last_name, child_suffix, birth_date, status')
+      .eq('parent_id', user.id)
+      .eq('batch_id', windowResult.data.current_batch_id)
+
+    setCheckingDuplicate(false)
+
+    if (duplicateCheckError) {
+      setMessage('Unable to check for an existing application right now. Please try again.')
+      return
+    }
+
+    const match = (existingEnrollments || []).find((enrollment) => childIdentityMatches(enrollment, {
+      firstName,
+      middleName,
+      lastName,
+      suffix,
+      birthDate,
+    }))
+
+    if (match) {
+      setDuplicateMatch(match)
+      return
+    }
+
     setConfirmSubmit(true)
   }
 
@@ -333,6 +405,19 @@ function EnrollmentForm() {
         onConfirm={submitEnrollment}
         onCancel={() => setConfirmSubmit(false)}
       />}
+      {duplicateMatch && <ConfirmDialog
+        title="Possible duplicate application"
+        message="An application with the same child name and birth date already exists in this semester. Continue only if this is intentionally a separate application. BCDC staff will still review it before enrollment."
+        confirmLabel="Continue Anyway"
+        cancelLabel="Review Information"
+        iconClass="app-icon-profile"
+        busy={false}
+        onConfirm={() => {
+          setDuplicateMatch(null)
+          setConfirmSubmit(true)
+        }}
+        onCancel={() => setDuplicateMatch(null)}
+      />}
 
       <div className="landing-scroll">
         <main className="enrollment-page">
@@ -453,7 +538,7 @@ function EnrollmentForm() {
                   <input
                     type="text"
                     value={placeOfBirth}
-                    onChange={(e) => setPlaceOfBirth(e.target.value.replace(/,\s*Philippines\s*$/i, ''))}
+                    onChange={(e) => setPlaceOfBirth(e.target.value)}
                     maxLength={100}
                     placeholder="City/Municipality, Province"
                     required
@@ -530,7 +615,7 @@ function EnrollmentForm() {
                   }}
                 >Next</button>
               ) : (
-                <button key="submit" type="submit" className="enrollment-submit" disabled={submitting}>
+                <button key="submit" type="submit" className="enrollment-submit" disabled={submitting || checkingDuplicate}>
                   {resubmissionId ? 'Resubmit Application' : 'Submit Enrollment'}
                 </button>
               )}

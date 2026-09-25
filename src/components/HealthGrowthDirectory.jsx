@@ -118,24 +118,23 @@ function HealthGrowthDirectory({ enrollments, canManage = false, rowsClickable =
     }
 
     const { data, error } = await supabase
-      .from('enrollments')
-      .select('id, growth_records(id, measured_on, height_cm, weight_kg)')
-      .eq('status', 'approved')
-      .order('measured_on', { referencedTable: 'growth_records', ascending: false })
-      .limit(1, { referencedTable: 'growth_records' })
+      .from('growth_records')
+      .select('id, enrollment_id, measured_on, height_cm, weight_kg')
+      .in('enrollment_id', students.map((student) => student.id))
+      .order('measured_on', { ascending: false })
 
     if (error) {
       setMessage('Health and growth records are temporarily unavailable.')
       setLatestMeasurements({})
     } else {
       const nextMeasurements = {}
-      for (const enrollment of data || []) {
-        if (enrollment.growth_records?.[0]) nextMeasurements[enrollment.id] = enrollment.growth_records[0]
+      for (const record of data || []) {
+        if (!nextMeasurements[record.enrollment_id]) nextMeasurements[record.enrollment_id] = record
       }
       setLatestMeasurements(nextMeasurements)
     }
     setLoading(false)
-  }, [students.length])
+  }, [students])
 
   useEffect(() => {
     const loadTimer = window.setTimeout(loadLatestMeasurements, 0)
@@ -284,7 +283,7 @@ function HealthGrowthDirectory({ enrollments, canManage = false, rowsClickable =
     const measuredOn = localDateValue()
     const { data, error } = await supabase
       .from('growth_records')
-      .upsert({
+      .insert({
         enrollment_id: selectedStudent.id,
         measured_on: measuredOn,
         height_cm: height,

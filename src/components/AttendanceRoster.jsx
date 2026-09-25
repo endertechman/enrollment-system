@@ -231,11 +231,6 @@ function AttendanceRoster({ enrollments, loading, attendanceDate, onDateChange, 
     onDateChange(formatDateValue(nextWeek))
   }
 
-  function showCurrentWeek() {
-    const targetDate = semesterEnd && semesterEnd < today ? semesterEnd : today
-    onDateChange(targetDate)
-  }
-
   async function markAllPresent(recordDate) {
     if (!canEdit || selectingDay || students.length === 0 || !isAttendanceDateAvailable(recordDate)) return
 
@@ -350,16 +345,15 @@ function AttendanceRoster({ enrollments, loading, attendanceDate, onDateChange, 
       <header className="growth-header"><h2>Attendance</h2></header>
       <div className="growth-directory-heading">
         <span>Weekly Records</span>
-        <strong>{formatWeekRange(weekDays)}</strong>
       </div>
       <p className="growth-directory-instruction">Record attendance from Monday through Friday. Click a student row to view their attendance summary.</p>
 
       <div className="growth-directory-toolbar attendance-directory-toolbar">
         <label className="growth-directory-search"><span className="visually-hidden">Filter attendance students</span><input type="search" value={search} onChange={(event) => { setSearch(event.target.value); setCurrentPage(1) }} placeholder="Filter by student name" /></label>
         <div className="attendance-week-controls" aria-label="Select attendance week">
-          <button type="button" onClick={() => changeWeek(-7)} disabled={previousWeekDisabled}>Previous Week</button>
-          <button type="button" onClick={showCurrentWeek}>This Week</button>
-          <button type="button" onClick={() => changeWeek(7)} disabled={nextWeekDisabled}>Next Week</button>
+          <button type="button" onClick={() => changeWeek(-7)} disabled={previousWeekDisabled} aria-label="Previous week" title="Previous week"><i className="app-icon app-icon-chevron-left" aria-hidden="true" /></button>
+          <span className="attendance-current-week" aria-live="polite">{formatWeekRange(weekDays)}</span>
+          <button type="button" onClick={() => changeWeek(7)} disabled={nextWeekDisabled} aria-label="Next week" title="Next week"><i className="app-icon app-icon-chevron-right" aria-hidden="true" /></button>
         </div>
       </div>
 

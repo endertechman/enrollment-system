@@ -1,0 +1,485 @@
+.student-report-panel {
+  min-width: 0;
+  padding: clamp(18px, 2.5vw, 24px);
+  border: 1px solid var(--color-border);
+  border-radius: 22px;
+  background: var(--color-surface);
+  box-shadow: 0 16px 38px rgba(87, 66, 82, .075);
+}
+
+.student-report-overlay {
+  align-items: flex-start;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.student-report-dialog {
+  width: min(960px, 100%);
+  max-height: calc(100dvh - 48px);
+  margin: auto;
+  padding: 0;
+  overflow: hidden;
+}
+
+.student-report-dialog-body {
+  min-height: 0;
+  padding: 22px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  background: var(--color-surface);
+}
+
+.student-report-row.interactive { cursor: pointer; }
+.student-report-row.interactive:focus-visible { position: relative; outline: 3px solid color-mix(in srgb, var(--color-primary) 38%, transparent); outline-offset: -3px; }
+.student-reports-toolbar { grid-template-columns: minmax(0, 1fr) minmax(165px, 210px); }
+.enrollment-requests-toolbar { grid-template-columns: minmax(0, 1fr) minmax(165px, 210px); }
+.student-reports-directory .student-records-table { width: 100%; min-width: 0; table-layout: fixed; }
+.student-reports-directory .student-records-table th,
+.student-reports-directory .student-records-table td { min-width: 0; overflow-wrap: anywhere; white-space: normal; }
+.student-reports-directory .student-records-table th:nth-child(1) { width: 22%; }
+.student-reports-directory .student-records-table th:nth-child(2) { width: 8%; }
+.student-reports-directory .student-records-table th:nth-child(3) { width: 10%; }
+.student-reports-directory .student-records-table th:nth-child(4) { width: 22%; }
+.student-reports-directory .student-records-table th:nth-child(5) { width: 20%; }
+.student-reports-directory .student-records-table th:nth-child(6) { width: 18%; }
+
+.student-reports-directory .student-records-table th:nth-child(3),
+.student-reports-directory .student-records-table td:nth-child(3),
+.student-reports-directory .student-records-table th:nth-child(3) .growth-sort-button {
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+
+.student-status-actions { display:flex; justify-content:flex-end; gap:8px; padding:0 20px 16px; }
+.student-status-action { min-height:38px; padding:7px 13px; border:1px solid var(--color-border); border-radius:9px; background:var(--color-surface); color:var(--color-text); font:inherit; font-size:11px; font-weight:720; cursor:pointer; transition:background-color .2s ease,border-color .2s ease,color .2s ease; }
+.student-status-action:hover:not(:disabled) { border-color:var(--color-primary); background:var(--color-primary-soft); color:var(--color-primary-ink); }
+.student-status-action.withdraw { border-color:var(--color-primary); background:var(--color-primary); color:var(--color-on-primary); }
+.student-status-action.withdraw:hover:not(:disabled) { border-color:var(--color-primary-hover); background:var(--color-primary-hover); color:var(--color-on-primary); }
+.student-status-action.danger { border-color:var(--color-danger); background:var(--color-danger); color: var(--color-on-strong); }
+.student-status-action.danger:hover:not(:disabled) { border-color:var(--color-danger-hover); background:var(--color-danger-hover); color: var(--color-on-strong); }
+.student-status-action.primary { border-color:var(--color-primary); background:var(--color-primary-soft); color:var(--color-primary-ink); }
+.student-status-action.primary:hover:not(:disabled) { background:color-mix(in srgb,var(--color-primary) 22%,var(--color-surface)); }
+.student-status-action:disabled { opacity:.5; cursor:not-allowed; }
+
+@media (max-width: 700px) {
+  .student-reports-toolbar,
+  .enrollment-requests-toolbar { grid-template-columns: 1fr; }
+}
+
+.enrollment-requests-view {
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+}
+
+.enrollment-requests-view > .enrollment-window-note,
+.enrollment-requests-view > .teacher-dashboard-message { margin: 0; }
+
+.enrollment-requests-directory .enrollment-requests-table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.enrollment-requests-directory .enrollment-requests-table th,
+.enrollment-requests-directory .enrollment-requests-table td {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.enrollment-requests-directory .enrollment-requests-table th:nth-child(1) { width: 22%; }
+.enrollment-requests-directory .enrollment-requests-table th:nth-child(2) { width: 7%; }
+.enrollment-requests-directory .enrollment-requests-table th:nth-child(3) { width: 10%; }
+.enrollment-requests-directory .enrollment-requests-table th:nth-child(4) { width: 18%; }
+.enrollment-requests-directory .enrollment-requests-table th:nth-child(5) { width: 18%; }
+.enrollment-requests-directory .enrollment-requests-table th:nth-child(6) { width: 25%; }
+
+.enrollment-requests-directory .enrollment-requests-table th:nth-child(3),
+.enrollment-requests-directory .enrollment-requests-table td:nth-child(3),
+.enrollment-requests-directory .enrollment-requests-table th:nth-child(3) .growth-sort-button {
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+
+.enrollment-request-dialog .student-report-section-heading span {
+  color: var(--color-muted);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.enrollment-request-review {
+  display: grid;
+  gap: 7px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border);
+}
+
+.enrollment-request-review > label {
+  color: var(--color-text);
+  font-size: 12px;
+  font-weight: 720;
+}
+
+.enrollment-request-review textarea {
+  width: 100%;
+  min-height: 84px;
+  resize: vertical;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  outline: 0;
+}
+
+.enrollment-request-review textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+.enrollment-request-review-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 18px;
+  color: var(--color-muted);
+  font-size: 10.5px;
+}
+
+.enrollment-request-review-meta strong {
+  color: var(--color-accent-ink);
+  font-weight: 650;
+}
+
+.enrollment-request-review-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 4px;
+}
+
+.enrollment-request-review-actions button {
+  min-width: 112px;
+  min-height: 40px;
+}
+
+@media (max-width: 520px) {
+  .enrollment-request-review-actions { display: grid; }
+  .enrollment-request-review-actions button { width: 100%; }
+}
+
+.student-report-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 58px;
+  padding: 14px 17px;
+  border-radius: 14px;
+  background: linear-gradient(100deg, var(--color-accent-soft), var(--color-primary-soft));
+}
+
+.student-report-dialog .student-report-body { gap: 14px; margin-top: 0; }
+.student-report-dialog .student-report-section { padding: 0; overflow: hidden; border: 1px solid var(--color-border); border-radius: 15px; background: var(--color-surface); }
+.student-report-dialog .student-report-section-heading { min-height: 44px; align-items: center; margin: 0; padding: 11px 14px; border-bottom: 1px solid var(--color-border); background: var(--color-surface-soft); }
+.student-report-dialog .student-report-section-heading h3 { font-size: 11px; letter-spacing: .025em; text-transform: uppercase; }
+.student-report-dialog .student-report-grid,
+.student-report-dialog .student-report-metrics { gap: 0; padding: 10px 8px; }
+.student-report-dialog .student-report-grid div,
+.student-report-dialog .student-report-metrics div { padding: 9px 12px; border: 0; border-radius: 0; background: transparent; }
+.student-report-dialog .student-report-health-note { margin: 0; padding: 0 20px 16px; }
+
+.student-report-back {
+  min-height: var(--dashboard-control-height);
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--dashboard-control-radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+}
+
+.student-report-back:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-ink);
+}
+
+.student-report-header h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 18px;
+  letter-spacing: -.015em;
+}
+
+.student-report-picker {
+  display: grid;
+  grid-template-columns: auto minmax(180px, 360px);
+  align-items: center;
+  justify-content: end;
+  gap: 10px;
+  margin-top: 15px;
+  padding: 12px 14px;
+  border-radius: 13px;
+  background: var(--color-surface-soft);
+}
+
+.student-report-picker label {
+  color: #68616a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.student-report-search {
+  position: relative;
+  min-width: 0;
+}
+
+.student-report-search-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 7px;
+}
+
+.student-report-search input {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 11px;
+  border: 1px solid #e2dce1;
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 12.5px;
+  outline: none;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.student-report-search input::placeholder { color: #969099; }
+
+.student-report-search input:focus {
+  border-color: var(--color-focus);
+  box-shadow: 0 0 0 3px rgba(53, 200, 208, .13);
+}
+
+.student-report-search-control > button {
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid #e5dfe4;
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: #68616a;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+}
+
+.student-report-search-control > button:hover {
+  border-color: #ccebed;
+  background: #f0fafb;
+  color: var(--color-primary-ink);
+}
+
+.student-report-suggestions {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  left: 0;
+  z-index: 20;
+  max-height: 300px;
+  padding: 6px;
+  overflow-y: auto;
+  border: 1px solid #e7e0e5;
+  border-radius: 12px;
+  background: var(--color-surface);
+  box-shadow: 0 16px 36px rgba(72, 53, 65, .14);
+}
+
+.student-report-suggestions button {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color .2s ease, color .2s ease;
+}
+
+.student-report-suggestions button:hover,
+.student-report-suggestions button[aria-selected="true"] {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-deep);
+}
+
+.student-report-suggestions button span { font-size: 12.5px; font-weight: 700; overflow-wrap: anywhere; }
+.student-report-suggestions button small { color: #8b848c; font-size: 10.5px; overflow-wrap: anywhere; }
+.student-report-suggestions p { margin: 0; padding: 12px 10px; color: #817a82; font-size: 12px; text-align: center; }
+
+.student-report-identity {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 13px;
+  margin-top: 15px;
+  padding: 15px 17px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 15px;
+  background: var(--color-surface);
+}
+
+.student-report-avatar {
+  display: grid;
+  place-items: center;
+  width: 43px;
+  height: 43px;
+  border-radius: 14px;
+  background: #dff8fa;
+  color: var(--color-primary-ink);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+
+.student-report-identity > div:nth-child(2) { min-width: 0; }
+.student-report-identity span:not(.enrollment-status) { color: #9a7180; font-size: 9.5px; font-weight: 750; letter-spacing: .055em; text-transform: uppercase; }
+.student-report-identity h3 { margin: 3px 0 0; color: var(--color-text); font-size: 16px; overflow-wrap: anywhere; }
+.student-report-identity p { margin: 4px 0 0; color: #858087; font-size: 11px; overflow-wrap: anywhere; }
+
+.student-report-body { display: grid; gap: 13px; margin-top: 15px; }
+.student-report-section { padding: 15px; border-radius: 15px; background: var(--color-surface-soft); }
+.student-report-section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 11px; }
+.student-report-section-heading h3 { margin: 0; color: #403940; font-size: 14px; }
+.student-report-section-heading span { color: #8b848c; font-size: 10.5px; }
+
+.student-info-edit-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary-ink);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: color .2s ease;
+}
+
+.student-info-edit-button:hover { color: var(--color-accent-ink); }
+.student-info-edit-button .app-icon { width: 16px; height: 16px; flex-basis: 16px; }
+.student-report-dialog .student-info-edit-button span { color: inherit; font-size: inherit; letter-spacing: normal; text-transform: none; }
+
+.student-report-grid,
+.student-report-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.student-report-grid div,
+.student-report-metrics div {
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 11px;
+  background: var(--color-surface);
+}
+
+.student-report-grid dt,
+.student-report-metrics dt { color: #8a828a; font-size: 9.5px; font-weight: 750; letter-spacing: .035em; text-transform: uppercase; }
+.student-report-grid dd,
+.student-report-metrics dd { margin: 5px 0 0; color: var(--color-text); font-size: 12.5px; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
+.student-report-grid dd input,
+.student-report-grid dd select {
+  width: 100%;
+  min-width: 0;
+  min-height: 36px;
+  padding: 7px 9px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  outline: none;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.student-report-grid dd input:focus,
+.student-report-grid dd select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 14%, transparent);
+}
+.student-info-edit-footer { display: grid; gap: 10px; padding: 4px 20px 16px; }
+.student-info-edit-footer > p { margin: 0; color: #b4234d; font-size: 11.5px; font-weight: 650; }
+.student-info-edit-footer > div { display: flex; justify-content: flex-end; gap: 8px; }
+.student-info-edit-footer button {
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+}
+.student-info-cancel { border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-muted); }
+.student-info-cancel:hover { border-color: var(--color-primary); background: var(--color-primary-soft); color: var(--color-primary-ink); }
+.student-info-save { border: 1px solid var(--color-primary); background: var(--color-primary); color: var(--color-on-strong); }
+.student-info-save:hover { border-color: var(--color-primary-hover); background: var(--color-primary-hover); }
+.student-report-metrics dd { font-size: 16px; }
+.student-report-bmi dd { display: grid; gap: 3px; }
+.student-report-bmi small { color: #5d765f; font-size: 10px; font-weight: 700; line-height: 1.3; }
+.student-report-bmi small[data-tone="warning"] { color: #a56b22; }
+.student-report-bmi small[data-tone="alert"] { color: #b84469; }
+.student-report-bmi small[data-tone="unavailable"] { color: #8a828a; }
+.student-report-health-note { margin: 10px 2px 0; color: #8b848c; font-size: 10.5px; line-height: 1.5; }
+
+.student-report-message,
+.student-report-empty {
+  margin: 15px 0 0;
+  padding: 16px;
+  border-radius: 13px;
+  background: var(--color-surface-soft);
+  color: #746d75;
+  font-size: 12.5px;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .student-report-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .student-report-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 520px) {
+  .student-report-overlay { padding: 12px; }
+  .student-report-dialog { max-height: calc(100dvh - 24px); }
+  .student-report-dialog-body { padding: 15px; }
+  .student-report-panel { border-radius: 17px; }
+  .student-report-header { align-items: stretch; flex-direction: column; }
+  .student-report-back { width: 100%; }
+  .student-report-picker { grid-template-columns: 1fr; }
+  .student-report-identity { grid-template-columns: auto minmax(0, 1fr); }
+  .student-report-identity .enrollment-status { grid-column: 2; justify-self: start; }
+  .student-report-grid { grid-template-columns: 1fr; }
+  .student-report-section-heading { align-items: flex-start; flex-direction: column; gap: 3px; }
+}

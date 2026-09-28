@@ -1,0 +1,60 @@
+.role-manager-overlay { position:fixed; inset:0; z-index:200; display:grid; place-items:center; padding:18px; background:rgba(42,37,43,.38); backdrop-filter:blur(5px); animation:role-manager-fade .18s ease; }
+.role-manager-dialog { position:relative; display:flex; width:min(460px,100%); max-height:calc(100dvh - 36px); flex-direction:column; overflow:hidden; border:1px solid rgba(255,255,255,.82); border-radius:18px; background:var(--color-surface-raised); box-shadow:0 24px 60px rgba(63,43,56,.22); }
+.role-manager-dialog-wide { width:min(760px,100%); }
+.role-manager-close { position:absolute; top:12px; right:12px; display:grid; place-items:center; width:var(--dashboard-icon-button-size); height:var(--dashboard-icon-button-size); padding:0; border:0; border-radius:50%; background:transparent; color:var(--color-muted); cursor:pointer; transition:background-color .2s ease,color .2s ease; }
+.role-manager-close:hover { background:#f8e8ef; color:var(--color-accent-deep); }
+.role-manager-close .app-icon { width:18px; height:18px; }
+.role-manager-header { position:relative; flex:0 0 auto; padding:22px 64px 0 22px; background:var(--color-surface-raised); }
+.role-manager-header>span { color:var(--color-primary-ink); font-size:10px; font-weight:750; letter-spacing:.08em; text-transform:uppercase; }
+.role-manager-dialog h2 { margin:4px 0 0; color:var(--color-text); font-family:var(--font-display); font-size:22px; font-weight:760; letter-spacing:-.025em; line-height:1.2; }
+.role-manager-header p { margin:6px 0 0; color:var(--color-muted); font-size:11.5px; font-weight:450; line-height:1.5; }
+.role-manager-body { min-height:0; overflow-y:auto; padding:0 22px 22px; scrollbar-gutter:stable; overscroll-behavior:contain; }
+.role-manager-toolbar { margin-top:16px; }
+.role-manager-toolbar input { width:100%; min-height:var(--dashboard-control-height); padding:0 13px; border:1px solid var(--color-border); border-radius:var(--dashboard-control-radius); background:var(--color-surface); color:var(--color-text); font:inherit; font-size:13px; outline:none; transition:border-color .2s ease,box-shadow .2s ease; }
+.role-manager-toolbar input::placeholder { color:var(--color-muted); }
+.role-manager-toolbar input:focus { border-color:var(--color-focus); box-shadow:0 0 0 3px var(--color-focus-ring); }
+
+.role-manager-table-shell { margin-top:12px; }
+.role-manager-table { min-width:0; table-layout:fixed; }
+.role-manager-table th:nth-child(1),
+.role-manager-table td:nth-child(1) { width:32%; }
+.role-manager-table th:nth-child(2),
+.role-manager-table td:nth-child(2) { width:42%; overflow-wrap:anywhere; }
+.role-manager-table th:nth-child(3),
+.role-manager-table td:nth-child(3) { width:26%; }
+.role-manager-table th:last-child,
+.role-manager-table td:last-child { white-space:nowrap; }
+.role-manager-row { cursor:pointer; }
+.role-manager-row:focus-visible { outline:3px solid color-mix(in srgb,var(--color-primary) 28%,transparent); outline-offset:-2px; }
+.role-manager-you-tag { display:inline-block; margin-left:7px; padding:2px 8px; border-radius:999px; background:var(--color-primary-soft); color:var(--color-primary-ink); font-size:9px; font-weight:750; letter-spacing:.03em; text-transform:uppercase; vertical-align:middle; }
+
+.role-manager-role-badge { text-transform:capitalize; }
+.role-manager-role-badge.role-parent { background:var(--color-primary-soft); color:var(--color-primary-ink); }
+.role-manager-role-badge.role-teacher_aide { background:var(--color-accent-soft); color:var(--color-accent-ink); }
+.role-manager-role-badge.role-teacher { background:#dcfce7; color:#15803d; }
+
+.role-manager-footer { margin-top:12px; }
+
+.role-manager-back { display:inline-flex; align-items:center; gap:6px; margin-bottom:14px; padding:0; border:0; background:transparent; color:var(--color-primary-ink); font:inherit; font-size:12px; font-weight:700; cursor:pointer; }
+.role-manager-back:hover { color:var(--color-primary-deep); }
+.role-manager-back .app-icon { width:14px; height:14px; flex:0 0 14px; background-color:currentColor; }
+.role-manager-message { margin:14px 0 0; padding:10px 12px; border-radius:10px; background:var(--color-danger-soft); color:var(--color-danger-ink); font-size:12px; font-weight:600; line-height:1.5; }
+.role-manager-result { display:grid; grid-template-columns:1.25fr .75fr; gap:10px; padding:12px; border:1px solid #e8e1e6; border-radius:12px; background: var(--color-surface); }
+.role-manager-result>div:not(.role-manager-actions) { display:grid; gap:5px; min-width:0; }
+.role-manager-result>.role-manager-account { display:grid; grid-template-columns:24px minmax(0,1fr); align-items:center; gap:8px; }
+.role-manager-account>.app-icon { width:19px; height:19px; color:var(--color-primary-deep); }
+.role-manager-account>div { display:grid; gap:5px; min-width:0; }
+.role-manager-result span { color:var(--color-muted); font-size:9.5px; font-weight:700; letter-spacing:.045em; text-transform:uppercase; }
+.role-manager-result strong { color:var(--color-text); font-size:13px; font-weight:680; overflow-wrap:anywhere; }
+.role-manager-account strong { font-family:var(--font-display); font-size:15px; font-weight:750; letter-spacing:-.01em; }
+.role-manager-result>p { grid-column:1/-1; margin:0; padding:10px; border-radius:9px; background:#f7f5f7; color:var(--color-muted); font-size:11.5px; line-height:1.5; }
+.role-manager-actions { grid-column:1/-1; display:flex; justify-content:flex-end; gap:8px; padding-top:3px; }
+.role-manager-actions button { min-height:var(--dashboard-control-height); padding:0 14px; border:1px solid var(--color-border); border-radius:var(--dashboard-control-radius); background:var(--color-surface); color:var(--color-text); font:inherit; font-size:13px; font-weight:700; cursor:pointer; transition:background-color .2s ease,border-color .2s ease,color .2s ease; }
+.role-manager-actions button:hover:not(:disabled) { border-color:var(--color-focus); background:#edf9fa; color:var(--color-primary-deep); }
+.role-manager-actions button:last-child { border-color:#ffc4d4; background:var(--color-danger-soft); color:#b84469; }
+.role-manager-actions button:last-child:hover:not(:disabled) { background:#ffe2ea; }
+.role-manager-actions button:disabled { opacity:.55; cursor:not-allowed; }
+.role-manager-note { margin:12px 0 0; color:var(--color-muted); font-size:10px; line-height:1.4; }
+@keyframes role-manager-fade { from{opacity:0} to{opacity:1} }
+@media(prefers-reduced-motion:reduce) { .role-manager-overlay{animation:none} }
+@media(max-width:520px) { .role-manager-overlay{padding:12px}.role-manager-dialog{border-radius:16px}.role-manager-header{padding:20px 60px 0 17px}.role-manager-body{padding:0 17px 20px}.role-manager-result{grid-template-columns:1fr}.role-manager-result>p,.role-manager-actions{grid-column:1}.role-manager-actions{flex-direction:column}.role-manager-actions button{width:100%} }

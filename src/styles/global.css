@@ -1,0 +1,177 @@
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+:root {
+  --font-sans: "Segoe UI Variable Text", "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: "Segoe UI Variable Display", "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --color-bg: #f8f7f9;
+  --color-surface: #ffffff;
+  --color-surface-raised: #fff9fc;
+  --color-surface-translucent: rgba(255, 255, 255, .78);
+  --color-surface-panel: rgba(255, 255, 255, .68);
+  --color-text: #353039;
+  --color-heading: #302a32;
+  --color-heading-cool: #26344d;
+  --color-text-soft: #514752;
+  --color-text-cool: #334155;
+  --color-muted: #77717a;
+  --color-muted-cool: #64748b;
+  --color-primary: #35c8d0;
+  --color-primary-hover: #20b6c0;
+  --color-primary-ink: #117d85;
+  --color-primary-deep: #138891;
+  --color-primary-soft: #e8f8f9;
+  --color-on-primary: #ffffff;
+  --color-on-strong: #ffffff;
+  --color-focus: #8de1e5;
+  --color-focus-ring: rgba(53, 200, 208, .13);
+  --color-accent: #ef92b3;
+  --color-accent-hover: #e781a6;
+  --color-accent-ink: #ad3d63;
+  --color-accent-deep: #a92e56;
+  --color-accent-soft: #fff0f6;
+  --color-on-accent: #ffffff;
+  --color-danger: #d94b70;
+  --color-danger-hover: #c73d63;
+  --color-danger-ink: #a83e60;
+  --color-danger-soft: #fff1f5;
+  --color-border: #eadfe5;
+  --color-control-border: #ded7dd;
+  --color-border-soft: #eee8ec;
+  --color-surface-soft: #fbf9fb;
+  --dashboard-control-height: 40px;
+  --dashboard-filter-height: 36px;
+  --dashboard-icon-button-size: 34px;
+  --dashboard-control-radius: 10px;
+  --dashboard-panel-padding: clamp(18px, 2.5vw, 24px);
+  --dashboard-content-gap: 16px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+
+  font-family: var(--font-sans);
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+
+  background: radial-gradient(circle at 12% 20%,
+      rgba(255, 207, 228, 0.75),
+      transparent 38%),
+    radial-gradient(circle at 88% 18%,
+      rgba(191, 244, 246, 0.72),
+      transparent 40%),
+    radial-gradient(circle at 50% 85%,
+      rgba(230, 214, 255, 0.65),
+      transparent 45%),
+    linear-gradient(135deg,
+      #fff1f7 0%,
+      #f9efff 45%,
+      #e8fbff 100%);
+
+  color: #1f2937;
+}
+
+body:has(.teacher-dashboard-page),
+body:has(.parent-dashboard-page) {
+  height: 100dvh;
+  overflow: hidden;
+}
+
+#root:has(.teacher-dashboard-page),
+#root:has(.parent-dashboard-page) {
+  height: 100dvh;
+  overflow: hidden;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  text-wrap: balance;
+}
+
+button {
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+
+/* Shared static loading message */
+.app-loading {
+  display: grid;
+  place-items: center;
+  min-height: 96px;
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 650;
+  text-align: center;
+}
+
+.app-loading-full-page {
+  min-height: 100vh;
+  background: #fff8fb;
+}
+
+.app-loading-compact { min-height: 72px; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.enrollment-window-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.enrollment-window-badge.open { background: var(--color-primary-soft); color: var(--color-primary-ink); }
+.enrollment-window-badge.scheduled { background: var(--color-accent-soft); color: var(--color-accent-ink); }
+.enrollment-window-badge.closed { background: var(--color-surface-soft); color: var(--color-muted); }
+.popup-close-button { transition:color .2s ease !important; }
+.popup-close-button:hover:not(:disabled) { background:transparent !important; color:var(--color-accent-ink) !important; }

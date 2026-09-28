@@ -438,6 +438,7 @@
 .app-icon-calendar-dates { --icon-url: url('/icons/calendar-dates.svg'); }
 .app-icon-clock { --icon-url: url('/icons/clock.svg'); }
 .app-icon-heart { --icon-url: url('/icons/heart.svg'); }
+.app-icon-insights { --icon-url: url('/icons/insights.svg'); }
 .app-icon-check-o { --icon-url: url('/icons/check-o.svg'); }
 .app-icon-sort-az { --icon-url: url('/icons/sort-az.svg'); }
 .app-icon-sort-za { --icon-url: url('/icons/sort-za.svg'); }

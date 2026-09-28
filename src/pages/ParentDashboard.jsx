@@ -368,7 +368,7 @@ function ParentDashboard() {
                   <i className="app-icon app-icon-heart" aria-hidden="true" /><span>Health &amp; Growth</span>
                 </button>
                 <button type="button" className={`parent-sidebar-tab${activeTab === 'development' ? ' active' : ''}`} aria-pressed={activeTab === 'development'} onClick={() => setActiveTab('development')}>
-                  <i className="app-icon app-icon-clipboard" aria-hidden="true" /><span>Development</span>
+                  <i className="app-icon app-icon-insights" aria-hidden="true" /><span>Development</span>
                 </button>
                 <button type="button" className={`parent-sidebar-tab${activeTab === 'attendance' ? ' active' : ''}`} aria-pressed={activeTab === 'attendance'} onClick={() => setActiveTab('attendance')}>
                   <i className="app-icon app-icon-check-o" aria-hidden="true" /><span>Attendance</span>

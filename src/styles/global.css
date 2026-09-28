@@ -123,24 +123,159 @@ button {
 }
 
 
-/* Shared static loading message */
+/* Shared loading state: three pulsing circles + label. Every existing .app-loading message picks this up. */
 .app-loading {
   display: grid;
-  place-items: center;
+  align-content: center;
+  justify-items: center;
+  gap: 10px;
   min-height: 96px;
   margin: 0;
   color: var(--color-muted);
   font-size: 13px;
   font-weight: 650;
+  letter-spacing: .01em;
   text-align: center;
+  /* Short loads never flash: the indicator fades in only if loading lasts a moment. */
+  opacity: 0;
+  animation: app-loading-in .3s ease .12s forwards;
+}
+
+.app-loading::before {
+  content: "";
+  width: 42px;
+  height: 24px;
+  background:
+    radial-gradient(circle at 7px calc(50% + var(--dot-y1)), var(--dot-c1) var(--dot-r1), transparent calc(var(--dot-r1) + 1px)),
+    radial-gradient(circle at 21px calc(50% + var(--dot-y2)), var(--dot-c2) var(--dot-r2), transparent calc(var(--dot-r2) + 1px)),
+    radial-gradient(circle at 35px calc(50% + var(--dot-y3)), var(--dot-c3) var(--dot-r3), transparent calc(var(--dot-r3) + 1px));
+  /* One animation per circle, offset in time so the pulse passes left to right. */
+  animation:
+    app-dot-1 1.5s infinite -.36s,
+    app-dot-2 1.5s infinite -.18s,
+    app-dot-3 1.5s infinite 0s;
 }
 
 .app-loading-full-page {
   min-height: 100vh;
-  background: #fff8fb;
+  gap: 16px;
+  background:
+    radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--color-accent) 16%, transparent), transparent 46%),
+    radial-gradient(circle at 60% 58%, color-mix(in srgb, var(--color-primary) 14%, transparent), transparent 42%),
+    var(--color-bg);
+  font-size: 14px;
 }
 
-.app-loading-compact { min-height: 72px; }
+.app-loading-full-page::before { transform: scale(1.2); }
+
+.app-loading-compact { min-height: 72px; gap: 8px; }
+.app-loading-compact::before { transform: scale(.8); }
+
+/* Registered so each circle's size and colour can be interpolated by the keyframes. */
+@property --dot-y1 { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --dot-r1 { syntax: '<length>'; inherits: false; initial-value: 3px; }
+@property --dot-c1 { syntax: '<color>'; inherits: false; initial-value: #35c8d0; }
+@property --dot-y2 { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --dot-r2 { syntax: '<length>'; inherits: false; initial-value: 3px; }
+@property --dot-c2 { syntax: '<color>'; inherits: false; initial-value: #35c8d0; }
+@property --dot-y3 { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --dot-r3 { syntax: '<length>'; inherits: false; initial-value: 3px; }
+@property --dot-c3 { syntax: '<color>'; inherits: false; initial-value: #35c8d0; }
+
+@keyframes app-dot-1 {
+  0% {
+    --dot-y1: 0px;
+    --dot-r1: 3px;
+    --dot-c1: color-mix(in srgb, var(--color-accent) 25%, var(--color-primary));
+    animation-timing-function: cubic-bezier(.4, 0, .6, 1);
+  }
+
+  40% {
+    --dot-y1: 1px;
+    --dot-r1: 3.3px;
+    --dot-c1: var(--color-primary);
+    animation-timing-function: cubic-bezier(.2, .8, .3, 1);
+  }
+
+  55% {
+    --dot-y1: -3px;
+    --dot-r1: 4.5px;
+    --dot-c1: var(--color-accent);
+    animation-timing-function: cubic-bezier(.4, 0, .2, 1);
+  }
+
+  100% {
+    --dot-y1: 0px;
+    --dot-r1: 3px;
+    --dot-c1: color-mix(in srgb, var(--color-accent) 25%, var(--color-primary));
+  }
+}
+
+@keyframes app-dot-2 {
+  0% {
+    --dot-y2: 0px;
+    --dot-r2: 3px;
+    --dot-c2: color-mix(in srgb, var(--color-accent) 25%, var(--color-primary));
+    animation-timing-function: cubic-bezier(.4, 0, .6, 1);
+  }
+
+  40% {
+    --dot-y2: 1px;
+    --dot-r2: 3.3px;
+    --dot-c2: var(--color-primary);
+    animation-timing-function: cubic-bezier(.2, .8, .3, 1);
+  }
+
+  55% {
+    --dot-y2: -3px;
+    --dot-r2: 4.5px;
+    --dot-c2: var(--color-accent);
+    animation-timing-function: cubic-bezier(.4, 0, .2, 1);
+  }
+
+  100% {
+    --dot-y2: 0px;
+    --dot-r2: 3px;
+    --dot-c2: color-mix(in srgb, var(--color-accent) 25%, var(--color-primary));
+  }
+}
+
+@keyframes app-dot-3 {
+  0% {
+    --dot-y3: 0px;
+    --dot-r3: 3px;
+    --dot-c3: color-mix(in srgb, var(--color-accent) 25%, var(--color-primary));
+    animation-timing-function: cubic-bezier(.4, 0, .6, 1);
+  }
+
+  40% {
+    --dot-y3: 1px;
+    --dot-r3: 3.3px;
+    --dot-c3: var(--color-primary);
+    animation-timing-function: cubic-bezier(.2, .8, .3, 1);
+  }
+
+  55% {
+    --dot-y3: -3px;
+    --dot-r3: 4.5px;
+    --dot-c3: var(--color-accent);
+    animation-timing-function: cubic-bezier(.4, 0, .2, 1);
+  }
+
+  100% {
+    --dot-y3: 0px;
+    --dot-r3: 3px;
+    --dot-c3: color-mix(in srgb, var(--color-accent) 25%, var(--color-primary));
+  }
+}
+
+@keyframes app-loading-in { to { opacity: 1; } }
+@keyframes app-loading-shimmer { to { background-position: -200% 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .app-loading { animation-duration: .01s; }
+  .app-loading::before { animation-duration: 2.6s, 2.6s, 2.6s; }
+}
 
 .visually-hidden {
   position: absolute;

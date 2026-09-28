@@ -71,8 +71,14 @@
   width: 100%;
   height: 14px;
   border-radius: 7px;
-  background: color-mix(in srgb, var(--color-muted) 14%, var(--color-surface));
+  background: linear-gradient(100deg,
+    color-mix(in srgb, var(--color-muted) 12%, var(--color-surface)) 30%,
+    color-mix(in srgb, var(--color-muted) 4%, var(--color-surface)) 50%,
+    color-mix(in srgb, var(--color-muted) 12%, var(--color-surface)) 70%) 100% 0 / 200% 100%;
+  animation: app-loading-shimmer 1.4s linear infinite;
 }
+
+@media (prefers-reduced-motion: reduce) { .dashboard-loading-line { animation: none; } }
 
 .dashboard-loading-label { width: 96px; height: 11px; }
 .dashboard-loading-title { width: min(72%, 420px); height: 36px; border-radius: 10px; }

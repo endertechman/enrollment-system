@@ -6,6 +6,22 @@ import TablePagination from './TablePagination'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 import { getPhilippineDateValue as getLocalDateValue } from '../lib/philippineDate'
 
+const DAY_MS = 24 * 60 * 60 * 1000
+function dateToUtcMs(value) {
+  const [year, month, day] = value.split('-').map(Number)
+  return Date.UTC(year, month - 1, day)
+}
+// Every Monday-Friday from start to end (inclusive). Weekends are skipped because the
+// roster only records school weekdays.
+function listWeekdays(start, end) {
+  const days = []
+  for (let time = dateToUtcMs(start); time <= dateToUtcMs(end); time += DAY_MS) {
+    const weekday = new Date(time).getUTCDay()
+    if (weekday !== 0 && weekday !== 6) days.push(new Date(time).toISOString().slice(0, 10))
+  }
+  return days
+}
+
 const PAGE_SIZE = 10
 
 function parseLocalDate(value) {
@@ -67,6 +83,7 @@ function AttendanceRoster({ enrollments, loading, attendanceDate, onDateChange, 
   const [pendingMarkAllDate, setPendingMarkAllDate] = useState('')
   const [selectedSummaryStudent, setSelectedSummaryStudent] = useState(null)
   const [summaryRecords, setSummaryRecords] = useState([])
+  const [summaryClassDates, setSummaryClassDates] = useState(() => new Set())
   const [summaryLoading, setSummaryLoading] = useState(false)
   const [summaryMessage, setSummaryMessage] = useState('')
   const [message, setMessage] = useState('')
@@ -280,10 +297,11 @@ function AttendanceRoster({ enrollments, loading, attendanceDate, onDateChange, 
   async function openAttendanceSummary(student) {
     setSelectedSummaryStudent(student)
     setSummaryRecords([])
+    setSummaryClassDates(new Set())
     setSummaryMessage('')
     setSummaryLoading(true)
 
-    const [attendanceResult, nonSchoolResult] = await Promise.all([
+    const [attendanceResult, nonSchoolResult, classDaysResult] = await Promise.all([
       supabase
         .from('attendance_records')
         .select('attendance_date, status')
@@ -292,23 +310,44 @@ function AttendanceRoster({ enrollments, loading, attendanceDate, onDateChange, 
       batchId
         ? supabase.from('attendance_non_school_days').select('attendance_date').eq('batch_id', batchId)
         : Promise.resolve({ data: [], error: null }),
+      // The same real class-day list the parent's own Attendance tab uses, so the two totals match.
+      batchId
+        ? supabase.rpc('list_class_days', { p_batch_id: batchId })
+        : Promise.resolve({ data: [], error: null }),
     ])
 
-    if (attendanceResult.error || nonSchoolResult.error) {
+    if (attendanceResult.error || nonSchoolResult.error || classDaysResult.error) {
       setSummaryMessage('This attendance summary is temporarily unavailable.')
     } else {
       const excludedDates = new Set((nonSchoolResult.data || []).map((row) => row.attendance_date))
       setSummaryRecords((attendanceResult.data || []).filter((record) => !excludedDates.has(record.attendance_date)))
+      setSummaryClassDates(new Set((classDaysResult.data || []).map((row) => row.attendance_date)))
     }
     setSummaryLoading(false)
   }
 
-  const summaryCounts = summaryRecords.reduce((counts, record) => {
-    counts[record.status === 'present' ? 'present' : 'absent'] += 1
+  // Follows the whole semester's schedule, same as the parent's own Attendance tab: days before
+  // this child was admitted aren't absences, and a day with no class at all isn't either.
+  const summaryDays = useMemo(() => {
+    if (!batch?.starts_on || !batch?.ends_on || !selectedSummaryStudent) return []
+    const today = getLocalDateValue()
+    const approvedOn = selectedSummaryStudent.reviewed_at ? getLocalDateValue(selectedSummaryStudent.reviewed_at) : ''
+    const start = batch.starts_on
+    const end = today < batch.ends_on ? today : batch.ends_on
+    if (start > end) return []
+    const recordsByDate = new Map(summaryRecords.map((record) => [record.attendance_date, record]))
+    return listWeekdays(start, end).map((date) => {
+      if (!summaryClassDates.has(date)) return { date, status: 'no-classes' }
+      if (approvedOn && date < approvedOn) return { date, status: 'not-enrolled' }
+      return { date, status: recordsByDate.get(date)?.status === 'present' ? 'present' : 'absent' }
+    })
+  }, [batch, selectedSummaryStudent, summaryClassDates, summaryRecords])
+  const summaryCounts = summaryDays.reduce((counts, day) => {
+    if (day.status === 'present' || day.status === 'absent') counts[day.status] += 1
+    else if (day.status === 'no-classes') counts.noClasses += 1
     return counts
-  }, { present: 0, absent: 0 })
-  const summaryTotalDays = summaryRecords.length
-  const summaryFraction = summaryTotalDays > 0 ? `${summaryCounts.present} / ${summaryTotalDays}` : '—'
+  }, { present: 0, absent: 0, noClasses: 0 })
+  const summaryTotalDays = summaryCounts.present + summaryCounts.absent
 
   return (
     <section className="growth-panel growth-directory-panel attendance-panel">
@@ -330,12 +369,12 @@ function AttendanceRoster({ enrollments, loading, attendanceDate, onDateChange, 
           </header>
           <div className="student-report-dialog-body attendance-summary-body">
             {summaryLoading ? <p className="student-report-empty app-loading" role="status">Loading attendance summary...</p> : summaryMessage ? <p className="student-report-message">{summaryMessage}</p> : <section className="student-report-section">
-              <div className="student-report-section-heading"><h3>Attendance Summary</h3><span>{summaryTotalDays} recorded days</span></div>
+              <div className="student-report-section-heading"><h3>Attendance Summary</h3><span>{summaryTotalDays} class {summaryTotalDays === 1 ? 'day' : 'days'}</span></div>
               <dl className="student-report-metrics attendance">
                 <div><dt>Present</dt><dd>{summaryCounts.present}</dd></div>
                 <div><dt>Absent</dt><dd>{summaryCounts.absent}</dd></div>
-                <div><dt>Total Days</dt><dd>{summaryTotalDays}</dd></div>
-                <div><dt>Present / Total</dt><dd>{summaryFraction}</dd></div>
+                <div><dt>Class Days</dt><dd>{summaryTotalDays}</dd></div>
+                <div><dt>No Classes</dt><dd>{summaryCounts.noClasses}</dd></div>
               </dl>
             </section>}
           </div>

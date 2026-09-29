@@ -12,6 +12,7 @@ const STATUS_LABELS = {
   absent: 'Absent',
   'no-classes': 'No classes',
   pending: 'Not yet recorded',
+  'not-enrolled': 'Not Yet Enrolled',
 }
 
 function childName(student) {
@@ -127,20 +128,22 @@ function ParentAttendancePanel({ student }) {
     const today = getPhilippineDateValue()
     const recordsByDate = new Map(records.map((record) => [record.attendance_date, record]))
 
-    // Start when the child was accepted (not before the semester began), and never
-    // later than their earliest saved record so no real record can be hidden.
-    let start = approvedOn && approvedOn > semester.starts_on ? approvedOn : semester.starts_on
-    for (const record of records) if (record.attendance_date < start) start = record.attendance_date
+    // The table follows the whole semester's schedule, not the child's admission date, so a
+    // newly approved student still sees every class day the batch has had, start to finish.
+    const start = semester.starts_on
     const end = today < semester.ends_on ? today : semester.ends_on
     if (start > end) return []
 
     return listWeekdays(start, end).map((date) => {
       // A day is a class day only when at least one student in the class was present.
-      // On a class day, anyone not marked present is absent (even without a saved row).
+      // On a class day, anyone not marked present is absent (even without a saved row) —
+      // unless the day came before this child was even admitted, which isn't an absence.
       let status = 'no-classes'
       if (!nonSchoolDates.has(date)) {
-        if (classDates.has(date)) status = recordsByDate.get(date)?.status === 'present' ? 'present' : 'absent'
-        else if (date === today) status = 'pending'
+        if (classDates.has(date)) {
+          if (approvedOn && date < approvedOn) status = 'not-enrolled'
+          else status = recordsByDate.get(date)?.status === 'present' ? 'present' : 'absent'
+        } else if (date === today) status = 'pending'
       }
       return { date, status }
     })
@@ -149,6 +152,7 @@ function ParentAttendancePanel({ student }) {
   const count = (status) => days.filter((day) => day.status === status).length
   const presentCount = count('present')
   const absentCount = count('absent')
+  const noClassesCount = count('no-classes')
   const classDays = presentCount + absentCount
   const totalDays = days.length
   const pageCount = Math.max(1, Math.ceil(totalDays / PAGE_SIZE))
@@ -171,7 +175,7 @@ function ParentAttendancePanel({ student }) {
             <div><dt>Present</dt><dd>{presentCount}</dd></div>
             <div><dt>Absent</dt><dd>{absentCount}</dd></div>
             <div><dt>Class Days</dt><dd>{classDays}</dd></div>
-            <div><dt>Present / Class Days</dt><dd>{classDays ? `${presentCount} / ${classDays}` : '—'}</dd></div>
+            <div><dt>No Classes</dt><dd>{noClassesCount}</dd></div>
           </dl>
         </section>
 

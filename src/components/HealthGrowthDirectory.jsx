@@ -90,9 +90,7 @@ function HealthGrowthDirectory({ enrollments, canManage = false, rowsClickable =
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
   const [updateOpen, setUpdateOpen] = useState(false)
-  const [updateSearch, setUpdateSearch] = useState('')
   const [selectedStudentId, setSelectedStudentId] = useState('')
-  const [suggestionsOpen, setSuggestionsOpen] = useState(false)
   const [heightCm, setHeightCm] = useState('')
   const [weightKg, setWeightKg] = useState('')
   const [saving, setSaving] = useState(false)
@@ -147,7 +145,9 @@ function HealthGrowthDirectory({ enrollments, canManage = false, rowsClickable =
     enabled: students.length > 0,
   })
 
-  const rows = useMemo(() => students.map((student) => {
+  // Withdrawn/dropped students keep their past growth records in the database, but the directory
+  // table (like Attendance and ECCD) only lists students who are still actively enrolled.
+  const rows = useMemo(() => activeStudents.map((student) => {
     const measurement = latestMeasurements[student.id] || null
     const bmi = calculateBmi(measurement?.height_cm, measurement?.weight_kg)
     const classification = bmiClassification(student, measurement)
@@ -155,7 +155,7 @@ function HealthGrowthDirectory({ enrollments, canManage = false, rowsClickable =
   }).sort((first, second) => {
     const dateComparison = String(second.measurement?.measured_on || '').localeCompare(String(first.measurement?.measured_on || ''))
     return dateComparison || childName(first.student).localeCompare(childName(second.student))
-  }), [latestMeasurements, students])
+  }), [latestMeasurements, activeStudents])
 
   const filteredRows = useMemo(() => {
     const term = search.trim().toLocaleLowerCase()
@@ -212,12 +212,6 @@ function HealthGrowthDirectory({ enrollments, canManage = false, rowsClickable =
   const shownStart = filteredRows.length === 0 ? 0 : firstIndex + 1
   const shownEnd = Math.min(firstIndex + PAGE_SIZE, filteredRows.length)
   const selectedStudent = activeStudents.find((student) => student.id === selectedStudentId) || null
-  const updateSuggestions = useMemo(() => {
-    const term = updateSearch.trim().toLocaleLowerCase()
-    return activeStudents.filter((student) => !term || [childName(student), student.reference_code, student.parent_full_name]
-      .some((value) => String(value || '').toLocaleLowerCase().includes(term)))
-      .slice(0, 5)
-  }, [activeStudents, updateSearch])
 
   function changeSort(key) {
     setSortConfig((current) => ({
@@ -233,27 +227,18 @@ function HealthGrowthDirectory({ enrollments, canManage = false, rowsClickable =
     return <th scope="col" aria-sort={active ? (direction === 'asc' ? 'ascending' : 'descending') : 'none'}><button type="button" className={`growth-sort-button${active ? ' active' : ''}`} onClick={() => changeSort(key)}>{label}<i className={`app-icon ${active && direction === 'desc' ? 'app-icon-sort-za' : 'app-icon-sort-az'} growth-sort-icon`} aria-hidden="true" /></button></th>
   }
 
-  function openUpdateDialog(student = null) {
-    setUpdateSearch(student ? childName(student) : '')
-    setSelectedStudentId(student ? student.id : '')
+  // Every call site now passes the student whose row was clicked, so there is no "no student yet" case.
+  function openUpdateDialog(student) {
+    setSelectedStudentId(student.id)
     setHeightCm('')
     setWeightKg('')
     setFormMessage('')
-    setSuggestionsOpen(false)
     setUpdateOpen(true)
   }
 
   function closeUpdateDialog() {
     if (saving) return
     setUpdateOpen(false)
-    setSuggestionsOpen(false)
-    setFormMessage('')
-  }
-
-  function selectUpdateStudent(student) {
-    setSelectedStudentId(student.id)
-    setUpdateSearch(childName(student))
-    setSuggestionsOpen(false)
     setFormMessage('')
   }
 
@@ -374,25 +359,11 @@ function HealthGrowthDirectory({ enrollments, canManage = false, rowsClickable =
             <button type="button" className="popup-close-button" onClick={closeUpdateDialog} disabled={saving} aria-label="Close health record dialog"><i className="app-icon app-icon-close" aria-hidden="true" /></button>
           </header>
           <form className="growth-update-form" onSubmit={saveRecord}>
-            <div className="growth-update-search" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setSuggestionsOpen(false) }}>
-              <label htmlFor="growth-update-student">Student name</label>
-              <input
-                id="growth-update-student"
-                type="search"
-                role="combobox"
-                aria-autocomplete="list"
-                aria-expanded={suggestionsOpen}
-                aria-controls="growth-update-suggestions"
-                value={updateSearch}
-                placeholder="Search student name or reference code"
-                autoComplete="off"
-                onFocus={() => setSuggestionsOpen(true)}
-                onChange={(event) => { setUpdateSearch(event.target.value); setSelectedStudentId(''); setSuggestionsOpen(true) }}
-                required
-              />
-              {suggestionsOpen && <div id="growth-update-suggestions" className="growth-update-suggestions" role="listbox">
-                {updateSuggestions.length === 0 ? <p>No enrolled students found.</p> : updateSuggestions.map((student) => <button type="button" role="option" aria-selected={student.id === selectedStudentId} key={student.id} onClick={() => selectUpdateStudent(student)}><span>{childName(student)}</span><small>{student.reference_code || student.parent_full_name || 'Enrolled student'}</small></button>)}
-              </div>}
+            {/* The dialog always opens from a row now, so the student is fixed and shown read-only rather than searchable. */}
+            <div className="growth-update-fixed-student">
+              <span className="growth-update-fixed-label">Student</span>
+              <strong>{selectedStudent ? childName(selectedStudent) : '—'}</strong>
+              <small>{selectedStudent?.reference_code || selectedStudent?.parent_full_name || 'Enrolled student'}</small>
             </div>
 
             <div className="growth-update-measurements">

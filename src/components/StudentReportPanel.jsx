@@ -3,6 +3,22 @@ import { supabase } from '../lib/supabase'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 import { classifyChildBmi } from '../lib/bmiClassification'
 import { getAgeInYears, getPhilippineDateValue } from '../lib/philippineDate'
+
+// Every Monday-Friday from start to end (inclusive). Weekends are skipped because the
+// teacher roster only records school weekdays.
+const DAY_MS = 24 * 60 * 60 * 1000
+function dateToUtcMs(value) {
+  const [year, month, day] = value.split('-').map(Number)
+  return Date.UTC(year, month - 1, day)
+}
+function listWeekdays(start, end) {
+  const days = []
+  for (let time = dateToUtcMs(start); time <= dateToUtcMs(end); time += DAY_MS) {
+    const weekday = new Date(time).getUTCDay()
+    if (weekday !== 0 && weekday !== 6) days.push(new Date(time).toISOString().slice(0, 10))
+  }
+  return days
+}
 import ConfirmDialog from './ConfirmDialog'
 import { sanitizeMiddleName } from '../lib/formValidation'
 import { formatResultDate, standardScoreLabel } from '../lib/eccd/resultFormat'
@@ -54,6 +70,9 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, includ
   const [pickerOpen, setPickerOpen] = useState(false)
   const [attendance, setAttendance] = useState([])
   const [attendanceUnavailable, setAttendanceUnavailable] = useState(false)
+  const [attendanceSemester, setAttendanceSemester] = useState(null)
+  const [attendanceClassDates, setAttendanceClassDates] = useState(() => new Set())
+  const [attendanceApprovedOn, setAttendanceApprovedOn] = useState('')
   const [growthRecords, setGrowthRecords] = useState([])
   const [latestEccd, setLatestEccd] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -98,6 +117,9 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, includ
     if (!activeEnrollmentId || student?.status !== 'approved') {
       setAttendance([])
       setAttendanceUnavailable(false)
+      setAttendanceSemester(null)
+      setAttendanceClassDates(new Set())
+      setAttendanceApprovedOn('')
       setGrowthRecords([])
       setLatestEccd(null)
       setMessage('')
@@ -120,7 +142,7 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, includ
         .order('assessment_date', { ascending: false })
         .limit(1)
 
-    const [attendanceResult, growthResult, nonSchoolResult, eccdResult] = await Promise.all([
+    const [attendanceResult, growthResult, nonSchoolResult, eccdResult, semesterResult, classDaysResult, reviewedResult] = await Promise.all([
       supabase
         .from('attendance_records')
         .select('id, attendance_date, status')
@@ -138,14 +160,25 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, includ
           .eq('batch_id', student.batch_id)
         : Promise.resolve({ data: [], error: null }),
       eccdRequest,
+      // The same semester schedule the parent's own Attendance tab uses, so the two totals match.
+      student?.batch_id
+        ? supabase.from('enrollment_batches').select('starts_on, ends_on').eq('id', student.batch_id).maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
+      student?.batch_id
+        ? supabase.rpc('list_class_days', { p_batch_id: student.batch_id })
+        : Promise.resolve({ data: [], error: null }),
+      supabase.from('enrollments').select('reviewed_at').eq('id', activeEnrollmentId).maybeSingle(),
     ])
 
     if (requestId !== reportRequestId.current) return
 
-    const attendanceFailed = Boolean(attendanceResult.error || nonSchoolResult.error)
+    const attendanceFailed = Boolean(attendanceResult.error || nonSchoolResult.error || semesterResult.error || classDaysResult.error)
     const excludedDates = new Set((nonSchoolResult.data || []).map((row) => row.attendance_date))
     setAttendance(attendanceFailed ? [] : (attendanceResult.data || []).filter((record) => !excludedDates.has(record.attendance_date)))
     setAttendanceUnavailable(attendanceFailed)
+    setAttendanceSemester(semesterResult.data || null)
+    setAttendanceClassDates(new Set((classDaysResult.data || []).map((row) => row.attendance_date)))
+    setAttendanceApprovedOn(reviewedResult.data?.reviewed_at ? getPhilippineDateValue(reviewedResult.data.reviewed_at) : '')
     setGrowthRecords(growthResult.data || [])
     setLatestEccd(eccdResult.error ? null : (eccdResult.data || [])[0] || null)
     if (attendanceResult.error || growthResult.error || nonSchoolResult.error) {
@@ -176,18 +209,32 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, includ
   useRealtimeRefresh(() => loadReport({ silent: true }), {
     channelName: `student-report-${activeEnrollmentId || 'none'}`,
     tables: viewerRole === 'parent' ? ['attendance_records', 'attendance_non_school_days', 'growth_records'] : ['attendance_records', 'attendance_non_school_days', 'growth_records', 'eccd_assessments'],
+
     enabled: Boolean(activeEnrollmentId && student?.status === 'approved'),
   })
 
-  const attendanceCounts = attendance.reduce((counts, record) => {
-    const status = record.status === 'present' ? 'present' : 'absent'
-    counts[status] += 1
+  // Follows the whole semester's schedule, the same as the parent's own Attendance tab, so a
+  // newly approved student's summary here matches what they see: days before admission don't
+  // count as absences, and the range isn't clipped to when they joined.
+  const attendanceRecordsByDate = useMemo(() => new Map(attendance.map((record) => [record.attendance_date, record])), [attendance])
+  const attendanceDays = useMemo(() => {
+    if (!attendanceSemester?.starts_on || !attendanceSemester?.ends_on) return []
+    const today = getPhilippineDateValue()
+    const start = attendanceSemester.starts_on
+    const end = today < attendanceSemester.ends_on ? today : attendanceSemester.ends_on
+    if (start > end) return []
+    return listWeekdays(start, end).map((date) => {
+      if (!attendanceClassDates.has(date)) return { date, status: 'no-classes' }
+      if (attendanceApprovedOn && date < attendanceApprovedOn) return { date, status: 'not-enrolled' }
+      return { date, status: attendanceRecordsByDate.get(date)?.status === 'present' ? 'present' : 'absent' }
+    })
+  }, [attendanceApprovedOn, attendanceClassDates, attendanceRecordsByDate, attendanceSemester])
+  const attendanceCounts = attendanceDays.reduce((counts, day) => {
+    if (day.status === 'present' || day.status === 'absent') counts[day.status] += 1
+    else if (day.status === 'no-classes') counts.noClasses += 1
     return counts
-  }, { present: 0, absent: 0 })
-  const totalAttendanceDays = attendance.length
-  const presentAttendanceFraction = totalAttendanceDays > 0
-    ? `${attendanceCounts.present} / ${totalAttendanceDays}`
-    : '—'
+  }, { present: 0, absent: 0, noClasses: 0 })
+  const totalAttendanceDays = attendanceCounts.present + attendanceCounts.absent
   const latestGrowth = growthRecords[0] || null
   const reportHeight = latestGrowth?.height_cm
   const reportWeight = latestGrowth?.weight_kg
@@ -476,13 +523,13 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, includ
               {student?.status === 'approved' && <section className="student-report-section">
                 <div className="student-report-section-heading">
                   <h3>Attendance Summary</h3>
-                  <span>{attendanceUnavailable ? 'Unavailable' : `${totalAttendanceDays} school days`}</span>
+                  <span>{attendanceUnavailable ? 'Unavailable' : `${totalAttendanceDays} class days`}</span>
                 </div>
                 {attendanceUnavailable ? <p className="student-report-empty">Attendance totals are temporarily unavailable.</p> : <dl className="student-report-metrics attendance">
                   <div><dt>Present</dt><dd>{attendanceCounts.present}</dd></div>
                   <div><dt>Absent</dt><dd>{attendanceCounts.absent}</dd></div>
-                  <div><dt>Total Days</dt><dd>{totalAttendanceDays}</dd></div>
-                  <div><dt>Present / Total</dt><dd>{presentAttendanceFraction}</dd></div>
+                  <div><dt>Class Days</dt><dd>{totalAttendanceDays}</dd></div>
+                  <div><dt>No Classes</dt><dd>{attendanceCounts.noClasses}</dd></div>
                 </dl>}
               </section>}
             </div>

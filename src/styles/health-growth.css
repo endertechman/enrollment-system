@@ -58,17 +58,15 @@
 .growth-directory-filter .paginated-dropdown-trigger { border-radius:10px; font-size:12px; }
 .growth-update-dialog { width:min(520px,100%); height:auto; max-height:calc(100dvh - 48px); }
 .growth-update-form { display:grid; min-height:0; gap:15px; padding:20px; overflow-y:auto; scrollbar-gutter:stable; }
-.growth-update-search { position:relative; display:grid; gap:6px; min-width:0; }
-.growth-update-search>label,.growth-update-measurements label { display:grid; gap:6px; color:var(--color-text); font-size:11px; font-weight:700; }
-.growth-update-search>input,.growth-update-measurements input { width:100%; min-height:42px; padding:8px 11px; border:1px solid var(--color-border); border-radius:9px; background:var(--color-surface); color:var(--color-text); font:inherit; font-size:12px; outline:0; transition:border-color .2s ease,box-shadow .2s ease; }
-.growth-update-search>input:focus,.growth-update-measurements input:focus { border-color:var(--color-primary); box-shadow:0 0 0 3px color-mix(in srgb,var(--color-primary) 18%,transparent); }
-.growth-update-suggestions { position:absolute; top:calc(100% + 5px); right:0; left:0; z-index:4; max-height:230px; padding:6px; overflow-y:auto; border:1px solid var(--color-border); border-radius:10px; background:var(--color-surface); box-shadow:0 15px 35px rgba(69,51,62,.16); }
-.growth-update-suggestions button { display:grid; width:100%; gap:2px; padding:9px 10px; border:0; border-radius:8px; background:transparent; color:var(--color-text); font:inherit; text-align:left; cursor:pointer; transition:background-color .2s ease,color .2s ease; }
-.growth-update-suggestions button:hover,.growth-update-suggestions button[aria-selected="true"] { background:var(--color-primary-soft); color:var(--color-primary-ink); }
-.growth-update-suggestions span { font-size:11.5px; font-weight:720; }
-.growth-update-suggestions small,.growth-update-suggestions p { margin:0; color:var(--color-muted); font-size:9.5px; }
-.growth-update-suggestions p { padding:12px 10px; text-align:center; }
+.growth-update-measurements label { display:grid; gap:6px; color:var(--color-text); font-size:11px; font-weight:700; }
+.growth-update-measurements input { width:100%; min-height:42px; padding:8px 11px; border:1px solid var(--color-border); border-radius:9px; background:var(--color-surface); color:var(--color-text); font:inherit; font-size:12px; outline:0; transition:border-color .2s ease,box-shadow .2s ease; }
+.growth-update-measurements input:focus { border-color:var(--color-primary); box-shadow:0 0 0 3px color-mix(in srgb,var(--color-primary) 18%,transparent); }
 .growth-update-measurements { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:11px; }
+/* Read-only student name shown in the add/update-record dialog, which now always opens from a row click. */
+.growth-update-fixed-student { display:grid; gap:2px; padding:11px 13px; border:1px solid var(--color-border); border-radius:9px; background:color-mix(in srgb,var(--color-muted) 8%,var(--color-surface)); }
+.growth-update-fixed-student-label,.growth-update-fixed-student span.growth-update-fixed-label { display:block; color:var(--color-muted); font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; }
+.growth-update-fixed-student strong { font-size:13.5px; }
+.growth-update-fixed-student small { color:var(--color-muted); font-size:11px; }
 .growth-update-measurements .growth-unit-input input { padding-right:40px; }
 .growth-history-dialog { width:min(760px,100%); height:auto; max-height:calc(100dvh - 48px); }
 .growth-history-body { min-height:0; padding:18px 20px 20px; overflow-y:auto; scrollbar-gutter:stable; }

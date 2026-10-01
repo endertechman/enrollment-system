@@ -6,7 +6,7 @@ import { MAX_RAW } from '../lib/eccd/checklistItems'
 import { AGE_GROUPS } from '../lib/eccd/conversionTables'
 import { TABLE_VERSION, computeAge, formatAge, getAgeGroup, scoreRawScores } from '../lib/eccd/scoring'
 import EccdResultCard from './EccdResultCard'
-import { formatResultDate, resultFromRow } from '../lib/eccd/resultFormat'
+import { resultFromRow } from '../lib/eccd/resultFormat'
 
 function childName(student) {
   const lastName = String(student?.child_last_name || '').trim()
@@ -18,8 +18,11 @@ function childName(student) {
 const EMPTY_SCORES = Object.fromEntries(DOMAINS.map((domain) => [domain.key, '']))
 
 function EccdAssessmentDialog({ student, onClose, onSaved }) {
-  // The assessment date is always the day the assessment is recorded (Philippine time).
-  const [assessmentDate] = useState(getPhilippineDateValue)
+  // Defaults to today (Philippine time), but the assessor can back-date it — e.g. recording an
+  // assessment a day or two after it actually happened.
+  const todayValue = getPhilippineDateValue()
+  const [assessmentDate, setAssessmentDate] = useState(todayValue)
+  const [dateError, setDateError] = useState('')
   const [scores, setScores] = useState(EMPTY_SCORES)
   const [invalid, setInvalid] = useState(() => new Set())
   const [saving, setSaving] = useState(false)
@@ -28,6 +31,14 @@ function EccdAssessmentDialog({ student, onClose, onSaved }) {
 
   const age = useMemo(() => computeAge(student.birth_date, assessmentDate), [student.birth_date, assessmentDate])
   const ageGroup = getAgeGroup(age)
+
+  function changeAssessmentDate(value) {
+    setAssessmentDate(value)
+    if (!value) setDateError('Enter the assessment date.')
+    else if (value > todayValue) setDateError('Assessment date cannot be in the future.')
+    else if (student.birth_date && value < student.birth_date) setDateError('Assessment date cannot be before the child\u2019s birth date.')
+    else setDateError('')
+  }
 
   useEffect(() => {
     function closeOnEscape(event) { if (event.key === 'Escape' && !saving) onClose() }
@@ -43,6 +54,11 @@ function EccdAssessmentDialog({ student, onClose, onSaved }) {
   async function submit(event) {
     event.preventDefault()
     if (saving) return
+
+    if (dateError || !assessmentDate) {
+      setDateError(dateError || 'Enter the assessment date.')
+      return
+    }
 
     const bad = DOMAINS.filter((domain) => {
       const value = scores[domain.key]
@@ -115,8 +131,9 @@ function EccdAssessmentDialog({ student, onClose, onSaved }) {
           </div>
         ) : (
           <form onSubmit={submit} noValidate className="growth-update-form eccd-form">
+            {dateError && <p className="growth-message" role="alert" id="eccd-date-error">{dateError}</p>}
             <div className="eccd-assessment-info">
-              <div><span>Assessment date</span><strong>{formatResultDate(assessmentDate)}</strong></div>
+              <div><span>Assessment date</span><input type="date" value={assessmentDate} max={todayValue} min={student.birth_date || undefined} onChange={(event) => changeAssessmentDate(event.target.value)} required aria-invalid={Boolean(dateError)} aria-describedby={dateError ? 'eccd-date-error' : undefined} /></div>
               <div><span>Age during assessment</span><strong>{formatAge(age)}</strong></div>
               <div><span>ECCD table used</span><strong>{ageGroup ? ageGroup.label : 'Not available'}</strong></div>
             </div>

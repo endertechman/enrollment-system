@@ -364,12 +364,18 @@ function AttendanceRoster({ enrollments, loading, attendanceDate, onDateChange, 
       {selectedSummaryStudent && <div className="semester-dialog-overlay student-report-overlay attendance-summary-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedSummaryStudent(null) }}>
         <section className="semester-dialog student-report-dialog attendance-summary-dialog" role="dialog" aria-modal="true" aria-labelledby="attendance-summary-title">
           <header className="semester-dialog-header">
-            <div><h2 id="attendance-summary-title">{getChildName(selectedSummaryStudent)}</h2><p>Complete recorded attendance for this student.</p></div>
+            <div><h2 id="attendance-summary-title">Attendance Summary</h2><p>Complete recorded attendance for this student.</p></div>
             <button type="button" className="popup-close-button" onClick={() => setSelectedSummaryStudent(null)} aria-label="Close attendance summary"><i className="app-icon app-icon-close" aria-hidden="true" /></button>
           </header>
           <div className="student-report-dialog-body attendance-summary-body">
+            {/* Same identity block as the parent's Attendance tab and Child Summary, so the student's
+                name sits in the body rather than the dialog header, consistently across all three. */}
+            <div className="student-report-identity">
+              <div className="student-report-avatar" aria-hidden="true">{selectedSummaryStudent?.child_first_name?.[0] || ''}{selectedSummaryStudent?.child_last_name?.[0] || ''}</div>
+              <div><span>Student</span><h3>{getChildName(selectedSummaryStudent)}</h3><p>{selectedSummaryStudent?.reference_code || '—'}</p></div>
+            </div>
             {summaryLoading ? <p className="student-report-empty app-loading" role="status">Loading attendance summary...</p> : summaryMessage ? <p className="student-report-message">{summaryMessage}</p> : <section className="student-report-section">
-              <div className="student-report-section-heading"><h3>Attendance Summary</h3><span>{summaryTotalDays} class {summaryTotalDays === 1 ? 'day' : 'days'}</span></div>
+              <div className="student-report-section-heading"><h3>Recorded Days</h3><span>{summaryTotalDays} class {summaryTotalDays === 1 ? 'day' : 'days'}</span></div>
               <dl className="student-report-metrics attendance">
                 <div><dt>Present</dt><dd>{summaryCounts.present}</dd></div>
                 <div><dt>Absent</dt><dd>{summaryCounts.absent}</dd></div>

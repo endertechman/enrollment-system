@@ -8,6 +8,8 @@
   --parent-aqua: var(--color-primary-ink);
   --parent-aqua-soft: var(--color-primary-soft);
   display: flex;
+  height: 100vh;
+  min-height: 100vh;
   height: 100dvh;
   min-height: 100dvh;
   flex-direction: column;

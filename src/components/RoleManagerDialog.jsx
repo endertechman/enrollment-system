@@ -246,17 +246,13 @@ function RoleManagerDialog({ onClose }) {
               <div className="role-manager-account"><i className="app-icon app-icon-user-list" aria-hidden="true" /><div><span>Account</span><strong>{selectedAccount.full_name}</strong></div></div>
               <div><span>Email</span><strong>{selectedAccount.email}</strong></div>
               <div><span>Current role</span><strong>{formatRole(selectedAccount.account_role)}</strong></div>
-              {selectedAccount.is_self ? <p>Your own teacher role cannot be changed here.</p> : <div className="role-manager-actions">{availableRoles.map(([role, label]) => <button type="button" key={role} disabled={Boolean(updatingRole)} onClick={() => setPendingRole(role)}>{label}</button>)}</div>}
-              {!selectedAccount.is_self && (
-                <div className="role-manager-danger-zone">
-                  {selectedAccount.account_role === 'teacher'
-                    ? <p>Teacher accounts cannot be deleted. Demote this account to Parent or Teacher Aide first if you need to remove it.</p>
-                    : <>
-                      <p>Permanently delete this account{selectedAccount.account_role === 'parent' ? ' and all of its enrollment, attendance, health and assessment records' : ''}.</p>
-                      <button type="button" disabled={deleteBusy || Boolean(updatingRole)} onClick={startDelete}>{deleteBusy ? 'Preparing...' : 'Delete account'}</button>
-                    </>}
+              {selectedAccount.is_self ? <p>Your own teacher role cannot be changed here.</p> : <>
+                <div className="role-manager-actions">
+                  {selectedAccount.account_role !== 'teacher' && <button type="button" className="role-manager-delete" disabled={deleteBusy || Boolean(updatingRole)} onClick={startDelete}>{deleteBusy ? 'Preparing...' : 'Delete account'}</button>}
+                  {availableRoles.map(([role, label]) => <button type="button" key={role} disabled={Boolean(updatingRole) || deleteBusy} onClick={() => setPendingRole(role)}>{label}</button>)}
                 </div>
-              )}
+                {selectedAccount.account_role === 'teacher' && <p className="role-manager-delete-note">Teacher accounts cannot be deleted. Demote this account to Parent or Teacher Aide first if you need to remove it.</p>}
+              </>}
             </article>
           )}
 

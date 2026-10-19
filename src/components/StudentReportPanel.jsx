@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { getAttendanceRangeStart } from '../lib/attendanceRange'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 import { classifyChildBmi } from '../lib/bmiClassification'
 import { getAgeInYears, getPhilippineDateValue } from '../lib/philippineDate'
@@ -73,7 +72,6 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, includ
   const [attendanceUnavailable, setAttendanceUnavailable] = useState(false)
   const [attendanceSemester, setAttendanceSemester] = useState(null)
   const [attendanceClassDates, setAttendanceClassDates] = useState(() => new Set())
-  const [attendanceApprovedOn, setAttendanceApprovedOn] = useState('')
   const [growthRecords, setGrowthRecords] = useState([])
   const [latestEccd, setLatestEccd] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -120,7 +118,6 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, includ
       setAttendanceUnavailable(false)
       setAttendanceSemester(null)
       setAttendanceClassDates(new Set())
-      setAttendanceApprovedOn('')
       setGrowthRecords([])
       setLatestEccd(null)
       setMessage('')
@@ -143,7 +140,7 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, includ
         .order('assessment_date', { ascending: false })
         .limit(1)
 
-    const [attendanceResult, growthResult, nonSchoolResult, eccdResult, semesterResult, classDaysResult, reviewedResult] = await Promise.all([
+    const [attendanceResult, growthResult, nonSchoolResult, eccdResult, semesterResult, classDaysResult] = await Promise.all([
       supabase
         .from('attendance_records')
         .select('id, attendance_date, status')
@@ -168,7 +165,6 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, includ
       student?.batch_id
         ? supabase.rpc('list_class_days', { p_batch_id: student.batch_id })
         : Promise.resolve({ data: [], error: null }),
-      supabase.from('enrollments').select('reviewed_at').eq('id', activeEnrollmentId).maybeSingle(),
     ])
 
     if (requestId !== reportRequestId.current) return
@@ -179,7 +175,6 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, includ
     setAttendanceUnavailable(attendanceFailed)
     setAttendanceSemester(semesterResult.data || null)
     setAttendanceClassDates(new Set((classDaysResult.data || []).map((row) => row.attendance_date)))
-    setAttendanceApprovedOn(reviewedResult.data?.reviewed_at ? getPhilippineDateValue(reviewedResult.data.reviewed_at) : '')
     setGrowthRecords(growthResult.data || [])
     setLatestEccd(eccdResult.error ? null : (eccdResult.data || [])[0] || null)
     if (attendanceResult.error || growthResult.error || nonSchoolResult.error) {
@@ -215,22 +210,20 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, includ
     pollMs: 30000,
   })
 
-  // Follows the whole semester's schedule, the same as the parent's own Attendance tab, so a
-  // newly approved student's summary here matches what they see: days before admission don't
-  // count as absences, and the range isn't clipped to when they joined.
+  // Follows the whole semester's schedule, the same as the parent's own Attendance tab. Every
+  // student is measured against the semester's dates, not the date they were admitted.
   const attendanceRecordsByDate = useMemo(() => new Map(attendance.map((record) => [record.attendance_date, record])), [attendance])
   const attendanceDays = useMemo(() => {
     if (!attendanceSemester?.starts_on || !attendanceSemester?.ends_on) return []
     const today = getPhilippineDateValue()
-    const start = getAttendanceRangeStart(attendanceSemester.starts_on, attendanceClassDates)
+    const start = attendanceSemester.starts_on
     const end = today < attendanceSemester.ends_on ? today : attendanceSemester.ends_on
-    if (!start || start > end) return []
+    if (start > end) return []
     return listWeekdays(start, end).map((date) => {
       if (!attendanceClassDates.has(date)) return { date, status: 'no-classes' }
-      if (attendanceApprovedOn && date < attendanceApprovedOn) return { date, status: 'not-enrolled' }
       return { date, status: attendanceRecordsByDate.get(date)?.status === 'present' ? 'present' : 'absent' }
     })
-  }, [attendanceApprovedOn, attendanceClassDates, attendanceRecordsByDate, attendanceSemester])
+  }, [attendanceClassDates, attendanceRecordsByDate, attendanceSemester])
   const attendanceCounts = attendanceDays.reduce((counts, day) => {
     if (day.status === 'present' || day.status === 'absent') counts[day.status] += 1
     else if (day.status === 'no-classes') counts.noClasses += 1

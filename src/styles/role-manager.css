@@ -51,8 +51,6 @@
 .role-manager-actions { grid-column:1/-1; display:flex; justify-content:flex-end; gap:8px; padding-top:3px; }
 .role-manager-actions button { min-height:var(--dashboard-control-height); padding:0 14px; border:1px solid var(--color-border); border-radius:var(--dashboard-control-radius); background:var(--color-surface); color:var(--color-text); font:inherit; font-size:13px; font-weight:700; cursor:pointer; transition:background-color .2s ease,border-color .2s ease,color .2s ease; }
 .role-manager-actions button:hover:not(:disabled) { border-color:var(--color-focus); background:#edf9fa; color:var(--color-primary-deep); }
-.role-manager-actions button:last-child { border-color:#ffc4d4; background:var(--color-danger-soft); color:#b84469; }
-.role-manager-actions button:last-child:hover:not(:disabled) { background:#ffe2ea; }
 .role-manager-actions button:disabled { opacity:.55; cursor:not-allowed; }
 .role-manager-note { margin:12px 0 0; color:var(--color-muted); font-size:10px; line-height:1.4; }
 @keyframes role-manager-fade { from{opacity:0} to{opacity:1} }
@@ -60,11 +58,10 @@
 @media(max-width:520px) { .role-manager-overlay{padding:12px}.role-manager-dialog{border-radius:16px}.role-manager-header{padding:20px 60px 0 17px}.role-manager-body{padding:0 17px 20px}.role-manager-result{grid-template-columns:1fr}.role-manager-result>p,.role-manager-actions{grid-column:1}.role-manager-actions{flex-direction:column}.role-manager-actions button{width:100%} }
 
 /* Delete account */
-.role-manager-danger-zone { grid-column:1/-1; display:grid; gap:8px; margin-top:6px; padding:14px; border:1px solid #ffc4d4; border-radius:12px; background:var(--color-danger-soft); }
-.role-manager-danger-zone p { margin:0; color:var(--color-danger-ink); font-size:12px; line-height:1.5; }
-.role-manager-danger-zone button { justify-self:start; min-height:var(--dashboard-control-height); padding:0 14px; border:1px solid var(--color-danger); border-radius:var(--dashboard-control-radius); background:var(--color-surface); color:var(--color-danger-ink); font:inherit; font-size:12.5px; font-weight:700; cursor:pointer; }
-.role-manager-danger-zone button:hover:not(:disabled) { background:var(--color-danger); color:var(--color-on-strong); }
-.role-manager-danger-zone button:disabled { opacity:.55; cursor:not-allowed; }
+.role-manager-actions .role-manager-delete { margin-right:auto; border-color:#ffc4d4; background:var(--color-danger-soft); color:var(--color-danger-ink); }
+.role-manager-actions .role-manager-delete:hover:not(:disabled) { border-color:var(--color-danger-hover); background:var(--color-danger); color:var(--color-on-strong); }
+.role-manager-actions .role-manager-delete:focus-visible { outline:2px solid var(--color-danger); outline-offset:2px; }
+.role-manager-delete-note { grid-column:1/-1; margin:0; color:var(--color-muted); font-size:11.5px; line-height:1.5; }
 .delete-account-dialog { width:min(480px,100%); }
 .delete-account-list { display:grid; gap:4px; margin:10px 0 0; padding:10px 12px 10px 28px; border-radius:10px; background:var(--color-surface-soft); color:var(--color-text-soft); font-size:12.5px; }
 .delete-account-confirm { display:grid; gap:6px; margin-top:14px; color:var(--color-text-soft); font-size:12px; }

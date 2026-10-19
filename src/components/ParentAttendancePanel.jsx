@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { getAttendanceRangeStart } from '../lib/attendanceRange'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 import TablePagination from './TablePagination'
 import { getPhilippineDateValue } from '../lib/philippineDate'
@@ -13,7 +12,6 @@ const STATUS_LABELS = {
   absent: 'Absent',
   'no-classes': 'No classes',
   pending: 'Not yet recorded',
-  'not-enrolled': 'Not Yet Enrolled',
 }
 
 function childName(student) {
@@ -55,7 +53,6 @@ function ParentAttendancePanel({ student }) {
   const [nonSchoolDates, setNonSchoolDates] = useState(() => new Set())
   const [classDates, setClassDates] = useState(() => new Set())
   const [semester, setSemester] = useState(null)
-  const [approvedOn, setApprovedOn] = useState('')
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
   const requestRef = useRef(0)
@@ -76,7 +73,7 @@ function ParentAttendancePanel({ student }) {
       setMessage('')
     }
 
-    const [attendanceResult, nonSchoolResult, batchResult, enrollmentResult, classDaysResult] = await Promise.all([
+    const [attendanceResult, nonSchoolResult, batchResult, classDaysResult] = await Promise.all([
       supabase.from('attendance_records')
         .select('id, attendance_date, status')
         .eq('enrollment_id', enrollmentId),
@@ -86,10 +83,6 @@ function ParentAttendancePanel({ student }) {
       supabase.from('enrollment_batches')
         .select('starts_on, ends_on')
         .eq('id', batchId)
-        .maybeSingle(),
-      supabase.from('enrollments')
-        .select('reviewed_at')
-        .eq('id', enrollmentId)
         .maybeSingle(),
       supabase.rpc('list_class_days', { p_batch_id: batchId }),
     ])
@@ -103,7 +96,6 @@ function ParentAttendancePanel({ student }) {
       setNonSchoolDates(new Set((nonSchoolResult.data || []).map((row) => row.attendance_date)))
       setClassDates(new Set((classDaysResult.data || []).map((row) => row.attendance_date)))
       setSemester(batchResult.data)
-      setApprovedOn(enrollmentResult.data?.reviewed_at ? getPhilippineDateValue(enrollmentResult.data.reviewed_at) : '')
       setMessage('')
     }
     setLoading(false)
@@ -130,28 +122,23 @@ function ParentAttendancePanel({ student }) {
     const today = getPhilippineDateValue()
     const recordsByDate = new Map(records.map((record) => [record.attendance_date, record]))
 
-    // The table follows the whole semester's schedule, not the child's admission date, so a
-    // newly approved student still sees every class day the batch has had, start to finish.
-    // Nothing is listed before the first day a class was held. With no class yet, only today
-    // can appear (as "pending") so the table isn't filled with days that never had class.
-    const start = getAttendanceRangeStart(semester.starts_on, classDates) || (today > semester.starts_on ? today : semester.starts_on)
+    // Every child is measured against the semester's own dates, not the date they were admitted,
+    // so a student who joins mid-semester is counted on every class day since the semester began.
+    const start = semester.starts_on
     const end = today < semester.ends_on ? today : semester.ends_on
     if (start > end) return []
 
     return listWeekdays(start, end).map((date) => {
       // A day is a class day only when at least one student in the class was present.
-      // On a class day, anyone not marked present is absent (even without a saved row) —
-      // unless the day came before this child was even admitted, which isn't an absence.
+      // On a class day, anyone not marked present is absent (even without a saved row).
       let status = 'no-classes'
       if (!nonSchoolDates.has(date)) {
-        if (classDates.has(date)) {
-          if (approvedOn && date < approvedOn) status = 'not-enrolled'
-          else status = recordsByDate.get(date)?.status === 'present' ? 'present' : 'absent'
-        } else if (date === today) status = 'pending'
+        if (classDates.has(date)) status = recordsByDate.get(date)?.status === 'present' ? 'present' : 'absent'
+        else if (date === today) status = 'pending'
       }
       return { date, status }
     })
-  }, [approvedOn, classDates, nonSchoolDates, records, semester])
+  }, [classDates, nonSchoolDates, records, semester])
 
   const count = (status) => days.filter((day) => day.status === status).length
   const presentCount = count('present')

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { getAttendanceRangeStart } from '../lib/attendanceRange'
 import AuthToast from './AuthToast'
 import ConfirmDialog from './ConfirmDialog'
 import TablePagination from './TablePagination'
@@ -328,19 +327,18 @@ function AttendanceRoster({ enrollments, loading, attendanceDate, onDateChange, 
     setSummaryLoading(false)
   }
 
-  // Follows the whole semester's schedule, same as the parent's own Attendance tab: days before
-  // this child was admitted aren't absences, and a day with no class at all isn't either.
+  // Follows the whole semester's schedule, same as the parent's own Attendance tab. Every student
+  // is measured against the semester's dates, not their own admission date; a day with no class
+  // at all isn't an absence.
   const summaryDays = useMemo(() => {
     if (!batch?.starts_on || !batch?.ends_on || !selectedSummaryStudent) return []
     const today = getLocalDateValue()
-    const approvedOn = selectedSummaryStudent.reviewed_at ? getLocalDateValue(selectedSummaryStudent.reviewed_at) : ''
-    const start = getAttendanceRangeStart(batch.starts_on, summaryClassDates)
+    const start = batch.starts_on
     const end = today < batch.ends_on ? today : batch.ends_on
-    if (!start || start > end) return []
+    if (start > end) return []
     const recordsByDate = new Map(summaryRecords.map((record) => [record.attendance_date, record]))
     return listWeekdays(start, end).map((date) => {
       if (!summaryClassDates.has(date)) return { date, status: 'no-classes' }
-      if (approvedOn && date < approvedOn) return { date, status: 'not-enrolled' }
       return { date, status: recordsByDate.get(date)?.status === 'present' ? 'present' : 'absent' }
     })
   }, [batch, selectedSummaryStudent, summaryClassDates, summaryRecords])

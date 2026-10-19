@@ -60,7 +60,10 @@ function stopResumeListeners() {
   window.removeEventListener('focus', refreshAfterResume)
 }
 
-function useRealtimeRefresh(refresh, { channelName, tables, enabled = true } = {}) {
+// pollMs is an optional safety net: realtime can silently stop delivering (a phone that slept, a
+// dropped websocket, a table missing from the realtime publication), so screens that must stay
+// current can also re-fetch on a timer while the tab is visible. 0 = off.
+function useRealtimeRefresh(refresh, { channelName, tables, enabled = true, pollMs = 0 } = {}) {
   const refreshRef = useRef(refresh)
   const tableKey = (tables || []).join('|')
 
@@ -93,13 +96,18 @@ function useRealtimeRefresh(refresh, { channelName, tables, enabled = true } = {
     resumeSubscribers.add(runRefresh)
     startResumeListeners()
 
+    const pollTimer = pollMs > 0
+      ? window.setInterval(() => { if (document.visibilityState === 'visible') requestRefresh() }, pollMs)
+      : null
+
     return () => {
+      if (pollTimer !== null) window.clearInterval(pollTimer)
       resumeSubscribers.delete(runRefresh)
       queuedRefreshes.delete(runRefresh)
       stopResumeListeners()
       supabase.removeChannel(channel)
     }
-  }, [channelName, enabled, tableKey])
+  }, [channelName, enabled, tableKey, pollMs])
 }
 
 export default useRealtimeRefresh

@@ -46,6 +46,12 @@
   --dashboard-control-radius: 10px;
   --dashboard-panel-padding: clamp(18px, 2.5vw, 24px);
   --dashboard-content-gap: 16px;
+
+  /* Layer scale: page chrome (header, menus) < popups < confirmations < toasts. */
+  --z-dropdown: 100;
+  --z-modal: 5000;
+  --z-modal-top: 5100;
+  --z-toast: 6000;
 }
 
 * {
@@ -313,3 +319,30 @@ button:disabled {
 .enrollment-window-badge.closed { background: var(--color-surface-soft); color: var(--color-muted); }
 .popup-close-button { transition:color .2s ease !important; }
 .popup-close-button:hover:not(:disabled) { background:transparent !important; color:var(--color-accent-ink) !important; }
+
+
+/* =========================================================
+   POPUP LAYER (universal)
+   Every popup sits above all page chrome (header, menus, dropdowns), and confirmations sit above the
+   popup that opened them. This is matched by structure, not by class name, so any popup added in the
+   future gets the same layer automatically as long as it follows the usual pattern: a full-screen
+   wrapper with a dialog inside (role="dialog" and aria-modal="true"), or a wrapper whose class
+   contains "overlay". New popups should not set their own z-index.
+========================================================= */
+[class*="overlay"][role="presentation"],
+[aria-modal="true"][class*="overlay"] {
+  z-index: var(--z-modal, 5000) !important;
+}
+
+/* Kept as separate rules: a browser without :has() drops the whole rule it appears in. */
+:has(> [role="dialog"][aria-modal="true"]) {
+  z-index: var(--z-modal, 5000) !important;
+}
+
+.confirm-overlay {
+  z-index: var(--z-modal-top, 5100) !important;
+}
+
+:has(> [role="alertdialog"][aria-modal="true"]) {
+  z-index: var(--z-modal-top, 5100) !important;
+}

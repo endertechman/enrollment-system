@@ -135,6 +135,7 @@ function AttendanceRoster({ enrollments, loading, attendanceDate, onDateChange, 
   useRealtimeRefresh(() => loadAttendance({ silent: true }), {
     channelName: 'attendance-roster',
     tables: ['attendance_records', 'attendance_non_school_days'],
+    pollMs: 30000,
   })
 
   const today = getLocalDateValue()

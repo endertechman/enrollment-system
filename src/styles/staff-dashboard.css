@@ -401,7 +401,7 @@
 .semester-schedule-cards dd strong { color:var(--color-text); font-size:clamp(11.5px,1.25vw,13.5px); font-weight:730; overflow-wrap:anywhere; }
 .semester-schedule-cards dd span { color:var(--color-primary-ink); font-size:11px; font-weight:740; }
 
-.semester-dialog-overlay { position:fixed; inset:0; z-index:1600; display:grid; place-items:center; padding:24px; overflow-y:auto; background:rgba(53,48,57,.28); backdrop-filter:blur(4px); }
+.semester-dialog-overlay { position:fixed; inset:0; z-index:var(--z-modal, 5000); display:grid; place-items:center; padding:24px; overflow-y:auto; background:rgba(53,48,57,.28); backdrop-filter:blur(4px); }
 .semester-dialog { display:flex; width:min(580px,100%); height:min(680px,calc(100dvh - 48px)); max-height:calc(100dvh - 48px); flex-direction:column; overflow:hidden; border:1px solid var(--color-border); border-radius:18px; background:var(--color-surface); box-shadow:0 24px 70px rgba(65,48,59,.2); }
 .semester-dialog-header { position:sticky; top:0; z-index:1; display:flex; align-items:flex-start; justify-content:space-between; gap:18px; padding:19px 20px; border-bottom:1px solid var(--color-border); background:linear-gradient(105deg,var(--color-accent-soft),var(--color-primary-soft)); }
 .semester-dialog-header h2 { margin:0; color:var(--color-text); font-size:18px; }

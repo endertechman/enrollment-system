@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { getPhilippineDateValue } from '../lib/philippineDate'
 import ConfirmDialog from './ConfirmDialog'
 import PaginatedDropdown from './PaginatedDropdown'
 import AuthToast from './AuthToast'
 
-const emptySemester = { name: '', startsOn: '', endsOn: '', opensDate: '', opensTime: '', closesDate: '', closesTime: '' }
+// Opening and closing times start at the usual office hours so only the dates need to be picked.
+const emptySemester = { name: '', startsOn: '', endsOn: '', opensDate: '', opensTime: '08:00', closesDate: '', closesTime: '17:00' }
 
 function toPhilippineTimestamp(date, time) {
-  return new Date(`${date}T${time}:00+08:00`).toISOString()
+  const value = new Date(`${date}T${time}:00+08:00`)
+  return Number.isNaN(value.getTime()) ? '' : value.toISOString()
 }
 
 function formatSchedule(value) {
@@ -39,10 +40,9 @@ function EnrollmentBatchControls({ batches, currentBatchId, selectedBatchId, onS
   const isCurrent = selectedBatch?.id === currentBatchId
   const openingSchedule = formatSchedule(selectedBatch?.opens_at)
   const closingSchedule = formatSchedule(selectedBatch?.closes_at)
-  const today = getPhilippineDateValue()
 
   function openCreateDialog() {
-    setSemester({ ...emptySemester, name: 'S.Y. 20XX' })
+    setSemester(emptySemester)
     setFormError('')
     setDialogMode('create')
   }
@@ -76,6 +76,8 @@ function EnrollmentBatchControls({ batches, currentBatchId, selectedBatchId, onS
     const closesAt = toPhilippineTimestamp(semester.closesDate, semester.closesTime)
 
     if (cleanName.length < 2 || cleanName.length > 20) return setFormError('Use a semester name between 2 and 20 characters.')
+    if (!semester.startsOn || !semester.endsOn) return setFormError('Choose the semester start and end dates.')
+    if (!opensAt || !closesAt) return setFormError('Choose the enrollment opening and closing date and time.')
     if (semester.startsOn > semester.endsOn) return setFormError('The semester end date must be after its start date.')
     if (opensAt >= closesAt) return setFormError('Enrollment must close after it opens.')
 
@@ -139,10 +141,10 @@ function EnrollmentBatchControls({ batches, currentBatchId, selectedBatchId, onS
         <section className="semester-dialog" role="dialog" aria-modal="true" aria-labelledby="semester-dialog-title">
           <header className="semester-dialog-header"><div><h2 id="semester-dialog-title">{dialogMode === 'update' ? 'Update semester' : 'Create new semester'}</h2><p>{dialogMode === 'update' ? 'Edit the semester name, academic dates, and enrollment window.' : 'Set the academic period and its separate enrollment window.'}</p></div><button type="button" className="popup-close-button" onClick={() => setDialogMode('')} disabled={working} aria-label="Close semester dialog"><i className="app-icon app-icon-close" aria-hidden="true" /></button></header>
           <form className="semester-form" onSubmit={saveSemester}>
-            <label className="semester-name-field"><span>Semester name</span><input type="text" value={semester.name} minLength="2" maxLength="20" onChange={(event) => updateSemester('name', event.target.value)} placeholder="S.Y. 20XX" required /><small>Use a clear name, up to 20 characters. {semester.name.length} of 20 characters used.</small></label>
-            <fieldset className="semester-form-section"><legend>Semester dates</legend><p>The period when classes and student records belong to this semester.</p><div className="semester-date-fields"><label><span>Semester starts</span><input type="date" value={semester.startsOn} min={dialogMode === 'create' ? today : undefined} onChange={(event) => updateSemester('startsOn', event.target.value)} required /></label><label><span>Semester ends</span><input type="date" value={semester.endsOn} min={semester.startsOn || (dialogMode === 'create' ? today : undefined)} onChange={(event) => updateSemester('endsOn', event.target.value)} required /></label></div></fieldset>
-            <fieldset className="semester-form-section"><legend>Enrollment window</legend><p>When students can submit enrollment requests. These dates are independent of semester dates.</p><div className="semester-window-fields"><label><span>Enrollment opens</span><input type="date" value={semester.opensDate} min={dialogMode === 'create' ? today : undefined} onChange={(event) => updateSemester('opensDate', event.target.value)} required /></label><label><span>Time</span><input type="time" value={semester.opensTime} onChange={(event) => updateSemester('opensTime', event.target.value)} required /></label><label><span>Enrollment closes</span><input type="date" value={semester.closesDate} min={semester.opensDate || (dialogMode === 'create' ? today : undefined)} onChange={(event) => updateSemester('closesDate', event.target.value)} required /></label><label><span>Time</span><input type="time" value={semester.closesTime} onChange={(event) => updateSemester('closesTime', event.target.value)} required /></label></div></fieldset>
-            <p className="semester-time-note"><i className="app-icon app-icon-clock" aria-hidden="true" /> Enrollment may remain open after the semester starts.</p>
+            <label className="semester-name-field"><span>Semester name</span><input type="text" value={semester.name} minLength="2" maxLength="20" onChange={(event) => updateSemester('name', event.target.value)} placeholder="e.g. S.Y. 2026-2027" required /><small>Use a clear name, up to 20 characters. {semester.name.length} of 20 characters used.</small></label>
+            <fieldset className="semester-form-section"><legend>Semester dates</legend><p>The period when classes and student records belong to this semester.</p><div className="semester-date-fields"><label><span>Semester starts</span><input type="date" value={semester.startsOn} onChange={(event) => updateSemester('startsOn', event.target.value)} required /></label><label><span>Semester ends</span><input type="date" value={semester.endsOn} min={semester.startsOn || undefined} onChange={(event) => updateSemester('endsOn', event.target.value)} required /></label></div></fieldset>
+            <fieldset className="semester-form-section"><legend>Enrollment window</legend><p>When students can submit enrollment requests. These dates are independent of semester dates.</p><div className="semester-window-fields"><label><span>Enrollment opens</span><input type="date" value={semester.opensDate} onChange={(event) => updateSemester('opensDate', event.target.value)} required /></label><label><span>Time</span><input type="time" value={semester.opensTime} onChange={(event) => updateSemester('opensTime', event.target.value)} required /></label><label><span>Enrollment closes</span><input type="date" value={semester.closesDate} min={semester.opensDate || undefined} onChange={(event) => updateSemester('closesDate', event.target.value)} required /></label><label><span>Time</span><input type="time" value={semester.closesTime} onChange={(event) => updateSemester('closesTime', event.target.value)} required /></label></div></fieldset>
+            <p className="semester-time-note"><i className="app-icon app-icon-clock" aria-hidden="true" /> Enrollment may remain open after the semester starts, and dates can be set in the past for a semester already underway.</p>
             <div className="semester-dialog-actions"><button type="button" className="button-secondary" onClick={() => setDialogMode('')} disabled={working}>Cancel</button><button type="submit" className="approve-button" disabled={working}>{dialogMode === 'update' ? 'Edit Semester' : 'Create Semester'}</button></div>
           </form>
         </section>

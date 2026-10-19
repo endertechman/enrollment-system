@@ -302,7 +302,7 @@
   position: fixed;
   top: 82px;
   left: 50%;
-  z-index: 1200;
+  z-index: var(--z-toast, 6000);
   width: min(380px, calc(100vw - 40px));
   transform: translateX(-50%);
   pointer-events: none;

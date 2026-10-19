@@ -120,6 +120,7 @@ function ParentAttendancePanel({ student }) {
     channelName: `parent-attendance-${enrollmentId || 'none'}`,
     tables: ['attendance_records', 'attendance_non_school_days'],
     enabled: Boolean(enrollmentId && batchId),
+    pollMs: 30000,
   })
 
   const days = useMemo(() => {

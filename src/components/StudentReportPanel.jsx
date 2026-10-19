@@ -211,6 +211,7 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, includ
     tables: viewerRole === 'parent' ? ['attendance_records', 'attendance_non_school_days', 'growth_records'] : ['attendance_records', 'attendance_non_school_days', 'growth_records', 'eccd_assessments'],
 
     enabled: Boolean(activeEnrollmentId && student?.status === 'approved'),
+    pollMs: 30000,
   })
 
   // Follows the whole semester's schedule, the same as the parent's own Attendance tab, so a

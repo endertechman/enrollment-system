@@ -1,4 +1,4 @@
-.confirm-overlay { position:fixed; inset:0; z-index:2000; display:grid; place-items:center; padding:18px; background:rgba(42,37,43,.38); backdrop-filter:blur(5px); animation:confirm-overlay-in .18s ease; }
+.confirm-overlay { position:fixed; inset:0; z-index:var(--z-modal-top, 5100); display:grid; place-items:center; padding:18px; background:rgba(42,37,43,.38); backdrop-filter:blur(5px); animation:confirm-overlay-in .18s ease; }
 .confirm-dialog { display:grid; grid-template-columns:42px minmax(0,1fr); gap:14px; width:min(430px,100%); padding:22px; border:1px solid rgba(255,255,255,.85); border-radius:18px; background:var(--color-surface-raised); box-shadow:0 24px 65px rgba(63,43,56,.24); }
 .confirm-dialog-icon { display:grid; place-items:center; width:42px; height:42px; border-radius:13px; background:#ffe4ec; color:#c33f66; }
 .confirm-dialog-icon.primary { background:#e5f8f9; color:var(--color-primary-deep); }

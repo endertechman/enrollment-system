@@ -1,4 +1,4 @@
-.role-manager-overlay { position:fixed; inset:0; z-index:200; display:grid; place-items:center; padding:18px; background:rgba(42,37,43,.38); backdrop-filter:blur(5px); animation:role-manager-fade .18s ease; }
+.role-manager-overlay { position:fixed; inset:0; z-index:var(--z-modal, 5000); display:grid; place-items:center; padding:18px; background:rgba(42,37,43,.38); backdrop-filter:blur(5px); animation:role-manager-fade .18s ease; }
 .role-manager-dialog { position:relative; display:flex; width:min(460px,100%); max-height:calc(100dvh - 36px); flex-direction:column; overflow:hidden; border:1px solid rgba(255,255,255,.82); border-radius:18px; background:var(--color-surface-raised); box-shadow:0 24px 60px rgba(63,43,56,.22); }
 .role-manager-dialog-wide { width:min(760px,100%); }
 .role-manager-close { position:absolute; top:12px; right:12px; display:grid; place-items:center; width:var(--dashboard-icon-button-size); height:var(--dashboard-icon-button-size); padding:0; border:0; border-radius:50%; background:transparent; color:var(--color-muted); cursor:pointer; transition:background-color .2s ease,color .2s ease; }

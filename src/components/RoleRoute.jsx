@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { fetchOwnRole } from '../lib/ownProfile'
 
 function RoleRoute({ allowedRole, children }) {
   const [loading, setLoading] = useState(true)
@@ -24,11 +25,8 @@ function RoleRoute({ allowedRole, children }) {
 
     setUserExists(true)
 
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+    // Recreates the profile if it was deleted while the user was still signed in.
+    const { role, error } = await fetchOwnRole(user.id)
 
     if (error) {
       console.error(error)
@@ -37,7 +35,7 @@ function RoleRoute({ allowedRole, children }) {
       return
     }
 
-    setAllowed(profile.role === allowedRole)
+    setAllowed(role === allowedRole)
     setLoading(false)
   }, [allowedRole])
 

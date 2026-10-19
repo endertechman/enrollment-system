@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { getAttendanceRangeStart } from '../lib/attendanceRange'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 import TablePagination from './TablePagination'
 import { getPhilippineDateValue } from '../lib/philippineDate'
@@ -131,7 +132,9 @@ function ParentAttendancePanel({ student }) {
 
     // The table follows the whole semester's schedule, not the child's admission date, so a
     // newly approved student still sees every class day the batch has had, start to finish.
-    const start = semester.starts_on
+    // Nothing is listed before the first day a class was held. With no class yet, only today
+    // can appear (as "pending") so the table isn't filled with days that never had class.
+    const start = getAttendanceRangeStart(semester.starts_on, classDates) || (today > semester.starts_on ? today : semester.starts_on)
     const end = today < semester.ends_on ? today : semester.ends_on
     if (start > end) return []
 

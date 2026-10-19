@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { fetchOwnRole } from '../lib/ownProfile'
 import takeAuthAttempt, { getAuthCooldownRemaining } from '../lib/authRateLimit'
 import AppHeader from './AppHeader'
 import AuthToast from './AuthToast'
@@ -86,17 +87,16 @@ function Login() {
       return
     }
 
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+    // Recreates the profile if it was deleted, so the user can still sign in.
+    const { role, error: profileError } = await fetchOwnRole(user.id)
 
     if (profileError) {
       setMessage(profileError.message)
       setSubmitting(false)
       return
     }
+
+    const profile = { role }
 
     if (
       profile.role === 'parent' ||

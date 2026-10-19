@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import AuthToast from './AuthToast'
 import ConfirmDialog from './ConfirmDialog'
+import DeleteAccountDialog from './DeleteAccountDialog'
 
 const PAGE_SIZE = 10
 
@@ -30,6 +31,9 @@ function RoleManagerDialog({ onClose }) {
   const [selectedAccount, setSelectedAccount] = useState(null)
   const [updatingRole, setUpdatingRole] = useState('')
   const [pendingRole, setPendingRole] = useState('')
+  const [deleteSummary, setDeleteSummary] = useState(null)
+  const [deleteError, setDeleteError] = useState('')
+  const [deleteBusy, setDeleteBusy] = useState(false)
   const [sortConfig, setSortConfig] = useState({ key: 'full_name', direction: 'asc' })
 
   useEffect(() => {
@@ -72,13 +76,13 @@ function RoleManagerDialog({ onClose }) {
   useEffect(() => {
     function closeOnEscape(event) {
       if (event.key !== 'Escape') return
-      if (pendingRole) return
+      if (pendingRole || deleteSummary) return
       if (selectedAccount) setSelectedAccount(null)
       else onClose()
     }
     document.addEventListener('keydown', closeOnEscape)
     return () => document.removeEventListener('keydown', closeOnEscape)
-  }, [onClose, pendingRole, selectedAccount])
+  }, [onClose, pendingRole, deleteSummary, selectedAccount])
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
   const shownStart = totalCount === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1
@@ -136,6 +140,36 @@ function RoleManagerDialog({ onClose }) {
     setPendingRole('')
   }
 
+  async function startDelete() {
+    if (!selectedAccount || deleteBusy) return
+    setDeleteBusy(true)
+    setMessage('')
+    const { data, error } = await supabase.rpc('get_account_deletion_summary', { p_user_id: selectedAccount.user_id }).single()
+    setDeleteBusy(false)
+    if (error || !data) {
+      setMessage(error?.message || 'Unable to prepare this deletion.')
+      return
+    }
+    setDeleteError('')
+    setDeleteSummary(data)
+  }
+
+  async function confirmDelete(typedEmail) {
+    if (!deleteSummary || deleteBusy) return
+    setDeleteBusy(true)
+    setDeleteError('')
+    const { error } = await supabase.rpc('delete_account', { p_user_id: deleteSummary.user_id, p_confirm_email: typedEmail })
+    setDeleteBusy(false)
+    if (error) {
+      setDeleteError(error.message)
+      return
+    }
+    setNotice(`${deleteSummary.full_name}'s account and records were deleted.`)
+    setDeleteSummary(null)
+    setSelectedAccount(null)
+    loadAccounts()
+  }
+
   const availableRoles = !selectedAccount || selectedAccount.is_self
     ? []
     : selectedAccount.account_role === 'parent'
@@ -147,16 +181,18 @@ function RoleManagerDialog({ onClose }) {
         : []
 
   return (
-    <div className="role-manager-overlay" role="dialog" aria-modal="true" aria-labelledby="role-manager-title" onMouseDown={(event) => { if (event.target === event.currentTarget && !pendingRole) onClose() }}>
+    <div className="role-manager-overlay" role="dialog" aria-modal="true" aria-labelledby="role-manager-title" onMouseDown={(event) => { if (event.target === event.currentTarget && !pendingRole && !deleteSummary) onClose() }}>
       <AuthToast message={notice} onDismiss={() => setNotice('')} duration={5000} variant="success" />
       {pendingRole && selectedAccount && <ConfirmDialog title="Change account role?" message={`${selectedAccount.full_name} will become ${formatRole(pendingRole)}.`} confirmLabel="Change Role" tone="primary" iconClass="app-icon-user-add" busy={Boolean(updatingRole)} onConfirm={changeRole} onCancel={() => setPendingRole('')} />}
+
+      {deleteSummary && <DeleteAccountDialog summary={deleteSummary} busy={deleteBusy} error={deleteError} onConfirm={confirmDelete} onCancel={() => setDeleteSummary(null)} />}
 
       <section className="role-manager-dialog role-manager-dialog-wide">
         <header className="role-manager-header">
           <button type="button" className="role-manager-close popup-close-button" onClick={onClose} aria-label="Close role manager"><i className="app-icon app-icon-close" aria-hidden="true" /></button>
           <span>Teacher tools</span>
           <h2 id="role-manager-title">Manage Account Roles</h2>
-          <p>Click any account below to review or change its role.</p>
+          <p>Click any account below to review, change its role, or delete it.</p>
         </header>
 
         <div className="role-manager-body">
@@ -211,6 +247,16 @@ function RoleManagerDialog({ onClose }) {
               <div><span>Email</span><strong>{selectedAccount.email}</strong></div>
               <div><span>Current role</span><strong>{formatRole(selectedAccount.account_role)}</strong></div>
               {selectedAccount.is_self ? <p>Your own teacher role cannot be changed here.</p> : <div className="role-manager-actions">{availableRoles.map(([role, label]) => <button type="button" key={role} disabled={Boolean(updatingRole)} onClick={() => setPendingRole(role)}>{label}</button>)}</div>}
+              {!selectedAccount.is_self && (
+                <div className="role-manager-danger-zone">
+                  {selectedAccount.account_role === 'teacher'
+                    ? <p>Teacher accounts cannot be deleted. Demote this account to Parent or Teacher Aide first if you need to remove it.</p>
+                    : <>
+                      <p>Permanently delete this account{selectedAccount.account_role === 'parent' ? ' and all of its enrollment, attendance, health and assessment records' : ''}.</p>
+                      <button type="button" disabled={deleteBusy || Boolean(updatingRole)} onClick={startDelete}>{deleteBusy ? 'Preparing...' : 'Delete account'}</button>
+                    </>}
+                </div>
+              )}
             </article>
           )}
 

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { getAttendanceRangeStart } from '../lib/attendanceRange'
 import useRealtimeRefresh from '../hooks/useRealtimeRefresh'
 import { classifyChildBmi } from '../lib/bmiClassification'
 import { getAgeInYears, getPhilippineDateValue } from '../lib/philippineDate'
@@ -221,9 +222,9 @@ function StudentReportPanel({ enrollments, allowStudentSelection = false, includ
   const attendanceDays = useMemo(() => {
     if (!attendanceSemester?.starts_on || !attendanceSemester?.ends_on) return []
     const today = getPhilippineDateValue()
-    const start = attendanceSemester.starts_on
+    const start = getAttendanceRangeStart(attendanceSemester.starts_on, attendanceClassDates)
     const end = today < attendanceSemester.ends_on ? today : attendanceSemester.ends_on
-    if (start > end) return []
+    if (!start || start > end) return []
     return listWeekdays(start, end).map((date) => {
       if (!attendanceClassDates.has(date)) return { date, status: 'no-classes' }
       if (attendanceApprovedOn && date < attendanceApprovedOn) return { date, status: 'not-enrolled' }

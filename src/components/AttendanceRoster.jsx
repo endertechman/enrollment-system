@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { getAttendanceRangeStart } from '../lib/attendanceRange'
 import AuthToast from './AuthToast'
 import ConfirmDialog from './ConfirmDialog'
 import TablePagination from './TablePagination'
@@ -333,9 +334,9 @@ function AttendanceRoster({ enrollments, loading, attendanceDate, onDateChange, 
     if (!batch?.starts_on || !batch?.ends_on || !selectedSummaryStudent) return []
     const today = getLocalDateValue()
     const approvedOn = selectedSummaryStudent.reviewed_at ? getLocalDateValue(selectedSummaryStudent.reviewed_at) : ''
-    const start = batch.starts_on
+    const start = getAttendanceRangeStart(batch.starts_on, summaryClassDates)
     const end = today < batch.ends_on ? today : batch.ends_on
-    if (start > end) return []
+    if (!start || start > end) return []
     const recordsByDate = new Map(summaryRecords.map((record) => [record.attendance_date, record]))
     return listWeekdays(start, end).map((date) => {
       if (!summaryClassDates.has(date)) return { date, status: 'no-classes' }

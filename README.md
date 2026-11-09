@@ -21,7 +21,7 @@ Available checks: `npm run lint`, `npm run build`, and `npm run test:uat-smoke`.
 
 ## Project status and documentation
 
-The main features are implemented, but production acceptance is **not yet signed off**. Local build and smoke checks passed; authenticated, cross-role, and deployment-target tests remain listed in [UAT.md](UAT.md).
+The main features are implemented and production acceptance was **signed off** by the project owner in October 2026. The sign-off record, the local build and smoke check results, and the acceptance cases are in [UAT.md](UAT.md).
 
 - [Notification behavior](NOTIFICATIONS.md): who sees updates and where they lead
 - [Supabase reference](supabase/reference/README.md): verified remote facts, remaining unknowns, and documentation-only SQL

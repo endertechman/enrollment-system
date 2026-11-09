@@ -2,7 +2,7 @@
 
 Date: 22 September 2026 (Asia/Manila)  
 Environment checked: local React/Vite project and local production preview  
-Release decision: **Not signed off yet** — authenticated Supabase and real-browser role tests remain to be run.
+Release decision: **Signed off** by the project owner in October 2026.
 
 This record distinguishes checks actually executed from acceptance cases that need staging accounts and a verified remote schema. No remote database writes, migration pushes, or destructive tests were performed. `.env.local` was not opened, printed, edited, or copied.
 
@@ -20,7 +20,16 @@ Later user-supplied remote metadata confirmed RLS on three sensitive tables and 
 
 Run the repeatable local checks with `npm run lint`, `npm run build`, and `npm run test:uat-smoke`. The smoke-test source is `tests/uat-smoke.test.mjs`.
 
-## Manual acceptance cases still required
+## Sign-off record
+
+| Item | Detail |
+| --- | --- |
+| Decision | Signed off for release |
+| Signed off by | Project owner |
+| Date | October 2026 |
+| Basis | The owner's acceptance of the system. The per-case results in the table below were **not** updated when sign-off was given and still read "Not run". Update them if a per-case record is needed. |
+
+## Manual acceptance cases
 
 Use a **staging/test Supabase project** or disposable test records, not live family records. Record the date, account role, browser, actual result, and a screenshot or defect ID for each case. Mark a case Pass only after observing the expected result.
 
